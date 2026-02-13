@@ -589,7 +589,6 @@ function ns.UI_RefreshAnalytics()
             end
         end
     end
-end
 
     -- 6. Dashboard Widgets
     if ns.DashboardWidgets and ns.DashboardWidgets.Refresh then
