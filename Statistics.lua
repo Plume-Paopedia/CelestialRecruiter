@@ -96,10 +96,14 @@ function Stats:RecordEvent(eventType, data)
 
     -- Cleanup old daily history (keep last 90 days)
     local cutoffDay = date("%Y-%m-%d", now - (90 * 24 * 3600))
+    local toRemove = {}
     for d in pairs(stats.dailyHistory) do
         if d < cutoffDay then
-            stats.dailyHistory[d] = nil
+            toRemove[#toRemove + 1] = d
         end
+    end
+    for _, d in ipairs(toRemove) do
+        stats.dailyHistory[d] = nil
     end
 end
 

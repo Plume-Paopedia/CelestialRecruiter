@@ -222,9 +222,8 @@ function Discord:NotifyDailySummary()
 
     if not ns.Statistics then return end
 
-    local today = date("%Y-%m-%d")
-    local history = ns.Statistics:GetDailyHistory()
-    local todayData = history[today]
+    local activity = ns.Statistics:GetDailyActivity(1)
+    local todayData = activity and activity[1] or nil
 
     if not todayData then return end
 
@@ -233,7 +232,7 @@ function Discord:NotifyDailySummary()
         embeds = {
             {
                 title = "📊 Résumé Quotidien",
-                description = "Statistiques du " .. today,
+                description = "Statistiques du " .. (todayData.day or date("%Y-%m-%d")),
                 color = 10181046,  -- Purple
                 fields = {
                     {
