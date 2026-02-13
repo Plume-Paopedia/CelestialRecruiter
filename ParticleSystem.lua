@@ -84,7 +84,7 @@ end
 ---------------------------------------------------------------------------
 -- Particle Update Loop
 ---------------------------------------------------------------------------
-local function updateParticles(elapsed)
+local function updateParticles(_, elapsed)
     for i = #activeParticles, 1, -1 do
         local p = activeParticles[i]
 
