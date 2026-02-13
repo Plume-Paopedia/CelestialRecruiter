@@ -652,7 +652,13 @@ function G:CheckAchievements()
                     unlockedAt = time(),
                 }
                 -- Notify the player
-                if ns.Notifications_Success then
+                if ns.Notifications_Achievement then
+                    ns.Notifications_Achievement(
+                        "Succes debloque !",
+                        def.name .. " - " .. def.description,
+                        def.icon
+                    )
+                elseif ns.Notifications_Success then
                     ns.Notifications_Success(
                         "Succes debloque !",
                         def.icon .. " " .. def.name .. " - " .. def.description

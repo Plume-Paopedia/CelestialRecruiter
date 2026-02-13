@@ -97,9 +97,9 @@ function CR:OnEnable()
       ns.Statistics:RecordEvent("joined", {contact = c})
     end
 
-    -- Show celebration notification
-    if ns.Notifications_Success then
-      ns.Notifications_Success("Nouvelle recrue !", key .. " a rejoint la guilde")
+    -- Show celebration banner for this important event
+    if ns.Notifications_Celebrate then
+      ns.Notifications_Celebrate("Nouvelle recrue !", key .. " a rejoint la guilde")
     end
 
     -- Play epic visual effects!
@@ -190,24 +190,35 @@ function CR:OnEnable()
     end
 
     -- Check invited/contacted contacts against guild roster (strict match only)
+    -- Collect keys first to avoid modifying table during iteration
+    local pendingJoins = {}
     for key, c in pairs(ns.db.global.contacts) do
-      if c.status == "invited" or c.status == "contacted" then
+      if c and (c.status == "invited" or c.status == "contacted") then
         if guildMembers[key] then
-          onRecruitJoined(key)
+          pendingJoins[#pendingJoins + 1] = key
         end
       end
     end
+    for _, key in ipairs(pendingJoins) do
+      onRecruitJoined(key)
+    end
 
     -- Re-verify "joined" contacts: remove false positives not actually in guild
+    -- Collect keys first to avoid modifying table during iteration
+    local pendingDemote = {}
     for key, c in pairs(ns.db.global.contacts) do
-      if c.status == "joined" and not guildMembers[key] then
-        if (c.lastInviteAt and c.lastInviteAt > 0) then
-          ns.DB_UpsertContact(key, { status = "invited" })
-        elseif (c.lastWhisperOut and c.lastWhisperOut > 0) then
-          ns.DB_UpsertContact(key, { status = "contacted" })
-        else
-          ns.DB_UpsertContact(key, { status = "new" })
-        end
+      if c and c.status == "joined" and not guildMembers[key] then
+        pendingDemote[#pendingDemote + 1] = {key = key, c = c}
+      end
+    end
+    for _, entry in ipairs(pendingDemote) do
+      local c = entry.c
+      if (c.lastInviteAt and c.lastInviteAt > 0) then
+        ns.DB_UpsertContact(entry.key, { status = "invited" })
+      elseif (c.lastWhisperOut and c.lastWhisperOut > 0) then
+        ns.DB_UpsertContact(entry.key, { status = "contacted" })
+      else
+        ns.DB_UpsertContact(entry.key, { status = "new" })
       end
     end
   end)

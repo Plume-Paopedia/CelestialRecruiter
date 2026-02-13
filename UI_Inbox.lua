@@ -487,12 +487,14 @@ local function BindRow(row, key, c, score, now, tplItems)
         row.replyEB:SetScript("OnEnterPressed", function(s)
             local msg = s:GetText()
             if msg and msg ~= "" then
-                SendChatMessage(msg, "WHISPER", nil, key)
-                ns.DB_UpsertContact(key, {
-                    status = "contacted",
-                    lastWhisperOut = ns.Util_Now(),
-                })
-                ns.DB_Log("OUT", "Reponse manuelle a " .. key .. ": " .. truncate(msg, 80))
+                local sendOk = pcall(SendChatMessage, msg, "WHISPER", nil, key)
+                if sendOk then
+                    ns.DB_UpsertContact(key, {
+                        status = "contacted",
+                        lastWhisperOut = ns.Util_Now(),
+                    })
+                    ns.DB_Log("OUT", "Reponse manuelle a " .. key .. ": " .. truncate(msg, 80))
+                end
             end
             s:SetText("")
             s:ClearFocus()
@@ -513,12 +515,14 @@ local function BindRow(row, key, c, score, now, tplItems)
         row.sendBtn:SetScript("OnClick", function()
             local msg = row.replyEB:GetText()
             if msg and msg ~= "" then
-                SendChatMessage(msg, "WHISPER", nil, key)
-                ns.DB_UpsertContact(key, {
-                    status = "contacted",
-                    lastWhisperOut = ns.Util_Now(),
-                })
-                ns.DB_Log("OUT", "Reponse manuelle a " .. key .. ": " .. truncate(msg, 80))
+                local sendOk = pcall(SendChatMessage, msg, "WHISPER", nil, key)
+                if sendOk then
+                    ns.DB_UpsertContact(key, {
+                        status = "contacted",
+                        lastWhisperOut = ns.Util_Now(),
+                    })
+                    ns.DB_Log("OUT", "Reponse manuelle a " .. key .. ": " .. truncate(msg, 80))
+                end
             end
             row.replyEB:SetText("")
             row.replyEB:ClearFocus()

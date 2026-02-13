@@ -6,6 +6,7 @@ local EDGE  = W.EDGE
 
 -- ═══════════════════════════════════════════════════════════════════
 -- CelestialRecruiter  —  Main UI Frame, Tabs, Status Bar & Public API
+-- Enhanced with animations and micro-interactions
 -- ═══════════════════════════════════════════════════════════════════
 
 ---------------------------------------------------------------------------
@@ -40,6 +41,86 @@ local tabIndicator
 -- Forward declarations
 ---------------------------------------------------------------------------
 local SwitchTab, RefreshCurrent, UpdateStatusBar, UpdateBadges
+
+---------------------------------------------------------------------------
+-- Animation Helper: Smooth color lerp via OnUpdate
+-- Drives border/backdrop color transitions over time for any frame.
+---------------------------------------------------------------------------
+local function StartColorLerp(frame, setFunc, fromR, fromG, fromB, fromA, toR, toG, toB, toA, duration)
+    frame._colorLerp = {
+        elapsed  = 0,
+        duration = duration,
+        fromR = fromR, fromG = fromG, fromB = fromB, fromA = fromA,
+        toR = toR, toG = toG, toB = toB, toA = toA,
+        setFunc = setFunc,
+    }
+    if not frame._colorLerpHooked then
+        frame._colorLerpHooked = true
+        local origOnUpdate = frame:GetScript("OnUpdate")
+        frame:SetScript("OnUpdate", function(self, elapsed)
+            if origOnUpdate then origOnUpdate(self, elapsed) end
+            local cl = self._colorLerp
+            if not cl then return end
+            cl.elapsed = cl.elapsed + elapsed
+            local t = math.min(1, cl.elapsed / cl.duration)
+            -- Smooth ease-out
+            local s = 1 - (1 - t) * (1 - t)
+            local r = cl.fromR + (cl.toR - cl.fromR) * s
+            local g = cl.fromG + (cl.toG - cl.fromG) * s
+            local b = cl.fromB + (cl.toB - cl.fromB) * s
+            local a = cl.fromA + (cl.toA - cl.fromA) * s
+            cl.setFunc(self, r, g, b, a)
+            if t >= 1 then
+                self._colorLerp = nil
+            end
+        end)
+    end
+end
+
+---------------------------------------------------------------------------
+-- Animation Helper: Tab hover color lerp (separate from the above so
+-- both can coexist on the same button frame without conflicting)
+---------------------------------------------------------------------------
+local function SetupTabHoverLerp(btn)
+    btn._hoverColor = {r = C.dim[1], g = C.dim[2], b = C.dim[3], a = 1}
+    btn._hoverTarget = {r = C.dim[1], g = C.dim[2], b = C.dim[3], a = 1}
+    btn._bgColor = {r = 0, g = 0, b = 0, a = 0}
+    btn._bgTarget = {r = 0, g = 0, b = 0, a = 0}
+
+    btn:SetScript("OnUpdate", function(self, elapsed)
+        local speed = 8 * elapsed
+        -- Lerp text color
+        local hc, ht = self._hoverColor, self._hoverTarget
+        local changed = false
+        if math.abs(hc.r - ht.r) > 0.002 or math.abs(hc.g - ht.g) > 0.002
+            or math.abs(hc.b - ht.b) > 0.002 or math.abs(hc.a - ht.a) > 0.002 then
+            hc.r = hc.r + (ht.r - hc.r) * speed
+            hc.g = hc.g + (ht.g - hc.g) * speed
+            hc.b = hc.b + (ht.b - hc.b) * speed
+            hc.a = hc.a + (ht.a - hc.a) * speed
+            self.t:SetTextColor(hc.r, hc.g, hc.b, hc.a)
+            changed = true
+        end
+        -- Lerp backdrop color
+        local bc, bt = self._bgColor, self._bgTarget
+        if math.abs(bc.r - bt.r) > 0.002 or math.abs(bc.g - bt.g) > 0.002
+            or math.abs(bc.b - bt.b) > 0.002 or math.abs(bc.a - bt.a) > 0.002 then
+            bc.r = bc.r + (bt.r - bc.r) * speed
+            bc.g = bc.g + (bt.g - bc.g) * speed
+            bc.b = bc.b + (bt.b - bc.b) * speed
+            bc.a = bc.a + (bt.a - bc.a) * speed
+            self:SetBackdropColor(bc.r, bc.g, bc.b, bc.a)
+            changed = true
+        end
+        -- Snap when close enough
+        if not changed then
+            hc.r, hc.g, hc.b, hc.a = ht.r, ht.g, ht.b, ht.a
+            bc.r, bc.g, bc.b, bc.a = bt.r, bt.g, bt.b, bt.a
+            self.t:SetTextColor(ht.r, ht.g, ht.b, ht.a)
+            self:SetBackdropColor(bt.r, bt.g, bt.b, bt.a)
+        end
+    end)
+end
 
 ---------------------------------------------------------------------------
 -- Main Frame
@@ -118,7 +199,18 @@ local function CreateMainFrame()
     titleGrad:SetAllPoints()
     titleGrad:SetGradient("HORIZONTAL", CreateColor(C.accent[1], C.accent[2], C.accent[3], 0.10), CreateColor(0, 0, 0, 0))
 
-    -- Accent line under title bar
+    -- === Enhancement #4a: Accent gradient line below title bar ===
+    -- A 1px gradient line that fades from accent color (left) to transparent (right)
+    local titleAccentLine = titleBar:CreateTexture(nil, "OVERLAY")
+    titleAccentLine:SetTexture(SOLID)
+    titleAccentLine:SetHeight(1)
+    titleAccentLine:SetPoint("BOTTOMLEFT", 0, -1)
+    titleAccentLine:SetPoint("BOTTOMRIGHT", 0, -1)
+    titleAccentLine:SetGradient("HORIZONTAL",
+        CreateColor(C.accent[1], C.accent[2], C.accent[3], 0.45),
+        CreateColor(C.accent[1], C.accent[2], C.accent[3], 0.0))
+
+    -- Original accent line under title bar (slightly above the gradient one)
     local titleLine = titleBar:CreateTexture(nil, "ARTWORK")
     titleLine:SetTexture(SOLID)
     titleLine:SetHeight(1)
@@ -148,7 +240,7 @@ local function CreateMainFrame()
     -- Version
     local ver = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ver:SetPoint("LEFT", title, "RIGHT", 8, 0)
-    ver:SetText("v3.0.0")
+    ver:SetText("v3.3.0")
     ver:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
     -- Close button with hover background
@@ -171,7 +263,14 @@ local function CreateMainFrame()
         s.t:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
         s.bg:SetVertexColor(C.red[1], C.red[2], C.red[3], 0)
     end)
-    closeBtn:SetScript("OnClick", function() f:Hide() end)
+    closeBtn:SetScript("OnClick", function()
+        -- Trigger close animation instead of immediate hide
+        if f._closeAnim and not f._closeAnim:IsPlaying() then
+            f._closeAnim:Play()
+        else
+            f:Hide()
+        end
+    end)
 
     -- Search box
     local search = CreateFrame("EditBox", nil, titleBar, "BackdropTemplate")
@@ -192,6 +291,13 @@ local function CreateMainFrame()
     searchPH:SetText("Recherche...")
     searchPH:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
+    -- === Enhancement #4b: Search box focus glow texture ===
+    local searchGlow = search:CreateTexture(nil, "BACKGROUND")
+    searchGlow:SetTexture(SOLID)
+    searchGlow:SetPoint("TOPLEFT", -1, 1)
+    searchGlow:SetPoint("BOTTOMRIGHT", 1, -1)
+    searchGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+
     -- Debounced search (wait 0.3s after last keystroke)
     local searchDebounceTimer
     search:SetScript("OnTextChanged", function(s)
@@ -210,12 +316,28 @@ local function CreateMainFrame()
         end)
     end)
     search:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
+
+    -- === Enhancement #4b: Smooth search focus border transition ===
     search:SetScript("OnEditFocusGained", function(s)
-        s:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.6)
+        -- Animate border from default to accent color
+        StartColorLerp(s,
+            function(self, r, g, b, a) self:SetBackdropBorderColor(r, g, b, a) end,
+            C.border[1], C.border[2], C.border[3], 0.4,
+            C.accent[1], C.accent[2], C.accent[3], 0.7,
+            0.2)
+        -- Animate glow appearance
+        searchGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.08)
         searchPH:Hide()
     end)
     search:SetScript("OnEditFocusLost", function(s)
-        s:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.4)
+        -- Animate border from accent back to default
+        StartColorLerp(s,
+            function(self, r, g, b, a) self:SetBackdropBorderColor(r, g, b, a) end,
+            C.accent[1], C.accent[2], C.accent[3], 0.7,
+            C.border[1], C.border[2], C.border[3], 0.4,
+            0.25)
+        -- Fade glow out
+        searchGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
         if (s:GetText() or "") == "" then searchPH:Show() end
     end)
 
@@ -229,28 +351,57 @@ local function CreateMainFrame()
     grip:SetScript("OnMouseDown", function() f:StartSizing("BOTTOMRIGHT") end)
     grip:SetScript("OnMouseUp", function() f:StopMovingOrSizing() end)
 
-    -- Open animation: alpha fade + subtle scale pop
+    -- === Enhancement #1: Frame Open Animation ===
+    -- Scale from 0.95 to 1.0 + fade from 0 to 1 (0.2s, OUT easing)
     local openAG = f:CreateAnimationGroup()
-    local fadeA = openAG:CreateAnimation("Alpha")
-    fadeA:SetFromAlpha(0)
-    fadeA:SetToAlpha(1)
-    fadeA:SetDuration(0.18)
-    fadeA:SetSmoothing("OUT")
-    local scaleA = openAG:CreateAnimation("Scale")
-    scaleA:SetScaleFrom(0.97, 0.97)
-    scaleA:SetScaleTo(1, 1)
-    scaleA:SetDuration(0.18)
-    scaleA:SetSmoothing("OUT")
-    scaleA:SetOrigin("CENTER", 0, 0)
+    local openFade = openAG:CreateAnimation("Alpha")
+    openFade:SetFromAlpha(0)
+    openFade:SetToAlpha(1)
+    openFade:SetDuration(0.2)
+    openFade:SetSmoothing("OUT")
+    local openScale = openAG:CreateAnimation("Scale")
+    openScale:SetScaleFrom(0.95, 0.95)
+    openScale:SetScaleTo(1, 1)
+    openScale:SetDuration(0.2)
+    openScale:SetSmoothing("OUT")
+    openScale:SetOrigin("CENTER", 0, 0)
     openAG:SetScript("OnFinished", function()
         f:SetAlpha(1)
     end)
-    f:SetScript("OnShow", function()
+    f._openAnim = openAG
+
+    -- === Enhancement #1: Frame Close Animation ===
+    -- Scale from 1.0 to 0.95 + fade from 1 to 0 (0.15s, IN easing)
+    local closeAG = f:CreateAnimationGroup()
+    local closeFade = closeAG:CreateAnimation("Alpha")
+    closeFade:SetFromAlpha(1)
+    closeFade:SetToAlpha(0)
+    closeFade:SetDuration(0.15)
+    closeFade:SetSmoothing("IN")
+    local closeScale = closeAG:CreateAnimation("Scale")
+    closeScale:SetScaleFrom(1, 1)
+    closeScale:SetScaleTo(0.95, 0.95)
+    closeScale:SetDuration(0.15)
+    closeScale:SetSmoothing("IN")
+    closeScale:SetOrigin("CENTER", 0, 0)
+    closeAG:SetScript("OnFinished", function()
         f:SetAlpha(0)
-        openAG:Play()
+        f:Hide()
+        -- Reset alpha for next show
+        f:SetAlpha(1)
+    end)
+    f._closeAnim = closeAG
+
+    f:SetScript("OnShow", function()
+        -- Stop close animation if it was playing (e.g., rapid toggle)
+        if f._closeAnim:IsPlaying() then
+            f._closeAnim:Stop()
+        end
+        f:SetAlpha(0)
+        f._openAnim:Play()
     end)
 
-    -- ESC to close
+    -- ESC to close (integrates with close animation)
     tinsert(UISpecialFrames, "CelestialRecruiterFrame")
 
     UI.mainFrame = f
@@ -274,7 +425,7 @@ local function CreateTabs(parent)
     sep:SetPoint("BOTTOMRIGHT")
     sep:SetVertexColor(C.border[1], C.border[2], C.border[3], 0.35)
 
-    -- Active indicator line (animated sliding)
+    -- === Enhancement #2c: Active indicator line (animated sliding) ===
     tabIndicator = CreateFrame("Frame", nil, bar)
     tabIndicator:SetHeight(2)
     tabIndicator:SetPoint("BOTTOMLEFT", 8, -2)
@@ -294,7 +445,7 @@ local function CreateTabs(parent)
     tabIndicator._curW = 60
     tabIndicator._tgtX = 8
     tabIndicator._tgtW = 60
-    tabIndicator:SetScript("OnUpdate", function(self)
+    tabIndicator:SetScript("OnUpdate", function(self, elapsed)
         local lf = 0.20
         local dx = math.abs(self._tgtX - self._curX)
         local dw = math.abs(self._tgtW - self._curW)
@@ -328,8 +479,9 @@ local function CreateTabs(parent)
         btn.badge:SetPoint("LEFT", btn.t, "RIGHT", 4, 0)
         btn.badge:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
         btn.badge:SetText("")
+        btn._lastBadgeText = ""
 
-        -- Badge pulse animation
+        -- === Enhancement #3: Badge pulse animation (bounces on count change) ===
         btn.badgePulse = btn.badge:CreateAnimationGroup()
         btn.badgePulse:SetLooping("BOUNCE")
         local bp = btn.badgePulse:CreateAnimation("Scale")
@@ -339,38 +491,88 @@ local function CreateTabs(parent)
         bp:SetSmoothing("IN_OUT")
         bp:SetOrigin("LEFT", 0, 0)
 
+        -- === Enhancement #3: Badge pop animation (plays once on count change) ===
+        btn.badgePop = btn.badge:CreateAnimationGroup()
+        local popScale = btn.badgePop:CreateAnimation("Scale")
+        popScale:SetScaleFrom(1.4, 1.4)
+        popScale:SetScaleTo(1, 1)
+        popScale:SetDuration(0.25)
+        popScale:SetSmoothing("OUT")
+        popScale:SetOrigin("LEFT", 0, 0)
+        local popAlpha = btn.badgePop:CreateAnimation("Alpha")
+        popAlpha:SetFromAlpha(0.5)
+        popAlpha:SetToAlpha(1)
+        popAlpha:SetDuration(0.25)
+        popAlpha:SetSmoothing("OUT")
+        btn.badgePop:SetScript("OnFinished", function()
+            btn.badge:SetAlpha(1)
+        end)
+
+        -- === Enhancement #3: Badge glow texture (accent-colored halo) ===
+        btn.badgeGlow = btn:CreateTexture(nil, "ARTWORK")
+        btn.badgeGlow:SetTexture(SOLID)
+        btn.badgeGlow:SetSize(28, 16)
+        btn.badgeGlow:SetPoint("CENTER", btn.badge, "CENTER", 0, 0)
+        btn.badgeGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+        -- Badge glow pulse animation
+        btn.badgeGlowAnim = btn.badgeGlow:CreateAnimationGroup()
+        btn.badgeGlowAnim:SetLooping("BOUNCE")
+        local glowAlpha = btn.badgeGlowAnim:CreateAnimation("Alpha")
+        glowAlpha:SetFromAlpha(0)
+        glowAlpha:SetToAlpha(0.25)
+        glowAlpha:SetDuration(0.6)
+        glowAlpha:SetSmoothing("IN_OUT")
+
         local tw = btn.t:GetStringWidth() + 28
         btn:SetWidth(tw)
         btn._key = tab.key
 
-        -- Smooth background transition on hover/click
-        btn._bgAnim = btn:CreateAnimationGroup()
-        local bgFade = btn._bgAnim:CreateAnimation("Alpha")
-        bgFade:SetDuration(0.15)
-        bgFade:SetSmoothing("OUT")
+        -- === Enhancement #2b: Smooth tab hover color transitions ===
+        SetupTabHoverLerp(btn)
 
         btn:SetScript("OnClick", function()
             -- Quick click feedback
-            btn:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.20)
+            btn._bgTarget.r = C.accent[1]
+            btn._bgTarget.g = C.accent[2]
+            btn._bgTarget.b = C.accent[3]
+            btn._bgTarget.a = 0.20
             C_Timer.After(0.08, function()
                 if UI.active == btn._key then
-                    btn:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.10)
+                    btn._bgTarget.r = C.accent[1]
+                    btn._bgTarget.g = C.accent[2]
+                    btn._bgTarget.b = C.accent[3]
+                    btn._bgTarget.a = 0.10
                 else
-                    btn:SetBackdropColor(0, 0, 0, 0)
+                    btn._bgTarget.r = 0
+                    btn._bgTarget.g = 0
+                    btn._bgTarget.b = 0
+                    btn._bgTarget.a = 0
                 end
             end)
             SwitchTab(tab.key)
         end)
         btn:SetScript("OnEnter", function(s)
             if UI.active ~= s._key then
-                s:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.08)
-                s.t:SetTextColor(C.text[1], C.text[2], C.text[3], 0.85)
+                s._bgTarget.r = C.accent[1]
+                s._bgTarget.g = C.accent[2]
+                s._bgTarget.b = C.accent[3]
+                s._bgTarget.a = 0.08
+                s._hoverTarget.r = C.text[1]
+                s._hoverTarget.g = C.text[2]
+                s._hoverTarget.b = C.text[3]
+                s._hoverTarget.a = 0.85
             end
         end)
         btn:SetScript("OnLeave", function(s)
             if UI.active ~= s._key then
-                s:SetBackdropColor(0, 0, 0, 0)
-                s.t:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+                s._bgTarget.r = 0
+                s._bgTarget.g = 0
+                s._bgTarget.b = 0
+                s._bgTarget.a = 0
+                s._hoverTarget.r = C.dim[1]
+                s._hoverTarget.g = C.dim[2]
+                s._hoverTarget.b = C.dim[3]
+                s._hoverTarget.a = 1
             end
         end)
 
@@ -412,6 +614,25 @@ local function CreateContent(parent)
             panel:Hide()
         end)
 
+        -- === Enhancement #5: Smooth content refresh animation ===
+        -- Fades to 0.7 then back to 1.0 for a "refreshing" visual pulse
+        panel._refreshDim = panel:CreateAnimationGroup()
+        local dimAlpha = panel._refreshDim:CreateAnimation("Alpha")
+        dimAlpha:SetFromAlpha(1)
+        dimAlpha:SetToAlpha(0.7)
+        dimAlpha:SetDuration(0.08)
+        dimAlpha:SetSmoothing("IN")
+        dimAlpha:SetOrder(1)
+        local brightAlpha = panel._refreshDim:CreateAnimation("Alpha")
+        brightAlpha:SetFromAlpha(0.7)
+        brightAlpha:SetToAlpha(1)
+        brightAlpha:SetDuration(0.15)
+        brightAlpha:SetSmoothing("OUT")
+        brightAlpha:SetOrder(2)
+        panel._refreshDim:SetScript("OnFinished", function()
+            panel:SetAlpha(1)
+        end)
+
         tabPanels[tab.key] = panel
     end
 
@@ -435,7 +656,7 @@ local function CreateStatusBar(parent)
     bar:SetPoint("BOTTOMRIGHT", -6, 4)
     bar:EnableMouse(true)
 
-    -- Top separator gradient (transparent → accent → transparent)
+    -- Top separator gradient (transparent -> accent -> transparent)
     local sepL = bar:CreateTexture(nil, "OVERLAY")
     sepL:SetTexture(SOLID)
     sepL:SetHeight(1)
@@ -493,18 +714,23 @@ SwitchTab = function(tabKey)
     local previousTab = UI.active
     UI.active = tabKey
 
+    -- Mark this as a tab switch so RefreshCurrent plays the refresh animation
+    UI._isTabSwitch = true
+
     -- Fade out previous panel, fade in new panel
     for key, panel in pairs(tabPanels) do
         if key == previousTab and key ~= tabKey and panel:IsShown() then
             -- Stop any ongoing animations before starting fade out
             panel._fadeIn:Stop()
             panel._fadeOut:Stop()
+            if panel._refreshDim:IsPlaying() then panel._refreshDim:Stop() end
             -- Fade out previous tab
             panel._fadeOut:Play()
         elseif key == tabKey then
             -- Stop any ongoing animations before starting fade in
             panel._fadeIn:Stop()
             panel._fadeOut:Stop()
+            if panel._refreshDim:IsPlaying() then panel._refreshDim:Stop() end
             -- Ensure alpha is reset before showing
             panel:SetAlpha(0)
             -- Fade in new tab
@@ -516,8 +742,15 @@ SwitchTab = function(tabKey)
     -- Update button visual state with smooth transitions + animated indicator target
     for key, btn in pairs(tabBtns) do
         if key == tabKey then
-            btn.t:SetTextColor(C.text[1], C.text[2], C.text[3])
-            btn:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.10)
+            -- Set lerp targets for active tab
+            btn._hoverTarget.r = C.text[1]
+            btn._hoverTarget.g = C.text[2]
+            btn._hoverTarget.b = C.text[3]
+            btn._hoverTarget.a = 1
+            btn._bgTarget.r = C.accent[1]
+            btn._bgTarget.g = C.accent[2]
+            btn._bgTarget.b = C.accent[3]
+            btn._bgTarget.a = 0.10
             -- Calculate position relative to the tab bar
             local bar = btn:GetParent()
             if bar and btn:GetLeft() and bar:GetLeft() then
@@ -527,12 +760,20 @@ SwitchTab = function(tabKey)
                 tabIndicator._tgtW = math.max(1, w)
             end
         else
-            btn.t:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
-            btn:SetBackdropColor(0, 0, 0, 0)
+            -- Set lerp targets for inactive tabs
+            btn._hoverTarget.r = C.dim[1]
+            btn._hoverTarget.g = C.dim[2]
+            btn._hoverTarget.b = C.dim[3]
+            btn._hoverTarget.a = 1
+            btn._bgTarget.r = 0
+            btn._bgTarget.g = 0
+            btn._bgTarget.b = 0
+            btn._bgTarget.a = 0
         end
     end
 
     RefreshCurrent()
+    UI._isTabSwitch = false
 end
 
 ---------------------------------------------------------------------------
@@ -578,17 +819,49 @@ UpdateBadges = function()
         local btn = tabBtns[tab.key]
         if btn and tab.badge then
             local text = tab.badge() or ""
-            local hadBadge = btn.badge:GetText() ~= ""
+            local prevText = btn._lastBadgeText or ""
             btn.badge:SetText(text)
 
-            -- Pulse animation when badge appears or changes to non-zero
-            if text ~= "" and not hadBadge then
-                if btn.badgePulse then
-                    btn.badgePulse:Play()
+            -- === Enhancement #3: Animated badge behavior ===
+            if text ~= "" then
+                if prevText == "" then
+                    -- Badge just appeared: start pulsing + play pop + start glow
+                    if btn.badgePulse and not btn.badgePulse:IsPlaying() then
+                        btn.badgePulse:Play()
+                    end
+                    if btn.badgePop then
+                        btn.badgePop:Play()
+                    end
+                    -- Start glow animation for new notification
+                    if btn.badgeGlowAnim and not btn.badgeGlowAnim:IsPlaying() then
+                        btn.badgeGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+                        btn.badgeGlowAnim:Play()
+                    end
+                elseif text ~= prevText then
+                    -- Count changed: play pop animation to draw attention
+                    if btn.badgePop then
+                        btn.badge:SetAlpha(1)
+                        btn.badgePop:Play()
+                    end
+                    -- Refresh glow
+                    if btn.badgeGlowAnim then
+                        btn.badgeGlowAnim:Stop()
+                        btn.badgeGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+                        btn.badgeGlowAnim:Play()
+                    end
                 end
-            elseif text == "" and btn.badgePulse then
-                btn.badgePulse:Stop()
+            else
+                -- Badge gone: stop all badge animations
+                if btn.badgePulse and btn.badgePulse:IsPlaying() then
+                    btn.badgePulse:Stop()
+                end
+                if btn.badgeGlowAnim and btn.badgeGlowAnim:IsPlaying() then
+                    btn.badgeGlowAnim:Stop()
+                    btn.badgeGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+                end
             end
+
+            btn._lastBadgeText = text
 
             local base  = btn.t:GetStringWidth() + 28
             local extra = text ~= "" and (btn.badge:GetStringWidth() + 6) or 0
@@ -602,6 +875,18 @@ RefreshCurrent = function()
     if fn then fn() end
     UpdateStatusBar()
     UpdateBadges()
+
+    -- === Enhancement #5: Play refresh dim/brighten on manual refresh or tab switch ===
+    -- Only do this when explicitly triggered (tab switch or manual), not on ticker auto-refresh
+    if UI._isManualRefresh or UI._isTabSwitch then
+        local panel = tabPanels[UI.active]
+        if panel and panel:IsShown() and panel:GetAlpha() >= 0.99 then
+            if not panel._refreshDim:IsPlaying() and not panel._fadeIn:IsPlaying() then
+                panel._refreshDim:Play()
+            end
+        end
+        UI._isManualRefresh = false
+    end
 end
 
 ---------------------------------------------------------------------------
@@ -649,7 +934,12 @@ end
 function ns.UI_Toggle()
     if not UI.mainFrame then return end
     if UI.mainFrame:IsShown() then
-        UI.mainFrame:Hide()
+        -- Use close animation instead of immediate hide
+        if UI.mainFrame._closeAnim and not UI.mainFrame._closeAnim:IsPlaying() then
+            UI.mainFrame._closeAnim:Play()
+        else
+            UI.mainFrame:Hide()
+        end
     else
         UI.mainFrame:Show()
         RefreshCurrent()
@@ -658,6 +948,8 @@ end
 
 function ns.UI_Refresh()
     if not UI.mainFrame or not UI.mainFrame:IsShown() then return end
+    -- Mark as manual refresh so the dim/brighten animation plays
+    UI._isManualRefresh = true
     RefreshCurrent()
 end
 

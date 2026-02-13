@@ -534,14 +534,17 @@ function ns.UI_RefreshAnalytics()
     end
 
     -- 3. Best Hours
-    if ad.hourBars and ns.Statistics.GetBestHours then
-        local bestHours = ns.Statistics:GetBestHours()
+    if ad.hourBars and ns.Statistics and ns.Statistics.GetBestHours then
+        local hOk, bestHours = pcall(ns.Statistics.GetBestHours, ns.Statistics)
+        if not hOk or not bestHours then bestHours = {} end
         local hourData = {}
         local maxActivity = 1
 
         for _, hourInfo in ipairs(bestHours) do
-            hourData[hourInfo.hour] = hourInfo.activity
-            maxActivity = math.max(maxActivity, hourInfo.activity)
+            if hourInfo and hourInfo.hour then
+                hourData[hourInfo.hour] = hourInfo.activity or 0
+                maxActivity = math.max(maxActivity, hourInfo.activity or 0)
+            end
         end
 
         for h = 0, 23 do
@@ -565,8 +568,9 @@ function ns.UI_RefreshAnalytics()
     end
 
     -- 4. Class Distribution
-    if ad.classBars and ns.Statistics.GetClassDistribution then
-        local distribution, total = ns.Statistics:GetClassDistribution()
+    if ad.classBars and ns.Statistics and ns.Statistics.GetClassDistribution then
+        local dOk, distribution, total = pcall(ns.Statistics.GetClassDistribution, ns.Statistics)
+        if not dOk then distribution, total = {}, 0 end
         total = math.max(1, total or 1)
         local maxWidth = 400
 
@@ -585,9 +589,9 @@ function ns.UI_RefreshAnalytics()
     end
 
     -- 5. Trends (week over week)
-    if ad.trendCards and ns.Statistics.GetTrends then
-        local trends = ns.Statistics:GetTrends()
-        if trends then
+    if ad.trendCards and ns.Statistics and ns.Statistics.GetTrends then
+        local tOk, trends = pcall(ns.Statistics.GetTrends, ns.Statistics)
+        if tOk and trends then
             for _, key in ipairs({"contacted", "invited", "joined"}) do
                 local card = ad.trendCards[key]
                 if card then
@@ -616,32 +620,34 @@ function ns.UI_RefreshAnalytics()
     end
 
     -- 7. A/B Test Results
-    if ad.abVariantRows and ns.ABTesting then
-        local tests = ns.ABTesting:GetAllTests()
-        if #tests > 0 then
+    if ad.abVariantRows and ns.ABTesting and ns.ABTesting.GetAllTests then
+        local ok, tests = pcall(ns.ABTesting.GetAllTests, ns.ABTesting)
+        if not ok then tests = {} end
+        if tests and #tests > 0 then
             local latestTest = tests[1]
             ad.abTestInfo:SetText(("Test: %s  |  Status: %s  |  Min. echantillons: %d"):format(
-                latestTest.name,
-                latestTest.status,
-                latestTest.minSamples
+                latestTest.name or "?",
+                latestTest.status or "?",
+                latestTest.minSamples or 0
             ))
 
-            local results = ns.ABTesting:GetTestResults(latestTest.id)
+            local rok, results = pcall(ns.ABTesting.GetTestResults, ns.ABTesting, latestTest.id)
+            if not rok then results = {} end
             local maxSent = 1
             for _, r in ipairs(results) do
-                if r.sent > maxSent then maxSent = r.sent end
+                if (r.sent or 0) > maxSent then maxSent = r.sent end
             end
 
             for i = 1, 5 do
                 local row = ad.abVariantRows[i]
                 if i <= #results then
                     local r = results[i]
-                    row.name:SetText(r.templateId .. (r.isWinner and " |cffFFD700*|r" or ""))
-                    row.sent:SetText(("Env: %d"):format(r.sent))
-                    row.replies:SetText(("Rep: %d"):format(r.replies))
-                    row.joined:SetText(("Rec: %d"):format(r.joined))
-                    row.rate:SetText(("Score: %.1f%%"):format(r.score * 100))
-                    row.fill:SetWidth(math.max(1, 200 * (r.sent / maxSent)))
+                    row.name:SetText((r.templateId or "?") .. (r.isWinner and " |cffFFD700*|r" or ""))
+                    row.sent:SetText(("Env: %d"):format(r.sent or 0))
+                    row.replies:SetText(("Rep: %d"):format(r.replies or 0))
+                    row.joined:SetText(("Rec: %d"):format(r.joined or 0))
+                    row.rate:SetText(("Score: %.1f%%"):format((r.score or 0) * 100))
+                    row.fill:SetWidth(math.max(1, 200 * ((r.sent or 0) / maxSent)))
 
                     if r.isWinner then
                         row.name:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
@@ -662,19 +668,21 @@ function ns.UI_RefreshAnalytics()
     end
 
     -- 8. Campaign Overview
-    if ad.campRows and ns.Campaigns then
-        local campaigns = ns.Campaigns:GetAll()
-        if #campaigns > 0 then
-            local globalStats = ns.Campaigns:GetGlobalStats()
+    if ad.campRows and ns.Campaigns and ns.Campaigns.GetAll then
+        local cOk, campaigns = pcall(ns.Campaigns.GetAll, ns.Campaigns)
+        if not cOk then campaigns = {} end
+        if campaigns and #campaigns > 0 then
+            local gsOk, globalStats = pcall(ns.Campaigns.GetGlobalStats, ns.Campaigns)
+            if not gsOk then globalStats = { campaigns = 0, active = 0, contacted = 0, joined = 0 } end
             ad.campInfo:SetText(("Total: %d campagnes | %d actives | %d contactes | %d recrues"):format(
-                globalStats.campaigns, globalStats.active, globalStats.contacted, globalStats.joined
+                globalStats.campaigns or 0, globalStats.active or 0, globalStats.contacted or 0, globalStats.joined or 0
             ))
 
             for i = 1, 5 do
                 local row = ad.campRows[i]
                 if i <= #campaigns then
                     local camp = campaigns[i]
-                    row.name:SetText(camp.name)
+                    row.name:SetText(camp.name or "?")
                     row.name:Show()
 
                     local statusColors = {
@@ -685,15 +693,18 @@ function ns.UI_RefreshAnalytics()
                         archived = {C.muted[1], C.muted[2], C.muted[3]},
                     }
                     local sc = statusColors[camp.status] or statusColors.draft
-                    row.status:SetText(camp.status)
+                    row.status:SetText(camp.status or "draft")
                     row.status:SetTextColor(sc[1], sc[2], sc[3])
 
+                    local cStats = camp.stats or {}
+                    local cGoals = camp.goals or {}
                     row.stats:SetText(("Contactes: %d | Invites: %d | Recrues: %d/%d"):format(
-                        camp.stats.contacted, camp.stats.invited, camp.stats.joined, camp.goals.targetJoined
+                        cStats.contacted or 0, cStats.invited or 0, cStats.joined or 0, cGoals.targetJoined or 0
                     ))
 
                     -- Progress bar
-                    local pct = camp.goals.targetJoined > 0 and (camp.stats.joined / camp.goals.targetJoined) or 0
+                    local targetJ = cGoals.targetJoined or 0
+                    local pct = targetJ > 0 and ((cStats.joined or 0) / targetJ) or 0
                     pct = math.min(1, pct)
                     row.barFill:SetWidth(math.max(1, row.barBg:GetWidth() * pct))
 
@@ -717,9 +728,9 @@ end
 function ns.UI_AnalyticsBadge()
     -- Show active campaign/test count
     local badge = ""
-    if ns.Campaigns then
-        local active = ns.Campaigns:GetActiveCampaigns()
-        if #active > 0 then
+    if ns.Campaigns and ns.Campaigns.GetActiveCampaigns then
+        local ok, active = pcall(ns.Campaigns.GetActiveCampaigns, ns.Campaigns)
+        if ok and active and #active > 0 then
             badge = "|cff33e07a" .. #active .. "|r"
         end
     end

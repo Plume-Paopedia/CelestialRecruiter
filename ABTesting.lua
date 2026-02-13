@@ -12,6 +12,7 @@ local AB = ns.ABTesting
 -- Initialize
 ---------------------------------------------------------------------------
 function AB:Init()
+    if not ns.db or not ns.db.global then return end
     if not ns.db.global.abTests then
         ns.db.global.abTests = {}
     end
@@ -149,9 +150,14 @@ function AB:PickTemplate(defaultTemplateId)
     local totalWeight = 0
     for _, v in ipairs(test.variants) do
         -- Weight = base + bonus from success rate
-        local rate = v.sent > 0 and ((v.replies + v.joined * 2) / v.sent) or 0.5
-        v.weight = 1 + rate * v.sent * 0.1  -- More data = more influence
+        local rate = v.sent > 0 and (((v.replies or 0) + (v.joined or 0) * 2) / v.sent) or 0.5
+        v.weight = 1 + rate * (v.sent or 0) * 0.1  -- More data = more influence
         totalWeight = totalWeight + v.weight
+    end
+
+    -- Guard against zero total weight
+    if totalWeight <= 0 then
+        return test.variants[1].templateId
     end
 
     -- Weighted random selection

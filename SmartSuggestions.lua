@@ -114,7 +114,7 @@ function SS:GetBestTemplate()
 
     local reason = string.format(
         "Le template '%s' a le meilleur taux de succes : %.0f%% (%d/%d utilisations converties).",
-        tplName, best.successRate, best.success, best.used
+        tplName, best.successRate or 0, best.success or 0, best.used or 0
     )
 
     return {

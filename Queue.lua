@@ -51,18 +51,25 @@ function ns.Queue_Whisper(key, tplId)
   if ns.ABTesting and ns.ABTesting.PickTemplate then
     actualTplId = ns.ABTesting:PickTemplate(tplId)
   end
+  -- Ensure actualTplId is never nil (fallback to original tplId or "default")
+  actualTplId = actualTplId or tplId or "default"
 
   local msg = ns.Templates_Render(key, actualTplId)
-  if msg == "" then
+  if not msg or msg == "" then
     ns.Util_Print("Message bloque (modele vide)")
     return false, "empty_template"
   end
 
-  SendChatMessage(msg, "WHISPER", nil, key)
+  local sendOk = pcall(SendChatMessage, msg, "WHISPER", nil, key)
+  if not sendOk then
+    ns.Util_Print("Message bloque (SendChatMessage protege)")
+    ns.DB_Log("ERR", "SendChatMessage bloque pour: " .. key)
+    return false, "send_blocked"
+  end
 
   ns.AntiSpam_MarkWhisper(key)
   ns.DB_UpsertContact(key, { status = "contacted", lastTemplate = actualTplId })
-  ns.DB_Log("OUT", "Message envoye a " .. key .. " (tpl: " .. actualTplId .. ")")
+  ns.DB_Log("OUT", "Message envoye a " .. key .. " (tpl: " .. tostring(actualTplId) .. ")")
   if ns.sessionStats then ns.sessionStats.whispersSent = ns.sessionStats.whispersSent + 1 end
 
   -- Record A/B Testing

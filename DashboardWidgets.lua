@@ -181,11 +181,11 @@ registerWidget("conversion_funnel", "Entonnoir de conversion", "|cff33e07a▼|r"
         end
     end,
     function(card)
-        if not ns.Statistics then return end
-        local rates = ns.Statistics:GetConversionRates()
-        if not rates then return end
+        if not ns.Statistics or not ns.Statistics.GetConversionRates then return end
+        local ok, rates = pcall(ns.Statistics.GetConversionRates, ns.Statistics)
+        if not ok or not rates then return end
 
-        local values = {rates.totalContacted, rates.totalInvited, rates.totalJoined}
+        local values = {rates.totalContacted or 0, rates.totalInvited or 0, rates.totalJoined or 0}
         local maxVal = math.max(1, values[1])
 
         for i = 1, 3 do
@@ -229,8 +229,9 @@ registerWidget("template_perf", "Performance templates", "|cffFF69B4★|r",
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
-        if not ns.Statistics then return end
-        local perf = ns.Statistics:GetTemplatePerformance()
+        if not ns.Statistics or not ns.Statistics.GetTemplatePerformance then return end
+        local ok, perf = pcall(ns.Statistics.GetTemplatePerformance, ns.Statistics)
+        if not ok or not perf then perf = {} end
 
         if #perf == 0 then
             card._emptyText:Show()
@@ -298,14 +299,14 @@ registerWidget("best_hours", "Meilleures heures", "|cffFFD700☀|r",
         end
     end,
     function(card)
-        if not ns.Statistics then return end
-        local hours = ns.Statistics:GetBestHours()
-        if not hours then return end
+        if not ns.Statistics or not ns.Statistics.GetBestHours then return end
+        local ok, hours = pcall(ns.Statistics.GetBestHours, ns.Statistics)
+        if not ok or not hours then return end
 
         -- Find max
         local maxActivity = 0
         for _, h in ipairs(hours) do
-            if h.activity > maxActivity then maxActivity = h.activity end
+            if (h.activity or 0) > maxActivity then maxActivity = h.activity end
         end
 
         for _, h in ipairs(hours) do
@@ -361,8 +362,9 @@ registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00⚔|r",
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
-        if not ns.Campaigns then return end
-        local active = ns.Campaigns:GetActiveCampaigns()
+        if not ns.Campaigns or not ns.Campaigns.GetActiveCampaigns then return end
+        local ok, active = pcall(ns.Campaigns.GetActiveCampaigns, ns.Campaigns)
+        if not ok then active = {} end
 
         if #active == 0 then
             card._emptyText:Show()
@@ -378,17 +380,21 @@ registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00⚔|r",
         for i = 1, math.min(3, #active) do
             local row = card._campRows[i]
             local camp = active[i]
-            local progress = ns.Campaigns:GetProgress(camp.id)
+            local ok, progress = pcall(ns.Campaigns.GetProgress, ns.Campaigns, camp.id)
+            if not ok then progress = {} end
 
-            row.name:SetText(camp.name)
+            row.name:SetText(camp.name or "?")
             row.name:Show()
 
-            local goalPct = progress.joined.pct / 100
+            local joinedProgress = progress and progress.joined
+            local goalPct = (joinedProgress and joinedProgress.pct) and (joinedProgress.pct / 100) or 0
             row.bar:SetProgress(goalPct)
             row.bar:Show()
 
+            local stats = camp.stats or {}
+            local goals = camp.goals or {}
             row.info:SetText(("%d/%d recrues"):format(
-                camp.stats.joined, camp.goals.targetJoined))
+                stats.joined or 0, goals.targetJoined or 0))
             row.info:Show()
         end
 
@@ -453,20 +459,21 @@ registerWidget("ab_test_status", "A/B Test actif", "|cff9370DB⚗|r",
         card._emptyText:Hide()
         card._abTestName:SetText(test.name)
 
-        local results = ns.ABTesting:GetTestResults(test.id)
+        local rok, results = pcall(ns.ABTesting.GetTestResults, ns.ABTesting, test.id)
+        if not rok then results = {} end
         local maxSent = 1
         for _, r in ipairs(results) do
-            if r.sent > maxSent then maxSent = r.sent end
+            if (r.sent or 0) > maxSent then maxSent = r.sent end
         end
 
         for i = 1, math.min(4, #results) do
             local row = card._abVariants[i]
             local r = results[i]
-            row.name:SetText(r.templateId)
+            row.name:SetText(r.templateId or "?")
             row.name:Show()
-            row.bar:SetProgress(r.sent / maxSent)
+            row.bar:SetProgress((r.sent or 0) / maxSent)
             row.bar:Show()
-            row.stat:SetText(("%d env. %.0f%% rep."):format(r.sent, r.replyRate * 100))
+            row.stat:SetText(("%d env. %.0f%% rep."):format(r.sent or 0, (r.replyRate or 0) * 100))
             row.stat:Show()
 
             if r.isWinner then
@@ -519,8 +526,9 @@ registerWidget("reputation_board", "Top contacts", "|cff00d1ff♛|r",
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
-        if not ns.Reputation then return end
-        local priorityQueue = ns.Reputation:GetPriorityQueue()
+        if not ns.Reputation or not ns.Reputation.GetPriorityQueue then return end
+        local ok, priorityQueue = pcall(ns.Reputation.GetPriorityQueue, ns.Reputation)
+        if not ok then priorityQueue = {} end
 
         if #priorityQueue == 0 then
             card._emptyText:Show()
@@ -584,16 +592,16 @@ registerWidget("weekly_trends", "Tendances semaine", "|cff66ff99📈|r",
     end,
     function(card)
         if not ns.Statistics then return end
-        local trends = ns.Statistics:GetTrends()
-        if not trends or not trends.thisWeek then return end
+        local ok, trends = pcall(ns.Statistics.GetTrends, ns.Statistics)
+        if not ok or not trends or not trends.thisWeek then return end
 
         local tw = trends.thisWeek
-        local changes = {trends.contactedChange, trends.invitedChange, trends.joinedChange}
-        local values = {tw.contacted, tw.invited, tw.joined}
+        local changes = {trends.contactedChange or 0, trends.invitedChange or 0, trends.joinedChange or 0}
+        local values = {tw.contacted or 0, tw.invited or 0, tw.joined or 0}
 
         for i = 1, 3 do
             card._trendItems[i].val:SetText(tostring(values[i]))
-            local ch = changes[i]
+            local ch = changes[i] or 0
             if ch > 0 then
                 card._trendItems[i].change:SetText(("▲ +%.0f%%"):format(ch))
                 card._trendItems[i].change:SetTextColor(C.green[1], C.green[2], C.green[3])

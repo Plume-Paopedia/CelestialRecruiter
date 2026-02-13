@@ -12,6 +12,7 @@ local Camp = ns.Campaigns
 -- Initialize
 ---------------------------------------------------------------------------
 function Camp:Init()
+    if not ns.db or not ns.db.global then return end
     if not ns.db.global.campaigns then
         ns.db.global.campaigns = {}
     end

@@ -279,6 +279,10 @@ function Rep:AutoTagAll()
         count = count + 1
     end
 
-    ns.Notifications_Success("Auto-Tag", string.format("%d contacts évalués et tagués", count))
-    ns.UI_Refresh()
+    if ns.Notifications_Success then
+        ns.Notifications_Success("Auto-Tag", string.format("%d contacts evalues et tagues", count))
+    end
+    if ns.UI_Refresh then
+        ns.UI_Refresh()
+    end
 end
