@@ -1,0 +1,8 @@
+# CelestialRecruiter Discord Webhook Companion
+# Python dependencies
+
+# Required
+requests>=2.28.0    # For sending HTTP requests to Discord
+
+# Optional but recommended
+watchdog>=2.1.0     # For file system monitoring (more efficient than polling)

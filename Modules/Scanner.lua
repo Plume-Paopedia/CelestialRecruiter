@@ -13,11 +13,15 @@ local Scanner = {
   lastWhoSent = 0,
 
   results = {}, -- [key] = record
+  resultCount = 0,
   timeoutTimer = nil,
   cappedQueries = 0,
   totalQueries = 0,
   _dirty = true,
   _cachedRows = nil,
+  _statsClassName = nil,
+  _statsClassFile = nil,
+  _statsLevelRange = nil,
 
   autoScanTimer = nil,
   autoScanCycles = 0,
@@ -27,19 +31,13 @@ local Scanner = {
 
 ns.Scanner = Scanner
 
+local RECENT_INVITE_COOLDOWN = 7 * 24 * 3600 -- 7 days in seconds
+
 local function cancelTimer(t)
   if t and t.Cancel then
     t:Cancel()
   end
   return nil
-end
-
-local function countMapKeys(map)
-  local n = 0
-  for _ in pairs(map or {}) do
-    n = n + 1
-  end
-  return n
 end
 
 local function whoDelay()
@@ -244,6 +242,16 @@ local function buildPlayerRecord(info)
     skipReason = "crossrealm"
   end
 
+  -- 7-day invite cooldown: skip players invited within the last 7 days
+  if not skipReason then
+    local contact = ns.DB_GetContact and ns.DB_GetContact(inviteName) or nil
+    if contact and (contact.lastInviteAt or 0) > 0 then
+      if (ns.Util_Now() - contact.lastInviteAt) < RECENT_INVITE_COOLDOWN then
+        skipReason = "recent_invite"
+      end
+    end
+  end
+
   local now = ns.Util_Now()
   return {
     key = inviteName,
@@ -266,6 +274,7 @@ local function mergeRecord(record)
   local existing = Scanner.results[record.key]
   if not existing then
     Scanner.results[record.key] = record
+    Scanner.resultCount = Scanner.resultCount + 1
     return true, record
   end
 
@@ -282,11 +291,8 @@ local function mergeRecord(record)
   return false, existing
 end
 
-local function queueIfUnguilded(rec)
+local function queueFromScan(rec)
   if not rec then
-    return false
-  end
-  if ns.Util_Trim(rec.guild or "") ~= "" then
     return false
   end
   local patch = {
@@ -297,6 +303,7 @@ local function queueIfUnguilded(rec)
     level = rec.level or 0,
     race = rec.race or "",
     zone = rec.zone or "",
+    guild = rec.guild or "",
   }
   -- Don't reset status if the contact already has a meaningful one
   local existing = ns.DB_GetContact(rec.key)
@@ -325,7 +332,7 @@ local function processWhoResults(completedQuery)
         local isNew, current = mergeRecord(rec)
         if isNew and not rec.skipReason then
           addedPlayers = addedPlayers + 1
-          if queueIfUnguilded(current) then
+          if queueFromScan(current) then
             addedQueue = addedQueue + 1
           end
         end
@@ -340,7 +347,7 @@ local function processWhoResults(completedQuery)
 
   if addedPlayers > 0 or addedQueue > 0 then
     ns.DB_Log("SCAN", ("Trouves: +%d | Ajoutes en file: +%d | Total liste: %d"):format(
-      addedPlayers, addedQueue, countMapKeys(Scanner.results)
+      addedPlayers, addedQueue, Scanner.resultCount
     ))
     if ns.sessionStats then
       ns.sessionStats.playersFound = ns.sessionStats.playersFound + addedPlayers
@@ -362,6 +369,15 @@ local function finishScan(logLine)
   if logLine then
     ns.DB_Log("SCAN", logLine)
   end
+
+  -- Discord notification
+  if ns.DiscordQueue and ns.DiscordQueue.NotifyScannerComplete then
+    ns.DiscordQueue:NotifyScannerComplete({
+      found = Scanner.resultCount or 0,
+      queries = Scanner.querySent or 0,
+    })
+  end
+
   ns.UI_Refresh()
 end
 
@@ -375,7 +391,7 @@ local function sendNextQuery()
 
   local query = table.remove(Scanner.queries, 1)
   if not query then
-    finishScan(("Scan termine: %d joueurs uniques"):format(countMapKeys(Scanner.results)))
+    finishScan(("Scan termine: %d joueurs uniques"):format(Scanner.resultCount))
     return false, "scan complete"
   end
 
@@ -389,12 +405,23 @@ local function sendNextQuery()
   Scanner.currentQuery = query
   Scanner.querySent = Scanner.querySent + 1
 
+  -- Cache parsed class/level info (avoid regex in Scanner_GetStats every tick)
+  local cn = query:match('c%-"([^"]+)"')
+  Scanner._statsClassName = cn or ""
+  Scanner._statsLevelRange = query:match("(%d+%-%d+)") or ""
+  Scanner._statsClassFile = nil
+  if cn then
+    local src = LOCALIZED_CLASS_NAMES_MALE or {}
+    for cf, name in pairs(src) do
+      if name == cn then Scanner._statsClassFile = cf; break end
+    end
+  end
+
   if not ((C_FriendList and C_FriendList.SendWho) or SendWho) then
     Scanner.awaiting = false
     Scanner.currentQuery = nil
     table.insert(Scanner.queries, 1, query)
     ns.DB_Log("ERR", "API /who indisponible sur ce client")
-    ns.UI_Refresh()
     return false, "who api unavailable"
   end
 
@@ -404,7 +431,6 @@ local function sendNextQuery()
     Scanner.currentQuery = nil
     table.insert(Scanner.queries, 1, query)
     ns.DB_Log("ERR", "SendWho bloque pour la requete: " .. tostring(query))
-    ns.UI_Refresh()
     return false, "SendWho blocked (needs hardware click)"
   end
 
@@ -451,7 +477,7 @@ scheduleAutoReady = function()
     Scanner.autoScanTimer = nil
     if not isAutoScanEnabled() then return end
     Scanner.autoReady = true
-    ns.UI_Refresh()
+    -- Ticker refreshes UI every 0.5s, no explicit refresh needed
   end)
 end
 
@@ -462,7 +488,7 @@ scheduleAutoScanCycleRestart = function()
 
   local delaySeconds = autoScanDelay()
   ns.DB_Log("SCAN", ("Cycle %d termine (%d joueurs). Prochain cycle dans %d min"):format(
-    Scanner.autoScanCycles, countMapKeys(Scanner.results), math.floor(delaySeconds / 60)
+    Scanner.autoScanCycles, Scanner.resultCount, math.floor(delaySeconds / 60)
   ))
 
   Scanner.active = false
@@ -508,7 +534,6 @@ local function autoScanTrigger()
   if Scanner.active then
     scheduleAutoReady()
   end
-  ns.UI_Refresh()
 end
 
 -- 1) WorldFrame OnMouseDown: game-world clicks trigger WHO queries
@@ -569,7 +594,7 @@ function ns.Scanner_Init()
       if isAutoScanEnabled() then
         scheduleAutoScanCycleRestart()
       else
-        finishScan(("Scan termine: %d joueurs uniques"):format(countMapKeys(Scanner.results)))
+        finishScan(("Scan termine: %d joueurs uniques"):format(Scanner.resultCount))
       end
       return
     end
@@ -582,39 +607,31 @@ function ns.Scanner_Init()
   end)
 end
 
+-- Reusable stats table (avoids creating a new table every 0.5s)
+local _statsTable = {}
+
 function ns.Scanner_GetStats()
-  local className, classFile, levelRange
-  if Scanner.currentQuery then
-    className = Scanner.currentQuery:match('c%-"([^"]+)"')
-    levelRange = Scanner.currentQuery:match("(%d+%-%d+)")
-    if className then
-      local src = LOCALIZED_CLASS_NAMES_MALE or {}
-      for cf, name in pairs(src) do
-        if name == className then classFile = cf; break end
-      end
-    end
-  end
-  return {
-    scanning = Scanner.active,
-    awaiting = Scanner.awaiting,
-    currentQuery = Scanner.currentQuery or "",
-    currentClassName = className or "",
-    currentClassFile = classFile or "",
-    currentLevelRange = levelRange or "",
-    pendingQueries = #Scanner.queries,
-    querySent = Scanner.querySent,
-    totalQueries = Scanner.totalQueries,
-    totalWhoRows = Scanner.totalWhoRows,
-    listedPlayers = countMapKeys(Scanner.results),
-    cappedQueries = Scanner.cappedQueries,
-    lastResultAt = Scanner.lastResultAt,
-    cooldownRemaining = cooldownRemaining(),
-    autoScanEnabled = isAutoScanEnabled(),
-    autoScanCycles = Scanner.autoScanCycles,
-    autoScanReady = Scanner.autoReady,
-    autoScanWaiting = Scanner.autoScanTimer ~= nil and not Scanner.active,
-    autoScanDelayMinutes = ns.Util_ToNumber(ns.db.profile.scanAutoDelayMinutes, 5, 1, 60),
-  }
+  local st = _statsTable
+  st.scanning = Scanner.active
+  st.awaiting = Scanner.awaiting
+  st.currentQuery = Scanner.currentQuery or ""
+  st.currentClassName = Scanner._statsClassName or ""
+  st.currentClassFile = Scanner._statsClassFile or ""
+  st.currentLevelRange = Scanner._statsLevelRange or ""
+  st.pendingQueries = #Scanner.queries
+  st.querySent = Scanner.querySent
+  st.totalQueries = Scanner.totalQueries
+  st.totalWhoRows = Scanner.totalWhoRows
+  st.listedPlayers = Scanner.resultCount
+  st.cappedQueries = Scanner.cappedQueries
+  st.lastResultAt = Scanner.lastResultAt
+  st.cooldownRemaining = cooldownRemaining()
+  st.autoScanEnabled = isAutoScanEnabled()
+  st.autoScanCycles = Scanner.autoScanCycles
+  st.autoScanReady = Scanner.autoReady
+  st.autoScanWaiting = Scanner.autoScanTimer ~= nil and not Scanner.active
+  st.autoScanDelayMinutes = ns.Util_ToNumber(ns.db.profile.scanAutoDelayMinutes, 5, 1, 60)
+  return st
 end
 
 function ns.Scanner_GetRows()
@@ -635,6 +652,7 @@ end
 function ns.Scanner_ScanStep(clearCurrentList)
   if clearCurrentList then
     Scanner.results = {}
+    Scanner.resultCount = 0
     Scanner.active = false
     Scanner.awaiting = false
     Scanner.currentQuery = nil
@@ -649,6 +667,7 @@ function ns.Scanner_ScanStep(clearCurrentList)
     end
 
     Scanner.results = {}
+    Scanner.resultCount = 0
     Scanner._dirty = true
     Scanner._cachedRows = nil
     Scanner.queries = queries
@@ -665,6 +684,12 @@ function ns.Scanner_ScanStep(clearCurrentList)
 
     ns.DB_Log("SCAN", ("Demarrage scan: %d requetes WHO"):format(#queries))
     if ns.sessionStats then ns.sessionStats.scansStarted = ns.sessionStats.scansStarted + 1 end
+
+    -- Discord notification
+    if ns.DiscordQueue and ns.DiscordQueue.NotifyScannerStarted then
+      local levelRange = ns.db.profile.scanLevelMin .. "-" .. ns.db.profile.scanLevelMax
+      ns.DiscordQueue:NotifyScannerStarted(levelRange)
+    end
 
     -- Record statistics
     if ns.Statistics and ns.Statistics.RecordEvent then
@@ -705,6 +730,7 @@ function ns.Scanner_Clear()
   Scanner.autoScanCycles = 0
   Scanner.autoReady = false
   Scanner.results = {}
+  Scanner.resultCount = 0
   Scanner._dirty = true
   Scanner._cachedRows = nil
   Scanner.totalQueries = 0
@@ -758,7 +784,7 @@ function ns.Scanner_ImportCurrentWho()
         local isNew, current = mergeRecord(rec)
         if isNew and not rec.skipReason then
           addedPlayers = addedPlayers + 1
-          if queueIfUnguilded(current) then
+          if queueFromScan(current) then
             addedQueue = addedQueue + 1
           end
         end

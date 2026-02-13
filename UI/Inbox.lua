@@ -11,6 +11,7 @@ local function getRep() return ns.Reputation end
 local ib = {}         -- module state
 local ROW_MAIN  = 44  -- main row height (name + preview)
 local ROW_REPLY = 28  -- inline reply editbox height
+local ROW_CONVO = 180 -- conversation history panel height
 local PREVIEW_CHARS = 60
 
 ---------------------------------------------------------------------------
@@ -51,7 +52,7 @@ end
 local function statusDot(status)
     local r, g, b = W.statusDotColor(status)
     local hex = string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
-    return string.format("|cff%s\226\151\143|r", hex) -- Unicode bullet
+    return string.format("|cff%so|r", hex)
 end
 
 local function classColoredName(key, classFile)
@@ -63,6 +64,28 @@ end
 
 local function agoFr(ts)
     return ns.Util_FormatAgo(ts)
+end
+
+local function fillConversation(convoScroll, key)
+    convoScroll:Clear()
+    local msgs = ns.DB_GetMessages(key)
+    if #msgs == 0 then
+        convoScroll:AddMessage("|cff888888Aucun historique enregistre.|r")
+        return
+    end
+    for _, m in ipairs(msgs) do
+        local ago = agoFr(m.t)
+        local line
+        if m.d == "out" then
+            local hex = string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255)
+            line = string.format("|cff%s[%s] Vous :|r %s", hex, ago, m.m)
+        else
+            local hex = string.format("%02x%02x%02x", C.green[1] * 255, C.green[2] * 255, C.green[3] * 255)
+            line = string.format("|cff%s[%s] Eux :|r %s", hex, ago, m.m)
+        end
+        convoScroll:AddMessage(line)
+    end
+    convoScroll:ScrollToBottom()
 end
 
 ---------------------------------------------------------------------------
@@ -279,13 +302,40 @@ local function MakeInboxRow(parent, i)
     W.AddRowGlow(row)
 
     -----------------------------------------------------------------------
-    -- Inline reply EditBox (hidden by default, shown below main row)
+    -- Conversation panel (hidden by default, shown below main row)
     -----------------------------------------------------------------------
-    row.replyFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    row.convoFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    row.convoFrame:SetHeight(ROW_CONVO)
+    row.convoFrame:SetBackdrop({ bgFile = W.SOLID, edgeFile = W.EDGE,
+        edgeSize = 8, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
+    row.convoFrame:SetBackdropColor(0.04, 0.05, 0.10, 0.95)
+    row.convoFrame:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.3)
+    row.convoFrame:Hide()
+
+    -- Scrolling message frame for conversation history
+    row.convoScroll = CreateFrame("ScrollingMessageFrame", nil, row.convoFrame)
+    row.convoScroll:SetPoint("TOPLEFT", 8, -6)
+    row.convoScroll:SetPoint("BOTTOMRIGHT", -8, ROW_REPLY + 4)
+    row.convoScroll:SetFontObject(GameFontHighlightSmall)
+    row.convoScroll:SetJustifyH("LEFT")
+    row.convoScroll:SetFading(false)
+    row.convoScroll:SetMaxLines(200)
+    row.convoScroll:SetInsertMode("BOTTOM")
+    row.convoScroll:EnableMouseWheel(true)
+    row.convoScroll:SetHyperlinksEnabled(false)
+    row.convoScroll:SetScript("OnMouseWheel", function(self, delta)
+        if delta > 0 then
+            self:ScrollUp()
+        else
+            self:ScrollDown()
+        end
+    end)
+
+    -- Reply editbox at the bottom of the convo frame
+    row.replyFrame = CreateFrame("Frame", nil, row.convoFrame)
     row.replyFrame:SetHeight(ROW_REPLY)
-    row.replyFrame:SetBackdrop({ bgFile = W.SOLID })
-    row.replyFrame:SetBackdropColor(0.06, 0.08, 0.14, 0.95)
-    row.replyFrame:Hide()
+    row.replyFrame:SetPoint("BOTTOMLEFT", 0, 0)
+    row.replyFrame:SetPoint("BOTTOMRIGHT", 0, 0)
 
     row.replyEB = CreateFrame("EditBox", nil, row.replyFrame, "BackdropTemplate")
     row.replyEB:SetPoint("TOPLEFT", 8, -3)
@@ -300,7 +350,7 @@ local function MakeInboxRow(parent, i)
     row.replyEB:SetTextInsets(6, 6, 0, 0)
     row.replyEB:SetAutoFocus(false)
 
-    -- Send button inside reply frame
+    -- Send button inside reply area
     row.sendBtn = W.MakeBtn(row.replyFrame, "Envoyer", 66, "p", nil)
     row.sendBtn:SetPoint("RIGHT", -6, 0)
 
@@ -331,6 +381,7 @@ function ns.UI_BuildInbox(parent)
         ns.UI_RefreshInbox()
     end)
     ib.sortDD:SetPoint("LEFT", 0, 0)
+    W.AddTooltip(ib.sortDD, "Tri", "Changer l'ordre d'affichage des contacts.")
 
     -- "Hot leads" toggle checkbox
     ib.hotCheck = W.MakeCheck(bar, "Prioritaires uniquement", function() return ib.hotOnly end, function(v)
@@ -338,6 +389,7 @@ function ns.UI_BuildInbox(parent)
         ns.UI_RefreshInbox()
     end)
     ib.hotCheck:SetPoint("LEFT", ib.sortDD, "RIGHT", 14, 0)
+    W.AddTooltip(ib.hotCheck, "Prioritaires", "N'afficher que les contacts avec un score >= 70.")
 
     -- "Filtres" button + active filter badge
     ib.filterBtn = W.MakeBtn(bar, "Filtres", 70, "n", function()
@@ -350,6 +402,7 @@ function ns.UI_BuildInbox(parent)
         end
     end)
     ib.filterBtn:SetPoint("LEFT", ib.hotCheck.label, "RIGHT", 14, 0)
+    W.AddTooltip(ib.filterBtn, "Filtres", "Affiche ou masque le panneau de filtres avances.")
 
     ib.filterBadge = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ib.filterBadge:SetPoint("LEFT", ib.filterBtn, "RIGHT", 3, 0)
@@ -453,24 +506,30 @@ local function BindRow(row, key, c, score, now, tplItems)
     end
 
     -----------------------------------------------------------------------
-    -- Preview (last message received) -- we show source/flags as stand-in
+    -- Preview: show last message text, or fallback to metadata
     -----------------------------------------------------------------------
-    local previewParts = {}
-    if c.optedIn then previewParts[#previewParts + 1] = "|cff33e07a[opt-in]|r" end
-    if c.source and c.source ~= "" then previewParts[#previewParts + 1] = c.source end
-    if ignored then previewParts[#previewParts + 1] = "|cffffb347[ignore]|r" end
-    if (c.lastWhisperOut or 0) > 0 then
-        previewParts[#previewParts + 1] = "envoye: " .. agoFr(c.lastWhisperOut)
+    local msgs = ns.DB_GetMessages(key)
+    local lastMsg = msgs[#msgs]
+    local previewStr
+    if lastMsg then
+        local prefix = lastMsg.d == "out" and "Vous: " or "Eux: "
+        previewStr = prefix .. lastMsg.m
+    else
+        local previewParts = {}
+        if c.optedIn then previewParts[#previewParts + 1] = "|cff33e07a[opt-in]|r" end
+        if c.source and c.source ~= "" then previewParts[#previewParts + 1] = c.source end
+        if ignored then previewParts[#previewParts + 1] = "|cffffb347[ignore]|r" end
+        if (c.lastWhisperOut or 0) > 0 then
+            previewParts[#previewParts + 1] = "envoye: " .. agoFr(c.lastWhisperOut)
+        end
+        previewStr = table.concat(previewParts, "  ")
     end
-    if c.lastTemplate and c.lastTemplate ~= "" then
-        previewParts[#previewParts + 1] = "(tpl: " .. tostring(c.lastTemplate) .. ")"
-    end
-    local previewStr = table.concat(previewParts, "  ")
     row.preview:SetText(truncate(previewStr, PREVIEW_CHARS))
 
     -----------------------------------------------------------------------
     -- Button labels
     -----------------------------------------------------------------------
+    row.replyBtn:SetLabel(ib.activeReply == key and "Fermer" or "Repondre")
     row.ignBtn:SetLabel(ignored and "Restaurer" or "Ignorer 7j")
 
     -----------------------------------------------------------------------
@@ -501,17 +560,16 @@ local function BindRow(row, key, c, score, now, tplItems)
             ns.Queue_Recruit(key, tplId)
         end)
 
-        -- Repondre toggle
+        -- Repondre toggle (shows conversation history)
         row.replyBtn:SetScript("OnClick", function()
             if ib.activeReply == key then
-                -- Hide reply
-                row.replyFrame:Hide()
+                row.convoFrame:Hide()
                 ib.activeReply = nil
                 ns.UI_RefreshInbox()
             else
-                -- Close any other open reply
                 ib.activeReply = key
                 ns.UI_RefreshInbox()
+                fillConversation(row.convoScroll, key)
                 row.replyEB:SetText("")
                 row.replyEB:SetFocus()
             end
@@ -531,21 +589,21 @@ local function BindRow(row, key, c, score, now, tplItems)
                 end
             end
             s:SetText("")
-            s:ClearFocus()
-            row.replyFrame:Hide()
-            ib.activeReply = nil
-            ns.UI_RefreshInbox()
+            -- Refresh conversation in-place (don't close panel)
+            C_Timer.After(0.1, function()
+                fillConversation(row.convoScroll, key)
+            end)
         end)
 
         row.replyEB:SetScript("OnEscapePressed", function(s)
             s:SetText("")
             s:ClearFocus()
-            row.replyFrame:Hide()
+            row.convoFrame:Hide()
             ib.activeReply = nil
             ns.UI_RefreshInbox()
         end)
 
-        -- Send button inside reply frame
+        -- Send button inside reply area
         row.sendBtn:SetScript("OnClick", function()
             local msg = row.replyEB:GetText()
             if msg and msg ~= "" then
@@ -559,10 +617,10 @@ local function BindRow(row, key, c, score, now, tplItems)
                 end
             end
             row.replyEB:SetText("")
-            row.replyEB:ClearFocus()
-            row.replyFrame:Hide()
-            ib.activeReply = nil
-            ns.UI_RefreshInbox()
+            -- Refresh conversation in-place
+            C_Timer.After(0.1, function()
+                fillConversation(row.convoScroll, key)
+            end)
         end)
     end
 
@@ -648,10 +706,10 @@ function ns.UI_RefreshInbox()
     local rows   = scroll.rows
 
     if #filtered == 0 then
-        scroll:ShowEmpty("|cffFFD700*|r", "Aucun message recu. Les reponses a tes messages apparaitront ici.")
+        scroll:ShowEmpty("|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t", "Aucun message recu. Les reponses a tes messages apparaitront ici.")
         for _, r in ipairs(rows) do
             r:Hide()
-            if r.replyFrame then r.replyFrame:Hide() end
+            if r.convoFrame then r.convoFrame:Hide() end
         end
         scroll:SetH(scroll.sf:GetHeight())
         return
@@ -677,22 +735,23 @@ function ns.UI_RefreshInbox()
         -- Bind data to row
         BindRow(row, key, c, score, now, tplItems)
 
-        -- Inline reply frame positioning
+        -- Conversation panel positioning
         if ib.activeReply == key then
-            row.replyFrame:ClearAllPoints()
-            row.replyFrame:SetPoint("TOPLEFT", scroll.child, "TOPLEFT", 0, -yOff)
-            row.replyFrame:SetPoint("RIGHT", scroll.child, "RIGHT")
-            row.replyFrame:Show()
-            yOff = yOff + ROW_REPLY
+            row.convoFrame:ClearAllPoints()
+            row.convoFrame:SetPoint("TOPLEFT", scroll.child, "TOPLEFT", 0, -yOff)
+            row.convoFrame:SetPoint("RIGHT", scroll.child, "RIGHT")
+            row.convoFrame:Show()
+            fillConversation(row.convoScroll, key)
+            yOff = yOff + ROW_CONVO
         else
-            row.replyFrame:Hide()
+            row.convoFrame:Hide()
         end
     end
 
     -- Hide unused rows
     for i = #filtered + 1, #rows do
         rows[i]:Hide()
-        if rows[i].replyFrame then rows[i].replyFrame:Hide() end
+        if rows[i].convoFrame then rows[i].convoFrame:Hide() end
     end
 
     scroll:SetH(yOff)

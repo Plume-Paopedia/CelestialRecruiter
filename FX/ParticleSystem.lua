@@ -426,7 +426,7 @@ function PS:PlayRecruitJoinedEffect(frame)
         C_Timer.After(randf(0, 0.4), function()
             if not frame:IsVisible() then return end
             local fs = acquireText(poolParent)
-            fs:SetText("\226\152\133")  -- UTF-8 for the star symbol
+            fs:SetText("*")
             fs:SetTextColor(COLOR_GOLD[1], COLOR_GOLD[2], COLOR_GOLD[3], 1)
             local startX = randf(-80, 80)
             local startY = randf(-30, 30)
@@ -781,7 +781,7 @@ function PS:PlayAchievementEffect(frame)
         C_Timer.After(randf(0, 0.3), function()
             if not frame:IsVisible() then return end
             local fs = acquireText(poolParent)
-            fs:SetText("\226\152\133")  -- star symbol
+            fs:SetText("*")
             local col = (math_random() > 0.5) and COLOR_PURPLE or COLOR_GOLD
             fs:SetTextColor(col[1], col[2], col[3], 1)
             local startX = randf(-60, 60)
@@ -818,6 +818,62 @@ function PS:PlayAchievementEffect(frame)
         PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_APPEARANCE_APPEARANCE_CHANGE)
     else
         PlaySound(888) -- level-up fallback
+    end
+end
+
+---------------------------------------------------------------------------
+-- ========================  EFFECT 6  ========================
+-- PlayScannerAmbientEffect(anchorFrame)
+-- Subtle blue particles drifting upward near the progress bar
+-- during active scanning. Call with throttle (max 1/2s).
+---------------------------------------------------------------------------
+function PS:PlayScannerAmbientEffect(frame)
+    if not frame then return end
+    local w = frame:GetWidth()
+    for i = 1, math_random(3, 5) do
+        spawnParticle(frame, {
+            x        = randf(-w * 0.4, w * 0.4),
+            y        = randf(-5, 5),
+            vx       = randf(-5, 5),
+            vy       = randf(15, 35),
+            gravity  = 0,
+            maxLife  = randf(1.5, 2.5),
+            size     = randf(1, 3),
+            r        = COLOR_ACCENT[1],
+            g        = COLOR_ACCENT[2],
+            b        = COLOR_ACCENT[3],
+            a        = 0.3,
+            rotation = 0,
+            rotSpeed = 0,
+        })
+    end
+end
+
+---------------------------------------------------------------------------
+-- ========================  EFFECT 7  ========================
+-- PlayNewContactEffect(anchorFrame)
+-- Short green burst when a new contact arrives in the inbox.
+---------------------------------------------------------------------------
+function PS:PlayNewContactEffect(frame)
+    if not frame then return end
+    for i = 1, math_random(6, 8) do
+        local angle = (i / 7) * TWO_PI + randf(-0.3, 0.3)
+        local speed = randf(40, 80)
+        spawnParticle(frame, {
+            x        = 0,
+            y        = 0,
+            vx       = math_cos(angle) * speed,
+            vy       = math_sin(angle) * speed,
+            gravity  = 0,
+            maxLife  = randf(0.3, 0.5),
+            size     = randf(2, 4),
+            r        = COLOR_GREEN[1],
+            g        = COLOR_GREEN[2],
+            b        = COLOR_GREEN[3],
+            a        = 0.8,
+            rotation = angle,
+            rotSpeed = 0,
+        })
     end
 end
 

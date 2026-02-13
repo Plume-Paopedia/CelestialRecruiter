@@ -21,6 +21,9 @@ function CR:OnInitialize()
   if ns.Discord and ns.Discord.Init then
     ns.Discord:Init()
   end
+  if ns.DiscordQueue and ns.DiscordQueue.Init then
+    ns.DiscordQueue:Init()
+  end
   if ns.ABTesting and ns.ABTesting.Init then
     ns.ABTesting:Init()
   end
@@ -32,6 +35,9 @@ function CR:OnInitialize()
   end
   if ns.Leaderboard and ns.Leaderboard.Init then
     ns.Leaderboard:Init()
+    if ns.Leaderboard.InitGuildSync then
+      ns.Leaderboard:InitGuildSync()
+    end
   end
   if ns.SmartSuggestions and ns.SmartSuggestions.Init then
     ns.SmartSuggestions:Init()
@@ -110,9 +116,14 @@ function CR:OnEnable()
       ns.ParticleSystem:PlayRecruitJoinedEffect(ns.UI.mainFrame)
     end
 
-    -- Notify Discord
+    -- Notify Discord (legacy)
     if ns.Discord and ns.Discord.NotifyRecruitJoined then
       ns.Discord:NotifyRecruitJoined(key, c)
+    end
+
+    -- Notify Discord Queue (new webhook system)
+    if ns.DiscordQueue and ns.DiscordQueue.NotifyPlayerJoined then
+      ns.DiscordQueue:NotifyPlayerJoined(key)
     end
 
     -- Record A/B Testing outcome
@@ -160,16 +171,103 @@ function CR:OnEnable()
   table.insert(joinPatterns, "(.+) a rejoint la guilde")
   table.insert(joinPatterns, "(.+) has joined the guild")
 
+  -- Guild leave patterns
+  local leavePatterns = {}
+  if ERR_GUILD_LEAVE_S then
+    local pat = ERR_GUILD_LEAVE_S:gsub("%%s", "(.+)")
+    pat = pat:gsub("%.", "%%.")
+    table.insert(leavePatterns, pat)
+  end
+  table.insert(leavePatterns, "(.+) a quitte la guilde")
+  table.insert(leavePatterns, "(.+) has left the guild")
+
+  -- Guild promote/demote patterns
+  local promotePatterns = {}
+  if ERR_GUILD_PROMOTE_SSS then
+    local pat = ERR_GUILD_PROMOTE_SSS:gsub("%%s", "(.+)")
+    pat = pat:gsub("%.", "%%.")
+    table.insert(promotePatterns, pat)
+  end
+  table.insert(promotePatterns, "(.+) a ete promu (.+) par (.+)")
+  table.insert(promotePatterns, "(.+) has been promoted to (.+) by (.+)")
+
+  local demotePatterns = {}
+  if ERR_GUILD_DEMOTE_SSS then
+    local pat = ERR_GUILD_DEMOTE_SSS:gsub("%%s", "(.+)")
+    pat = pat:gsub("%.", "%%.")
+    table.insert(demotePatterns, pat)
+  end
+  table.insert(demotePatterns, "(.+) a ete retrograde (.+) par (.+)")
+  table.insert(demotePatterns, "(.+) has been demoted to (.+) by (.+)")
+
   CR:RegisterEvent("CHAT_MSG_SYSTEM", function(_, msg)
     if not msg then return end
+
+    -- Check guild join
     local joined
     for _, pat in ipairs(joinPatterns) do
       joined = msg:match(pat)
       if joined then break end
     end
-    if not joined then return end
-    local key = ns.Util_EnsurePlayerRealm(ns.Util_Key(joined))
-    onRecruitJoined(key)
+    if joined then
+      local key = ns.Util_EnsurePlayerRealm(ns.Util_Key(joined))
+      -- Notify Discord for ALL guild joins (not just recruited contacts)
+      if key and ns.DiscordQueue and ns.DiscordQueue.NotifyGuildJoin then
+        ns.DiscordQueue:NotifyGuildJoin(key)
+        -- Auto-flush: reload UI to send Discord notification immediately
+        if ns.DiscordQueue.ScheduleAutoFlush then
+          ns.DiscordQueue:ScheduleAutoFlush()
+        end
+      end
+      onRecruitJoined(key)
+      return
+    end
+
+    -- Check guild leave
+    for _, pat in ipairs(leavePatterns) do
+      local left = msg:match(pat)
+      if left then
+        local key = ns.Util_EnsurePlayerRealm(ns.Util_Key(left))
+        if key and ns.DiscordQueue and ns.DiscordQueue.NotifyGuildLeave then
+          ns.DiscordQueue:NotifyGuildLeave(key)
+          -- Auto-flush: reload UI to send Discord notification immediately
+          if ns.DiscordQueue.ScheduleAutoFlush then
+            ns.DiscordQueue:ScheduleAutoFlush()
+          end
+        end
+        return
+      end
+    end
+
+    -- Check guild promote
+    for _, pat in ipairs(promotePatterns) do
+      local player, rank = msg:match(pat)
+      if player then
+        local key = ns.Util_EnsurePlayerRealm(ns.Util_Key(player))
+        if key and ns.DiscordQueue and ns.DiscordQueue.QueueEvent then
+          ns.DiscordQueue:QueueEvent("guild_promote", {
+            description = string.format("**%s** a ete promu **%s**", key, rank or "?"),
+            fields = { { name = "Nouveau rang", value = rank or "?", inline = true } }
+          })
+        end
+        return
+      end
+    end
+
+    -- Check guild demote
+    for _, pat in ipairs(demotePatterns) do
+      local player, rank = msg:match(pat)
+      if player then
+        local key = ns.Util_EnsurePlayerRealm(ns.Util_Key(player))
+        if key and ns.DiscordQueue and ns.DiscordQueue.QueueEvent then
+          ns.DiscordQueue:QueueEvent("guild_demote", {
+            description = string.format("**%s** a ete retrograde **%s**", key, rank or "?"),
+            fields = { { name = "Nouveau rang", value = rank or "?", inline = true } }
+          })
+        end
+        return
+      end
+    end
   end)
 
   -- Method 2: CLUB_MEMBER_ADDED - Communities API (modern WoW retail)
@@ -256,8 +354,26 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
     return
   end
 
+  if msg == "flush" then
+    local count = 0
+    if ns.db and ns.db.global and ns.db.global.discordQueue then
+      count = #ns.db.global.discordQueue
+    end
+    if count > 0 then
+      ns.Util_Print("Envoi de " .. count .. " notifications Discord... (reload en cours)")
+    else
+      ns.Util_Print("Aucune notification Discord en attente.")
+      return
+    end
+    C_Timer.After(0.1, function()
+      ReloadUI()
+    end)
+    return
+  end
+
   if msg == "help" then
-    ns.Util_Print("Commandes: /cr, /cr reset, /cr help")
+    ns.Util_Print("Commandes: /cr, /cr reset, /cr flush, /cr help")
+    ns.Util_Print("/cr flush : Envoie les notifications Discord en attente (reload)")
     ns.Util_Print("Scanner: bouton Scan (avec cooldown), import /who, joueurs sans guilde ajoutes en file.")
     return
   end

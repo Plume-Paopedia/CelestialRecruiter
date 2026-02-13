@@ -151,8 +151,12 @@ end
 
 function AR:CanProcessContact(key, contact)
     -- Check skip conditions
+    -- Only skip guilded contacts for pure "invite" mode (invite would fail).
+    -- For "whisper" and "recruit" modes, guilded players still receive the message.
     if self.rules.skipConditions.skipGuilded and contact.guild and contact.guild ~= "" then
-        return false, "guilded"
+        if self.rules.mode == "invite" then
+            return false, "guilded"
+        end
     end
 
     if self.rules.skipConditions.skipContacted and contact.status == "contacted" then
@@ -399,6 +403,11 @@ function AR:Stop()
 
     if ns.Notifications_Info then
         ns.Notifications_Info("Auto-recrutement arrêté", summary)
+    end
+
+    -- Discord notification
+    if ns.DiscordQueue and ns.DiscordQueue.NotifyAutoRecruiterComplete then
+      ns.DiscordQueue:NotifyAutoRecruiterComplete(self.stats)
     end
 
     ns.UI_Refresh()

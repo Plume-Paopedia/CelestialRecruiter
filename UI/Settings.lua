@@ -136,36 +136,43 @@ function ns.UI_BuildSettings(parent)
         function() return p().cooldownWhisper end,
         function(v) p().cooldownWhisper = v end, 180, 0, 86400)
     cdWhisper:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(cdWhisper, "Cooldown message", "Delai minimum (secondes) entre deux messages au meme joueur.")
 
     local cdInvite = W.MakeNumInput(ch, "Cooldown invitation (s)", 145,
         function() return p().cooldownInvite end,
         function(v) p().cooldownInvite = v end, 300, 0, 86400)
     cdInvite:SetPoint("LEFT", cdWhisper, "RIGHT", 12, 0)
+    W.AddTooltip(cdInvite, "Cooldown invitation", "Delai minimum (secondes) entre deux invitations au meme joueur.")
 
     local maxApm = W.MakeNumInput(ch, "Max actions/min", 145,
         function() return p().maxActionsPerMinute end,
         function(v) p().maxActionsPerMinute = v end, 8, 1, 120)
     maxApm:SetPoint("LEFT", cdInvite, "RIGHT", 12, 0)
+    W.AddTooltip(maxApm, "Max actions/min", "Nombre maximum d'actions (messages + invites) par minute.")
 
     local maxWph = W.MakeNumInput(ch, "Max messages/h", 145,
         function() return p().maxWhispersPerHour end,
         function(v) p().maxWhispersPerHour = v end, 20, 1, 500)
     maxWph:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(maxWph, "Max messages/h", "Nombre maximum de messages envoyes par heure.")
 
     local maxIph = W.MakeNumInput(ch, "Max invites/h", 145,
         function() return p().maxInvitesPerHour end,
         function(v) p().maxInvitesPerHour = v end, 10, 1, 200)
     maxIph:SetPoint("LEFT", maxWph, "RIGHT", 12, 0)
+    W.AddTooltip(maxIph, "Max invites/h", "Nombre maximum d'invitations de guilde envoyees par heure.")
 
     local afkHold = W.MakeNumInput(ch, "Pause AFK/DND (s)", 145,
         function() return p().afkDndHoldSeconds end,
         function(v) p().afkDndHoldSeconds = v end, 900, 0, 86400)
     afkHold:SetPoint("LEFT", maxIph, "RIGHT", 12, 0)
+    W.AddTooltip(afkHold, "Pause AFK/DND", "Duree (secondes) pendant laquelle ignorer un joueur AFK ou DND.")
 
     local logLim = W.MakeNumInput(ch, "Limite logs", 145,
         function() return p().logLimit end,
         function(v) p().logLimit = v end, 300, 50, 1000)
     logLim:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(logLim, "Limite logs", "Nombre maximum de lignes dans le journal (50-1000).")
 
     ---------------------------------------------------------------------------
     -- Section: Scanner
@@ -179,26 +186,31 @@ function ns.UI_BuildSettings(parent)
         function() return p().scanLevelMin end,
         function(v) p().scanLevelMin = v end, 10, 1, 80)
     lvlMin:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(lvlMin, "Niveau min", "Niveau minimum des joueurs a scanner (1-80).")
 
     local lvlMax = W.MakeNumInput(ch, "Niveau max", 120,
         function() return p().scanLevelMax end,
         function(v) p().scanLevelMax = v end, 80, 1, 80)
     lvlMax:SetPoint("LEFT", lvlMin, "RIGHT", 12, 0)
+    W.AddTooltip(lvlMax, "Niveau max", "Niveau maximum des joueurs a scanner (1-80).")
 
     local lvlSlice = W.MakeNumInput(ch, "Tranche niveau", 120,
         function() return p().scanLevelSlice end,
         function(v) p().scanLevelSlice = v end, 10, 1, 40)
     lvlSlice:SetPoint("LEFT", lvlMax, "RIGHT", 12, 0)
+    W.AddTooltip(lvlSlice, "Tranche niveau", "Nombre de niveaux par requete /who (1-40).")
 
     local whoDelay = W.MakeNumInput(ch, "Delai WHO (s)", 120,
         function() return p().scanWhoDelaySeconds end,
         function(v) p().scanWhoDelaySeconds = v end, 6, 3, 30)
     whoDelay:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(whoDelay, "Delai WHO", "Secondes d'attente entre chaque requete /who (3-30).")
 
     local whoTimeout = W.MakeNumInput(ch, "Timeout WHO (s)", 120,
         function() return p().scanWhoTimeoutSeconds end,
         function(v) p().scanWhoTimeoutSeconds = v end, 8, 3, 30)
     whoTimeout:SetPoint("LEFT", whoDelay, "RIGHT", 12, 0)
+    W.AddTooltip(whoTimeout, "Timeout WHO", "Duree max d'attente d'une reponse /who avant timeout (3-30).")
 
     ---------------------------------------------------------------------------
     -- Section: Options
@@ -211,37 +223,49 @@ function ns.UI_BuildSettings(parent)
     local checks = {
         {"Exiger opt-in par mot cle",
             function() return p().inviteKeywordOnly end,
-            function(v) p().inviteKeywordOnly = v end},
+            function(v) p().inviteKeywordOnly = v end,
+            "Seuls les joueurs ayant envoye le mot cle seront invites."},
         {"Inviter depuis scanner sans opt-in",
             function() return p().scannerBypassOptIn end,
-            function(v) p().scannerBypassOptIn = v end},
+            function(v) p().scannerBypassOptIn = v end,
+            "Permet d'inviter les joueurs trouves par scan meme sans opt-in."},
         {"Respecter AFK",
             function() return p().respectAFK end,
-            function(v) p().respectAFK = v end},
+            function(v) p().respectAFK = v end,
+            "Ne pas contacter les joueurs AFK pendant la duree configuree."},
         {"Respecter DND",
             function() return p().respectDND end,
-            function(v) p().respectDND = v end},
+            function(v) p().respectDND = v end,
+            "Ne pas contacter les joueurs DND pendant la duree configuree."},
         {"Bloquer en instance",
             function() return p().blockInInstance end,
-            function(v) p().blockInInstance = v end},
+            function(v) p().blockInInstance = v end,
+            "Ne pas recruter quand vous etes en instance."},
         {"Scanner inclut joueurs en guilde",
             function() return p().scanIncludeGuilded end,
-            function(v) p().scanIncludeGuilded = v end},
+            function(v) p().scanIncludeGuilded = v end,
+            "Inclure les joueurs deja dans une guilde dans les resultats."},
         {"Scanner inclut cross-realm",
             function() return p().scanIncludeCrossRealm end,
-            function(v) p().scanIncludeCrossRealm = v end},
+            function(v) p().scanIncludeCrossRealm = v end,
+            "Inclure les joueurs d'autres royaumes dans les resultats."},
         {"Scanner par classe (plus lent)",
             function() return p().scanUseClassFilters end,
-            function(v) p().scanUseClassFilters = v end},
+            function(v) p().scanUseClassFilters = v end,
+            "Genere une requete separee par classe pour plus de resultats. Plus lent."},
         {"Bouton minimap",
             function() return p().showMinimapButton end,
-            function(v) p().showMinimapButton = v; ns.Minimap_SetShown(v) end},
+            function(v) p().showMinimapButton = v; ns.Minimap_SetShown(v) end,
+            "Afficher ou masquer le bouton sur la minimap."},
     }
 
     sd.checks = {}
     for _, def in ipairs(checks) do
         local chk = W.MakeCheck(ch, def[1], def[2], def[3])
         chk:SetPoint("TOPLEFT", 8, row(26))
+        if def[4] then
+            W.AddTooltip(chk, def[1], def[4])
+        end
         sd.checks[#sd.checks + 1] = chk
     end
 
@@ -264,6 +288,91 @@ function ns.UI_BuildSettings(parent)
             end
         end)
     unbl:SetPoint("TOPLEFT", 4, row(46))
+
+    ---------------------------------------------------------------------------
+    -- Section: Discord Notifications
+    ---------------------------------------------------------------------------
+    local hDiscord = W.MakeHeader(ch, "Notifications Discord")
+    hDiscord:SetPoint("TOPLEFT", 4, row(30))
+    W.MakeSeparator(ch, hDiscord)
+    y = y - 8
+
+    local discordHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    discordHint:SetPoint("TOPLEFT", 8, row(16))
+    discordHint:SetText("Envoie des notifications Discord en temps reel. Necessite le script Python companion (voir Tools/discord_webhook.py)")
+    discordHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    y = y - 6
+
+    local discordUrl = W.MakeInput(ch, "URL Webhook Discord", 520,
+        function() return ns.db.profile.discordNotify and ns.db.profile.discordNotify.webhookUrl or "" end,
+        function(v)
+            if not ns.db.profile.discordNotify then ns.db.profile.discordNotify = {} end
+            ns.db.profile.discordNotify.webhookUrl = ns.Util_Trim(v)
+        end)
+    discordUrl:SetPoint("TOPLEFT", 4, row(46))
+
+    local discordTestBtn = W.MakeBtn(ch, "Test", 80, "p", function()
+        if ns.DiscordQueue and ns.DiscordQueue.TestWebhook then
+            ns.DiscordQueue:TestWebhook()
+        end
+    end)
+    discordTestBtn:SetPoint("LEFT", discordUrl, "RIGHT", 8, -6)
+
+    local discordEnabled = W.MakeCheck(ch, "Activer les notifications Discord",
+        function() return ns.db.profile.discordNotify and ns.db.profile.discordNotify.enabled or false end,
+        function(v)
+            if not ns.db.profile.discordNotify then ns.db.profile.discordNotify = {} end
+            ns.db.profile.discordNotify.enabled = v
+        end)
+    discordEnabled:SetPoint("TOPLEFT", 8, row(26))
+    W.AddTooltip(discordEnabled, "Activer Discord", "Envoie des notifications Discord pour les evenements de recrutement")
+
+    local autoFlushCheck = W.MakeCheck(ch, "Envoi temps reel (auto-reload)",
+        function() return ns.db.profile.discordNotify and ns.db.profile.discordNotify.autoFlush ~= false end,
+        function(v)
+            if not ns.db.profile.discordNotify then ns.db.profile.discordNotify = {} end
+            ns.db.profile.discordNotify.autoFlush = v
+        end)
+    autoFlushCheck:SetPoint("TOPLEFT", 8, row(26))
+    W.AddTooltip(autoFlushCheck, "Envoi temps reel", "Reload automatiquement l'interface apres chaque evenement pour envoyer les notifications Discord instantanement (~7s)")
+
+    -- Event toggles
+    y = y - 8
+    local eventHeader = ch:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    eventHeader:SetPoint("TOPLEFT", 8, row(20))
+    eventHeader:SetText("Types d'evenements:")
+    eventHeader:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+    sd.discordEventChecks = {}
+
+    -- Get event categories from DiscordQueue
+    if ns.DiscordQueue and ns.DiscordQueue.GetEventTypes then
+        local categories = ns.DiscordQueue:GetEventTypes()
+        for _, category in ipairs(categories) do
+            -- Category label
+            local catLabel = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            catLabel:SetPoint("TOPLEFT", 12, row(18))
+            catLabel:SetText(category.label)
+            catLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+            -- Events in this category
+            for _, event in ipairs(category.events) do
+                local chk = W.MakeCheck(ch, event.label,
+                    function()
+                        return ns.db.profile.discordNotify and ns.db.profile.discordNotify.events and ns.db.profile.discordNotify.events[event.id] or false
+                    end,
+                    function(v)
+                        if not ns.db.profile.discordNotify then ns.db.profile.discordNotify = {} end
+                        if not ns.db.profile.discordNotify.events then ns.db.profile.discordNotify.events = {} end
+                        ns.db.profile.discordNotify.events[event.id] = v
+                    end)
+                chk:SetPoint("TOPLEFT", 20, row(24))
+                sd.discordEventChecks[#sd.discordEventChecks + 1] = chk
+            end
+        end
+    end
+
+    y = y - 8
 
     ---------------------------------------------------------------------------
     -- Section: A/B Testing

@@ -24,7 +24,7 @@ function ns.UI_BuildAnalytics(panel)
     -- Header
     local header = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     header:SetPoint("TOPLEFT", 16, yOffset)
-    header:SetText("|cffFFD700*|r Analytiques et apercu")
+    header:SetText("|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t Analytiques et apercu")
     header:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
     yOffset = yOffset - 40
 
@@ -33,7 +33,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local summaryLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     summaryLabel:SetPoint("TOPLEFT", 16, yOffset)
-    summaryLabel:SetText("|cff00aaff>|r Resume global")
+    summaryLabel:SetText("|TInterface\\Icons\\Spell_Holy_BorrowedTime:14:14:0:0|t Resume global")
     summaryLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
@@ -44,10 +44,10 @@ function ns.UI_BuildAnalytics(panel)
     ad.cards = {}
 
     local cardDefs = {
-        {key = "contacted", label = "Contactes",  icon = "|cff00aaffO|r", color = C.accent},
-        {key = "invited",   label = "Invites",    icon = "|cff33e07a+|r", color = C.green},
-        {key = "joined",    label = "Recrues",    icon = "|cffFFD700*|r", color = C.gold},
-        {key = "conversion",label = "Conversion", icon = "|cffFF69B4%%|r", color = {1, 0.41, 0.71}},
+        {key = "contacted", label = "Contactes",  icon = "|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t", color = C.accent},
+        {key = "invited",   label = "Invites",    icon = "|TInterface\\Icons\\Spell_ChargePositive:14:14:0:0|t", color = C.green},
+        {key = "joined",    label = "Recrues",    icon = "|TInterface\\Icons\\Achievement_GuildPerk_EverybodysFriend:14:14:0:0|t", color = C.gold},
+        {key = "conversion",label = "Conversion", icon = "|TInterface\\Icons\\INV_Misc_EngGizmos_20:14:14:0:0|t", color = {1, 0.41, 0.71}},
     }
 
     for i, def in ipairs(cardDefs) do
@@ -96,7 +96,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local funnelLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     funnelLabel:SetPoint("TOPLEFT", 16, yOffset)
-    funnelLabel:SetText("|cff00aaff>|r Entonnoir de conversion")
+    funnelLabel:SetText("|TInterface\\Icons\\INV_Misc_EngGizmos_20:14:14:0:0|t Entonnoir de conversion")
     funnelLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -147,7 +147,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local hoursLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     hoursLabel:SetPoint("TOPLEFT", 16, yOffset)
-    hoursLabel:SetText("|cff00aaff>|r Meilleurs horaires de recrutement")
+    hoursLabel:SetText("|TInterface\\Icons\\INV_Misc_PocketWatch_01:14:14:0:0|t Meilleurs horaires de recrutement")
     hoursLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -202,7 +202,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local classLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     classLabel:SetPoint("TOPLEFT", 16, yOffset)
-    classLabel:SetText("|cff00aaff>|r Distribution par classe")
+    classLabel:SetText("|TInterface\\Icons\\Achievement_General_StayClassy:14:14:0:0|t Distribution par classe")
     classLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -263,7 +263,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local tplLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     tplLabel:SetPoint("TOPLEFT", 16, yOffset)
-    tplLabel:SetText("|cff00aaff>|r Performance des templates")
+    tplLabel:SetText("|TInterface\\Icons\\INV_Scroll_02:14:14:0:0|t Performance des templates")
     tplLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -277,7 +277,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local trendsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     trendsLabel:SetPoint("TOPLEFT", 16, yOffset)
-    trendsLabel:SetText("|cff00aaff>|r Tendances (cette semaine vs la precedente)")
+    trendsLabel:SetText("|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t Tendances (cette semaine vs la precedente)")
     trendsLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
@@ -324,7 +324,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local goalsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     goalsLabel:SetPoint("TOPLEFT", 16, yOffset)
-    goalsLabel:SetText("|cffFFD700>|r Succes et Progression")
+    goalsLabel:SetText("|TInterface\\Icons\\Achievement_General_StayClassy:14:14:0:0|t Succes et Progression")
     goalsLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
@@ -349,7 +349,7 @@ function ns.UI_BuildAnalytics(panel)
 
     ad.achProgressText = achProgressFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     ad.achProgressText:SetPoint("TOPLEFT", 14, -8)
-    ad.achProgressText:SetText("|cffFFD700T|r 0 / 25 succes debloques")
+    ad.achProgressText:SetText("|TInterface\\Icons\\Achievement_General_StayClassy:14:14:0:0|t 0 / 25 succes debloques")
     ad.achProgressText:SetTextColor(C.text[1], C.text[2], C.text[3])
 
     ad.achProgressPct = achProgressFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -377,9 +377,9 @@ function ns.UI_BuildAnalytics(panel)
     -- Streak display: 3 small cards showing daily login, daily recruit, weekly goal
     ad.streakCards = {}
     local streakDefs = {
-        {key = "dailyLogin",   label = "Connexion",   icon = "|cff00aaff>|r"},
-        {key = "dailyRecruit", label = "Recrutement", icon = "|cff33e07a+|r"},
-        {key = "weeklyGoal",   label = "Semaine",     icon = "|cffFFD700*|r"},
+        {key = "dailyLogin",   label = "Connexion",   icon = "|TInterface\\Icons\\Spell_Holy_BorrowedTime:14:14:0:0|t"},
+        {key = "dailyRecruit", label = "Recrutement", icon = "|TInterface\\Icons\\Ability_Warrior_BattleShout:14:14:0:0|t"},
+        {key = "weeklyGoal",   label = "Semaine",     icon = "|TInterface\\Icons\\Achievement_General_StayClassy:14:14:0:0|t"},
     }
     local streakCardW = math.floor((chartWidth - 60) / 3)
     local streakCardH = 55
@@ -497,7 +497,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local widgetsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     widgetsLabel:SetPoint("TOPLEFT", 16, yOffset)
-    widgetsLabel:SetText("|cff00aaff>|r Tableau de bord")
+    widgetsLabel:SetText("|TInterface\\Icons\\Trade_Engineering:14:14:0:0|t Tableau de bord")
     widgetsLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
@@ -519,7 +519,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local abLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     abLabel:SetPoint("TOPLEFT", 16, yOffset)
-    abLabel:SetText("|cff9370DB>|r Tests A/B")
+    abLabel:SetText("|TInterface\\Icons\\INV_Alchemy_Potion_02:14:14:0:0|t Tests A/B")
     abLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -580,7 +580,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local campLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     campLabel:SetPoint("TOPLEFT", 16, yOffset)
-    campLabel:SetText("|cffFF8C00>|r Campagnes de recrutement")
+    campLabel:SetText("|TInterface\\Icons\\INV_Banner_02:14:14:0:0|t Campagnes de recrutement")
     campLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -634,6 +634,173 @@ function ns.UI_BuildAnalytics(panel)
     end
 
     yOffset = yOffset - 280
+
+    -- ═══════════════════════════════════════════════════
+    -- Section 11: Classement Guilde
+    -- ═══════════════════════════════════════════════════
+    local guildLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    guildLabel:SetPoint("TOPLEFT", 16, yOffset)
+    guildLabel:SetText("|TInterface\\Icons\\Achievement_GuildPerk_EverybodysFriend:14:14:0:0|t Classement Guilde")
+    guildLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+    yOffset = yOffset - 25
+
+    ad.guildInfo = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.guildInfo:SetPoint("TOPLEFT", 20, yOffset)
+    ad.guildInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    ad.guildInfo:SetText("Classement des recruteurs de la guilde utilisant CelestialRecruiter.")
+    yOffset = yOffset - 20
+
+    -- Header row
+    local guildHeaderRow = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    guildHeaderRow:SetSize(chartWidth - 40, 22)
+    guildHeaderRow:SetPoint("TOPLEFT", 20, yOffset)
+    guildHeaderRow:SetBackdrop({bgFile = W.SOLID})
+    guildHeaderRow:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.15)
+
+    local ghRank = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ghRank:SetPoint("LEFT", 8, 0); ghRank:SetWidth(30); ghRank:SetText("#")
+    ghRank:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    local ghName = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ghName:SetPoint("LEFT", 42, 0); ghName:SetWidth(180); ghName:SetText("Joueur")
+    ghName:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    local ghTier = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ghTier:SetPoint("LEFT", 226, 0); ghTier:SetWidth(80); ghTier:SetText("Palier")
+    ghTier:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    local ghJoined = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ghJoined:SetPoint("LEFT", 310, 0); ghJoined:SetWidth(80); ghJoined:SetText("Recrues")
+    ghJoined:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    local ghContacted = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ghContacted:SetPoint("LEFT", 394, 0); ghContacted:SetWidth(80); ghContacted:SetText("Contactes")
+    ghContacted:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    local ghToday = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ghToday:SetPoint("LEFT", 478, 0); ghToday:SetWidth(100); ghToday:SetText("Aujourd'hui")
+    ghToday:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    yOffset = yOffset - 24
+
+    ad.guildRows = {}
+    local guildRowH = 26
+    for i = 1, 15 do
+        local row = CreateFrame("Frame", nil, content, "BackdropTemplate")
+        row:SetSize(chartWidth - 40, guildRowH)
+        row:SetPoint("TOPLEFT", 20, yOffset)
+        row:SetBackdrop({bgFile = W.SOLID})
+        row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], (i % 2 == 0) and 0.2 or 0.35)
+
+        local rRank = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rRank:SetPoint("LEFT", 8, 0); rRank:SetWidth(30); rRank:SetJustifyH("CENTER")
+        rRank:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+        local rName = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rName:SetPoint("LEFT", 42, 0); rName:SetWidth(180); rName:SetJustifyH("LEFT")
+        rName:SetWordWrap(false)
+
+        local rTier = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rTier:SetPoint("LEFT", 226, 0); rTier:SetWidth(80); rTier:SetJustifyH("LEFT")
+
+        local rJoined = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rJoined:SetPoint("LEFT", 310, 0); rJoined:SetWidth(80); rJoined:SetJustifyH("CENTER")
+        rJoined:SetTextColor(C.green[1], C.green[2], C.green[3])
+
+        local rContacted = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rContacted:SetPoint("LEFT", 394, 0); rContacted:SetWidth(80); rContacted:SetJustifyH("CENTER")
+        rContacted:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        local rToday = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rToday:SetPoint("LEFT", 478, 0); rToday:SetWidth(100); rToday:SetJustifyH("CENTER")
+        rToday:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+
+        ad.guildRows[i] = {row = row, rank = rRank, name = rName, tier = rTier, joined = rJoined, contacted = rContacted, today = rToday}
+        row:Hide()
+        yOffset = yOffset - guildRowH - 1
+    end
+
+    yOffset = yOffset - 15
+
+    -- ═══════════════════════════════════════════════════
+    -- Section 12: Catalogue des Succes
+    -- ═══════════════════════════════════════════════════
+    local catalogLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    catalogLabel:SetPoint("TOPLEFT", 16, yOffset)
+    catalogLabel:SetText("|TInterface\\Icons\\Achievement_General:14:14:0:0|t Catalogue des succes")
+    catalogLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+    yOffset = yOffset - 25
+
+    ad.catalogInfo = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.catalogInfo:SetPoint("TOPLEFT", 20, yOffset)
+    ad.catalogInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    ad.catalogInfo:SetText("Tous les succes disponibles et leur progression.")
+    yOffset = yOffset - 20
+
+    ad.catalogRows = {}
+    ad.catalogHeaders = {}
+    local catalogRowH = 32
+
+    -- Pre-build 4 category headers + up to 12 rows per category (48 max)
+    local catDefs = {
+        {key = "recrutement", label = "Recrutement", color = C.accent},
+        {key = "social",      label = "Social",      color = C.green},
+        {key = "dedication",  label = "Dedication",  color = C.orange},
+        {key = "mastery",     label = "Maitrise",    color = C.purple},
+    }
+
+    for ci, cat in ipairs(catDefs) do
+        local catHeader = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        catHeader:SetPoint("TOPLEFT", 20, yOffset)
+        catHeader:SetText(cat.label)
+        catHeader:SetTextColor(cat.color[1], cat.color[2], cat.color[3])
+        ad.catalogHeaders[cat.key] = {header = catHeader, yBase = yOffset}
+        yOffset = yOffset - 22
+
+        for i = 1, 12 do
+            local row = CreateFrame("Frame", nil, content, "BackdropTemplate")
+            row:SetSize(chartWidth - 60, catalogRowH)
+            row:SetPoint("TOPLEFT", 30, yOffset)
+            row:SetBackdrop({bgFile = W.SOLID})
+            row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], (i % 2 == 0) and 0.2 or 0.35)
+
+            -- Left accent bar (colored by unlock status)
+            local accentBar = row:CreateTexture(nil, "OVERLAY")
+            accentBar:SetTexture(W.SOLID)
+            accentBar:SetWidth(3)
+            accentBar:SetPoint("TOPLEFT", 0, 0)
+            accentBar:SetPoint("BOTTOMLEFT", 0, 0)
+
+            -- Icon placeholder
+            local rIcon = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            rIcon:SetPoint("LEFT", 8, 0)
+            rIcon:SetWidth(24)
+            rIcon:SetJustifyH("CENTER")
+
+            -- Name
+            local rName = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            rName:SetPoint("LEFT", 36, 4)
+            rName:SetWidth(300)
+            rName:SetJustifyH("LEFT")
+            rName:SetWordWrap(false)
+
+            -- Description
+            local rDesc = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            rDesc:SetPoint("LEFT", 36, -8)
+            rDesc:SetWidth(400)
+            rDesc:SetJustifyH("LEFT")
+            rDesc:SetWordWrap(false)
+
+            -- Status (right side)
+            local rStatus = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            rStatus:SetPoint("RIGHT", -8, 0)
+            rStatus:SetWidth(140)
+            rStatus:SetJustifyH("RIGHT")
+
+            local rowKey = cat.key .. "_" .. i
+            ad.catalogRows[rowKey] = {row = row, icon = rIcon, name = rName, desc = rDesc, status = rStatus, accent = accentBar}
+            row:Hide()
+            yOffset = yOffset - catalogRowH - 1
+        end
+
+        yOffset = yOffset - 10
+    end
+
+    yOffset = yOffset - 20
 
     -- Set scroll content height
     scroll:SetH(math.abs(yOffset) + 20)
@@ -799,7 +966,7 @@ function ns.UI_RefreshAnalytics()
             -- Achievement progress bar and text
             if ad.achProgressText then
                 ad.achProgressText:SetText(
-                    "|cffFFD700T|r " .. tostring(goalsProgress.unlocked) .. " / " .. tostring(goalsProgress.total) .. " succes debloques"
+                    "|TInterface\\Icons\\Achievement_General_StayClassy:14:14:0:0|t " .. tostring(goalsProgress.unlocked) .. " / " .. tostring(goalsProgress.total) .. " succes debloques"
                 )
             end
             if ad.achProgressPct then
@@ -818,7 +985,7 @@ function ns.UI_RefreshAnalytics()
                     if row then
                         if i <= #unlocks then
                             local u = unlocks[i]
-                            row.icon:SetText(u.icon or "|cffFFD700*|r")
+                            row.icon:SetText(u.icon or "|TInterface\\Icons\\Achievement_General:14:14:0:0|t")
                             row.name:SetText(u.name or "?")
                             if u.unlockedAt and u.unlockedAt > 0 then
                                 row.date:SetText(date("%d/%m/%Y %H:%M", u.unlockedAt))
@@ -900,7 +1067,7 @@ function ns.UI_RefreshAnalytics()
                 local row = ad.abVariantRows[i]
                 if i <= #results then
                     local r = results[i]
-                    row.name:SetText((r.templateId or "?") .. (r.isWinner and " |cffFFD700*|r" or ""))
+                    row.name:SetText((r.templateId or "?") .. (r.isWinner and " |TInterface\\Icons\\Achievement_General:14:14:0:0|t" or ""))
                     row.sent:SetText(("Envoyes: %d"):format(r.sent or 0))
                     row.replies:SetText(("Reponses: %d"):format(r.replies or 0))
                     row.joined:SetText(("Recrues: %d"):format(r.joined or 0))
@@ -925,7 +1092,118 @@ function ns.UI_RefreshAnalytics()
         end
     end
 
-    -- 9. Campaign Overview
+    -- 9. Guild Leaderboard
+    if ad.guildRows and ns.Leaderboard and ns.Leaderboard.GetGuildRanking then
+        local rOk, ranking = pcall(ns.Leaderboard.GetGuildRanking, ns.Leaderboard)
+        if not rOk then ranking = {} end
+
+        if ad.guildInfo then
+            if #ranking > 1 then
+                ad.guildInfo:SetText(("Classement des %d recruteurs de la guilde utilisant CelestialRecruiter."):format(#ranking))
+            elseif #ranking == 1 then
+                ad.guildInfo:SetText("Vous etes le seul recruteur avec CelestialRecruiter dans la guilde.")
+            else
+                ad.guildInfo:SetText("Aucune donnee de guilde disponible.")
+            end
+        end
+
+        for i = 1, 15 do
+            local row = ad.guildRows[i]
+            if row then
+                if i <= #ranking then
+                    local data = ranking[i]
+                    -- Rank
+                    if i == 1 then
+                        row.rank:SetText("|cffFFD7001|r")
+                    elseif i == 2 then
+                        row.rank:SetText("|cffC0C0C02|r")
+                    elseif i == 3 then
+                        row.rank:SetText("|cffCD7F323|r")
+                    else
+                        row.rank:SetText(tostring(i))
+                        row.rank:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+                    end
+
+                    -- Name (highlight self)
+                    local displayName = (data.name or "?"):match("^([^%-]+)") or data.name or "?"
+                    if data.isSelf then
+                        row.name:SetText("|cff00aaff" .. displayName .. "|r |cff555555(vous)|r")
+                    else
+                        row.name:SetText(displayName)
+                        row.name:SetTextColor(C.text[1], C.text[2], C.text[3])
+                    end
+
+                    -- Tier
+                    local tierInfo = ns.Leaderboard:GetTierLabel(data.tier)
+                    row.tier:SetText(tierInfo.name)
+                    row.tier:SetTextColor(tierInfo.color[1], tierInfo.color[2], tierInfo.color[3])
+
+                    -- Stats
+                    row.joined:SetText(tostring(data.totalJoined or 0))
+                    row.contacted:SetText(tostring(data.totalContacted or 0))
+                    row.today:SetText(("J: %d  C: %d"):format(data.todayJoined or 0, data.todayContacted or 0))
+
+                    row.row:Show()
+                else
+                    row.row:Hide()
+                end
+            end
+        end
+    end
+
+    -- 10. Achievement Catalog
+    if ad.catalogRows and ns.Goals and ns.Goals.GetAllAchievements then
+        local aOk, allAch = pcall(ns.Goals.GetAllAchievements, ns.Goals)
+        if aOk and allAch then
+            -- Group by category
+            local byCategory = {}
+            for _, ach in ipairs(allAch) do
+                local cat = ach.category or "recrutement"
+                if not byCategory[cat] then byCategory[cat] = {} end
+                byCategory[cat][#byCategory[cat] + 1] = ach
+            end
+
+            for _, catKey in ipairs({"recrutement", "social", "dedication", "mastery"}) do
+                local items = byCategory[catKey] or {}
+                for i = 1, 12 do
+                    local rowKey = catKey .. "_" .. i
+                    local row = ad.catalogRows[rowKey]
+                    if row then
+                        if i <= #items then
+                            local ach = items[i]
+                            row.icon:SetText(ach.icon or "|TInterface\\Icons\\Achievement_General:14:14:0:0|t")
+                            row.name:SetText(ach.name or "?")
+                            row.name:SetTextColor(C.text[1], C.text[2], C.text[3])
+                            row.desc:SetText(ach.description or "")
+
+                            if ach.unlocked then
+                                row.accent:SetVertexColor(C.gold[1], C.gold[2], C.gold[3], 0.9)
+                                row.desc:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+                                if ach.unlockedAt and ach.unlockedAt > 0 then
+                                    row.status:SetText("|cff33e07aDebloque|r " .. date("%d/%m/%Y", ach.unlockedAt))
+                                else
+                                    row.status:SetText("|cff33e07aDebloque|r")
+                                end
+                                row.row:SetAlpha(1)
+                            else
+                                row.accent:SetVertexColor(C.muted[1], C.muted[2], C.muted[3], 0.4)
+                                row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+                                row.desc:SetTextColor(0.4, 0.4, 0.4)
+                                row.status:SetText("|cffff6666Verrouille|r")
+                                row.row:SetAlpha(0.7)
+                            end
+
+                            row.row:Show()
+                        else
+                            row.row:Hide()
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- 11. Campaign Overview
     if ad.campRows and ns.Campaigns and ns.Campaigns.GetAll then
         local cOk, campaigns = pcall(ns.Campaigns.GetAll, ns.Campaigns)
         if not cOk then campaigns = {} end

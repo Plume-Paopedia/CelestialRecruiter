@@ -122,10 +122,12 @@ end
 function Filters:Matches(contact, scanData)
     if not contact then return false end
 
-    -- Text search (name, notes)
+    -- Text search (name, notes) - check each field individually
     if self.active.text ~= "" then
-        local searchText = ns.Util_Lower((contact.name or "") .. " " .. (contact.notes or ""))
-        if not searchText:find(self.active.text, 1, true) then
+        local q = self.active.text
+        local nameMatch = (contact.name or "") ~= "" and ns.Util_Lower(contact.name):find(q, 1, true)
+        local notesMatch = not nameMatch and (contact.notes or "") ~= "" and ns.Util_Lower(contact.notes):find(q, 1, true)
+        if not nameMatch and not notesMatch then
             return false
         end
     end

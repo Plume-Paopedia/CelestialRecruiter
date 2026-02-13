@@ -38,6 +38,28 @@ local DEFAULTS = {
     showMinimapButton = true,
     minimapAngle = 220,
   },
+  char = {
+    leaderboard = {
+      daily = {},
+      personalBests = {
+        bestDayRecruits = 0,
+        bestDayDate = "",
+        bestDayContacts = 0,
+        bestDayContactsDate = "",
+        bestWeekRecruits = 0,
+        bestWeekDate = "",
+        longestStreak = 0,
+        fastestJoinMinutes = 0,
+      },
+      currentTier = "none",
+      totalAllTime = {
+        contacted = 0,
+        invited = 0,
+        joined = 0,
+        whispers = 0,
+      },
+    },
+  },
   global = {
     contacts = {},   -- [key] = {...}
     queue = {},      -- array of keys
@@ -132,6 +154,18 @@ local function rebuildQueueSet()
   end
 end
 
+-- Expose queueSet for O(1) lookup (avoids rebuilding in UI)
+function ns.DB_IsQueued(key)
+  return queueSet[key] == true
+end
+
+-- Fast queue count (avoids iterating + filtering in DB_QueueList)
+function ns.DB_QueueCount()
+  local n = 0
+  for _ in pairs(queueSet) do n = n + 1 end
+  return n
+end
+
 function ns.DB_Init()
   ns.db = LibStub("AceDB-3.0"):New("CelestialRecruiterDB", DEFAULTS, true)
   migrateStorage()
@@ -193,6 +227,11 @@ function ns.DB_SetBlacklisted(key, val)
   if val then
     ns.DB_QueueRemove(key)
     ns.DB_UpsertContact(key, { status = "ignored", ignoredUntil = ns.Util_Now() + (365 * 24 * 3600) })
+
+    -- Discord notification
+    if ns.DiscordQueue and ns.DiscordQueue.NotifyBlacklisted then
+      ns.DiscordQueue:NotifyBlacklisted(key, "Added to blacklist")
+    end
   end
 end
 
@@ -217,10 +256,22 @@ function ns.DB_QueueAdd(key)
   if c and c.status == "ignored" and (c.ignoredUntil or 0) > ns.Util_Now() then
     return false
   end
+  -- 7-day invite cooldown: don't re-queue recently invited players
+  if c and (c.lastInviteAt or 0) > 0 then
+    if (ns.Util_Now() - c.lastInviteAt) < (7 * 24 * 3600) then
+      return false
+    end
+  end
   if queueSet[key] then return false end
   table.insert(ns.db.global.queue, key)
   queueSet[key] = true
   if ns.sessionStats then ns.sessionStats.queueAdded = ns.sessionStats.queueAdded + 1 end
+
+  -- Discord notification
+  if ns.DiscordQueue and ns.DiscordQueue.NotifyQueueAdded then
+    ns.DiscordQueue:NotifyQueueAdded(key)
+  end
+
   return true
 end
 
@@ -318,6 +369,33 @@ function ns.DB_HasTag(key, tag)
     if t == tag then return true end
   end
   return false
+end
+
+---------------------------------------------------------------------------
+-- Message History
+---------------------------------------------------------------------------
+local MSG_LIMIT = 50  -- max messages per contact
+
+function ns.DB_AddMessage(key, dir, text)
+  key = ns.Util_Key(key)
+  if not key or not text or text == "" then return end
+  local c = ns.DB_GetContact(key)
+  if not c then return end
+  if not c.messages then c.messages = {} end
+  local msgs = c.messages
+  msgs[#msgs + 1] = { t = ns.Util_Now(), d = dir, m = tostring(text) }
+  -- Trim oldest if over limit
+  while #msgs > MSG_LIMIT do
+    table.remove(msgs, 1)
+  end
+end
+
+function ns.DB_GetMessages(key)
+  key = ns.Util_Key(key)
+  if not key then return {} end
+  local c = ns.DB_GetContact(key)
+  if not c or not c.messages then return {} end
+  return c.messages
 end
 
 function ns.DB_GetAllTags()

@@ -24,13 +24,13 @@ UI.active = "Scanner"
 -- Tab definitions
 ---------------------------------------------------------------------------
 local TABS = {
-    {key = "Scanner",   label = "|cff00aaff\226\151\137|r Scanner",    badge = ns.UI_ScannerBadge},
-    {key = "Queue",     label = "|cffFFD700\226\151\143|r File d'attente", badge = ns.UI_QueueBadge},
-    {key = "Inbox",     label = "|cff33e07a\226\151\136|r Boite",       badge = ns.UI_InboxBadge},
-    {key = "Analytics", label = "|cffFF69B4\226\150\136|r Analytiques",  badge = ns.UI_AnalyticsBadge},
-    {key = "Settings",  label = "|cff888888\226\154\153|r Reglages"},
-    {key = "Logs",      label = "|cff888888\226\150\164|r Journaux"},
-    {key = "Help",      label = "|cff888888\226\151\136|r Aide"},
+    {key = "Scanner",   label = "|TInterface\\Icons\\INV_Misc_Spyglass_03:14:14:0:0|t |cff00aaffScanner|r",    badge = ns.UI_ScannerBadge, tip = "Recherche de joueurs via /who."},
+    {key = "Queue",     label = "|TInterface\\Icons\\Spell_ChargePositive:14:14:0:0|t |cffFFD700File d'attente|r", badge = ns.UI_QueueBadge, tip = "Joueurs en attente de recrutement."},
+    {key = "Inbox",     label = "|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t |cff33e07aBoite|r",       badge = ns.UI_InboxBadge, tip = "Messages recus et conversations."},
+    {key = "Analytics", label = "|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t |cffFF69B4Analytiques|r",  badge = ns.UI_AnalyticsBadge, tip = "Statistiques et objectifs de recrutement."},
+    {key = "Settings",  label = "|TInterface\\Icons\\Trade_Engineering:14:14:0:0|t |cff888888Reglages|r", tip = "Configuration de l'addon."},
+    {key = "Logs",      label = "|TInterface\\Icons\\INV_Misc_Book_09:14:14:0:0|t |cff888888Journaux|r", tip = "Journal des actions effectuees."},
+    {key = "Help",      label = "|TInterface\\Icons\\INV_Misc_QuestionMark:14:14:0:0|t |cff888888Aide|r", tip = "Guide d'utilisation et commandes."},
 }
 
 local tabBtns    = {}
@@ -221,7 +221,7 @@ local function CreateMainFrame()
     -- Gold star with gentle pulse
     local star = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     star:SetPoint("LEFT", 8, 0)
-    star:SetText("|cffFFD700*|r")
+    star:SetText("|TInterface\\Icons\\INV_Jewelry_Ring_03:16:16:0:0|t")
     local starPulse = star:CreateAnimationGroup()
     starPulse:SetLooping("BOUNCE")
     local sp = starPulse:CreateAnimation("Alpha")
@@ -271,6 +271,7 @@ local function CreateMainFrame()
             f:Hide()
         end
     end)
+    W.AddTooltip(closeBtn, "Fermer", "Fermer la fenetre CelestialRecruiter.")
 
     -- Search box
     local search = CreateFrame("EditBox", nil, titleBar, "BackdropTemplate")
@@ -297,6 +298,8 @@ local function CreateMainFrame()
     searchGlow:SetPoint("TOPLEFT", -1, 1)
     searchGlow:SetPoint("BOTTOMRIGHT", 1, -1)
     searchGlow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+
+    W.AddTooltip(search, "Recherche", "Filtrer les resultats de l'onglet actif par nom.")
 
     -- Debounced search (wait 0.3s after last keystroke)
     local searchDebounceTimer
@@ -445,21 +448,27 @@ local function CreateTabs(parent)
     tabIndicator._curW = 60
     tabIndicator._tgtX = 8
     tabIndicator._tgtW = 60
-    tabIndicator:SetScript("OnUpdate", function(self, elapsed)
+    local function tabIndicatorLerp(self, elapsed)
         local lf = 0.20
         local dx = math.abs(self._tgtX - self._curX)
         local dw = math.abs(self._tgtW - self._curW)
         if dx < 0.5 and dw < 0.5 then
             self._curX = self._tgtX
             self._curW = self._tgtW
-        else
-            self._curX = self._curX + (self._tgtX - self._curX) * lf
-            self._curW = self._curW + (self._tgtW - self._curW) * lf
+            self:ClearAllPoints()
+            self:SetPoint("BOTTOMLEFT", self._curX, -2)
+            self:SetWidth(math.max(1, self._curW))
+            self:SetScript("OnUpdate", nil)
+            return
         end
+        self._curX = self._curX + (self._tgtX - self._curX) * lf
+        self._curW = self._curW + (self._tgtW - self._curW) * lf
         self:ClearAllPoints()
         self:SetPoint("BOTTOMLEFT", self._curX, -2)
         self:SetWidth(math.max(1, self._curW))
-    end)
+    end
+    tabIndicator._lerpFn = tabIndicatorLerp
+    tabIndicator:SetScript("OnUpdate", tabIndicatorLerp)
 
     local xOff = 8
     for _, tab in ipairs(TABS) do
@@ -575,6 +584,10 @@ local function CreateTabs(parent)
                 s._hoverTarget.a = 1
             end
         end)
+
+        if tab.tip then
+            W.AddTooltip(btn, tab.key, tab.tip)
+        end
 
         tabBtns[tab.key] = btn
         xOff = xOff + tw + 2
@@ -758,6 +771,10 @@ SwitchTab = function(tabKey)
                 local w = btn:GetWidth() - 8
                 tabIndicator._tgtX = relX
                 tabIndicator._tgtW = math.max(1, w)
+                -- Restart lerp if stopped
+                if not tabIndicator:GetScript("OnUpdate") then
+                    tabIndicator:SetScript("OnUpdate", tabIndicator._lerpFn)
+                end
             end
         else
             -- Set lerp targets for inactive tabs
@@ -792,7 +809,7 @@ local refreshFuncs = {
 UpdateStatusBar = function()
     if not UI.statsText then return end
     local contacts = W.countKeys(ns.db.global.contacts)
-    local queue    = #ns.DB_QueueList()
+    local queue    = ns.DB_QueueCount and ns.DB_QueueCount() or #ns.DB_QueueList()
     local bl       = W.countKeys(ns.db.global.blacklist)
     local blColor  = bl > 0 and "ff6b6b" or "5c5f6a"
     UI.statsText:SetText(
@@ -905,6 +922,7 @@ function ns.UI_Init()
     CreateContent(f)
     CreateStatusBar(f)
     f:Hide()
+    ns._mainFrame = f
 
     -- Default to Scanner tab
     SwitchTab("Scanner")
@@ -946,11 +964,28 @@ function ns.UI_Toggle()
     end
 end
 
+local _refreshPending = false
+local _lastRefreshTime = 0
+local REFRESH_THROTTLE = 0.3  -- max 1 refresh per 0.3s
+
 function ns.UI_Refresh()
     if not UI.mainFrame or not UI.mainFrame:IsShown() then return end
-    -- Mark as manual refresh so the dim/brighten animation plays
-    UI._isManualRefresh = true
-    RefreshCurrent()
+    local now = GetTime and GetTime() or 0
+    if (now - _lastRefreshTime) >= REFRESH_THROTTLE then
+        _lastRefreshTime = now
+        _refreshPending = false
+        UI._isManualRefresh = true
+        RefreshCurrent()
+    elseif not _refreshPending then
+        _refreshPending = true
+        C_Timer.After(REFRESH_THROTTLE - (now - _lastRefreshTime), function()
+            _refreshPending = false
+            if UI.mainFrame and UI.mainFrame:IsShown() then
+                _lastRefreshTime = GetTime and GetTime() or 0
+                RefreshCurrent()
+            end
+        end)
+    end
 end
 
 -- Public API for tab switching (for keybinds)

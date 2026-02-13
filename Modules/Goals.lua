@@ -664,6 +664,10 @@ function G:CheckAchievements()
                         def.icon .. " " .. def.name .. " - " .. def.description
                     )
                 end
+                -- Play achievement particle effect
+                if ns.ParticleSystem and ns.ParticleSystem.PlayAchievementEffect and ns._mainFrame and ns._mainFrame:IsVisible() then
+                    ns.ParticleSystem:PlayAchievementEffect(ns._mainFrame)
+                end
                 if ns.DB_Log then ns.DB_Log("GOAL", "Succes debloque: " .. def.name) end
             end
         end

@@ -103,16 +103,41 @@ local WEEKDAY_NAMES = {
 ---------------------------------------------------------------------------
 
 function L:Init()
-    if not ns.db or not ns.db.global then return end
+    if not ns.db then return end
 
-    if not ns.db.global.leaderboard then
-        ns.db.global.leaderboard = deepCopy(LEADERBOARD_DEFAULTS)
-    else
-        ensureDefaults(ns.db.global.leaderboard, LEADERBOARD_DEFAULTS)
+    local lb = ns.db.char.leaderboard
+    if not lb then return end
+
+    -- Ensure nested tables exist
+    ensureDefaults(lb, LEADERBOARD_DEFAULTS)
+
+    -- Migration: copy old global leaderboard data to first character
+    if not ns.db.char._leaderboardMigrated then
+        ns.db.char._leaderboardMigrated = true
+        local oldLb = ns.db.global.leaderboard
+        if oldLb and not ns.db.global._leaderboardMigrated then
+            -- First character to load inherits accumulated stats
+            if oldLb.totalAllTime then
+                for k, v in pairs(oldLb.totalAllTime) do
+                    if type(v) == "number" and v > (lb.totalAllTime[k] or 0) then
+                        lb.totalAllTime[k] = v
+                    end
+                end
+            end
+            if oldLb.personalBests then
+                for k, v in pairs(oldLb.personalBests) do
+                    lb.personalBests[k] = v
+                end
+            end
+            if oldLb.daily then
+                for k, v in pairs(oldLb.daily) do
+                    lb.daily[k] = deepCopy(v)
+                end
+            end
+            lb.currentTier = oldLb.currentTier or lb.currentTier
+            ns.db.global._leaderboardMigrated = true
+        end
     end
-
-    -- Synchroniser les totaux depuis les contacts existants
-    self:_SyncTotalsFromContacts()
 
     -- Mettre a jour le palier
     self:_UpdateTier()
@@ -127,7 +152,7 @@ end
 
 function L:_SyncTotalsFromContacts()
     if not ns.db or not ns.db.global then return end
-    local lb = ns.db.global.leaderboard
+    local lb = ns.db.char.leaderboard
     if not lb then return end
 
     local contacts = ns.db.global.contacts or {}
@@ -169,8 +194,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:_UpdateTier()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return end
-    local lb = ns.db.global.leaderboard
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return end
+    local lb = ns.db.char.leaderboard
     local totalRecruits = lb.totalAllTime.joined or 0
 
     local tier = "none"
@@ -187,8 +212,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:_UpdateWeeklyBest()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return end
-    local lb = ns.db.global.leaderboard
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return end
+    local lb = ns.db.char.leaderboard
     local pb = lb.personalBests
 
     local weekStats = self:GetThisWeek()
@@ -205,8 +230,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:_EnsureToday()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return nil end
-    local lb = ns.db.global.leaderboard
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return nil end
+    local lb = ns.db.char.leaderboard
     local key = todayKey()
 
     if not lb.daily[key] then
@@ -226,8 +251,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:_UpdatePersonalBests()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return end
-    local lb = ns.db.global.leaderboard
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return end
+    local lb = ns.db.char.leaderboard
     local pb = lb.personalBests
     local key = todayKey()
     local today = lb.daily[key]
@@ -265,8 +290,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:_CleanupOldDays()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return end
-    local lb = ns.db.global.leaderboard
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return end
+    local lb = ns.db.char.leaderboard
     local cutoff = date("%Y-%m-%d", time() - (365 * 24 * 3600))
 
     local toRemove = {}
@@ -286,8 +311,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:RecordDaily(eventType)
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return end
-    local lb = ns.db.global.leaderboard
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return end
+    local lb = ns.db.char.leaderboard
 
     local today = self:_EnsureToday()
     if not today then return end
@@ -325,8 +350,8 @@ end
 ---------------------------------------------------------------------------
 
 function L:RecordFastestJoin(minutes)
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then return end
-    local pb = ns.db.global.leaderboard.personalBests
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then return end
+    local pb = ns.db.char.leaderboard.personalBests
     if not pb then return end
 
     minutes = tonumber(minutes) or 0
@@ -342,12 +367,12 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetToday()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return { contacted = 0, invited = 0, joined = 0, whispers = 0 }
     end
 
     local key = todayKey()
-    local today = ns.db.global.leaderboard.daily[key]
+    local today = ns.db.char.leaderboard.daily[key]
 
     if not today then
         return { contacted = 0, invited = 0, joined = 0, whispers = 0 }
@@ -366,11 +391,11 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetThisWeek()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return { contacted = 0, invited = 0, joined = 0, whispers = 0 }
     end
 
-    local lb = ns.db.global.leaderboard
+    local lb = ns.db.char.leaderboard
     local now = time()
     local result = { contacted = 0, invited = 0, joined = 0, whispers = 0 }
 
@@ -400,11 +425,11 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetThisMonth()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return { contacted = 0, invited = 0, joined = 0, whispers = 0 }
     end
 
-    local lb = ns.db.global.leaderboard
+    local lb = ns.db.char.leaderboard
     local currentMonth = monthKey()
     local result = { contacted = 0, invited = 0, joined = 0, whispers = 0 }
 
@@ -426,11 +451,11 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetPersonalBests()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return deepCopy(LEADERBOARD_DEFAULTS.personalBests)
     end
 
-    local pb = ns.db.global.leaderboard.personalBests
+    local pb = ns.db.char.leaderboard.personalBests
     return {
         bestDayRecruits = pb.bestDayRecruits or 0,
         bestDayDate = pb.bestDayDate or "",
@@ -448,10 +473,10 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetTier()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return "none"
     end
-    return ns.db.global.leaderboard.currentTier or "none"
+    return ns.db.char.leaderboard.currentTier or "none"
 end
 
 ---------------------------------------------------------------------------
@@ -460,11 +485,11 @@ end
 
 function L:GetHistory(days)
     days = days or 30
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return {}
     end
 
-    local lb = ns.db.global.leaderboard
+    local lb = ns.db.char.leaderboard
     local now = time()
     local history = {}
 
@@ -489,11 +514,11 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetWeekdayStats()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return {}
     end
 
-    local lb = ns.db.global.leaderboard
+    local lb = ns.db.char.leaderboard
     local weekdays = {}
 
     -- Initialiser les 7 jours
@@ -551,7 +576,7 @@ end
 ---------------------------------------------------------------------------
 
 function L:GetRankInfo()
-    if not ns.db or not ns.db.global or not ns.db.global.leaderboard then
+    if not ns.db or not ns.db.char or not ns.db.char.leaderboard then
         return {
             tier = "none",
             tierName = "Debutant",
@@ -562,7 +587,7 @@ function L:GetRankInfo()
         }
     end
 
-    local lb = ns.db.global.leaderboard
+    local lb = ns.db.char.leaderboard
     local totalRecruits = lb.totalAllTime.joined or 0
     local currentTier = lb.currentTier or "none"
 
@@ -621,8 +646,151 @@ end
 ---------------------------------------------------------------------------
 
 function L:Reset()
-    if ns.db and ns.db.global then
-        ns.db.global.leaderboard = nil
+    if ns.db and ns.db.char then
+        ns.db.char.leaderboard = nil
     end
     self:Init()
+end
+
+---------------------------------------------------------------------------
+-- Guild-Wide Leaderboard via Addon Communication
+---------------------------------------------------------------------------
+local ADDON_PREFIX = "CelRec"
+local GUILD_DATA_VERSION = 1
+local BROADCAST_INTERVAL = 300  -- broadcast every 5 minutes
+
+function L:InitGuildSync()
+    if not C_ChatInfo or not C_ChatInfo.RegisterAddonMessagePrefix then return end
+    C_ChatInfo.RegisterAddonMessagePrefix(ADDON_PREFIX)
+
+    if not ns.db.global.guildRanking then
+        ns.db.global.guildRanking = {}
+    end
+
+    ns.CR:RegisterEvent("CHAT_MSG_ADDON", function(_, prefix, message, channel, sender)
+        if prefix ~= ADDON_PREFIX or channel ~= "GUILD" then return end
+        self:_ReceiveGuildData(sender, message)
+    end)
+
+    -- Initial broadcast after 10s, then every 5 minutes
+    C_Timer.After(10, function() self:BroadcastStats() end)
+    C_Timer.NewTicker(BROADCAST_INTERVAL, function() self:BroadcastStats() end)
+
+    self:_CleanupGuildRanking()
+end
+
+function L:BroadcastStats()
+    if not IsInGuild() then return end
+    if not C_ChatInfo or not C_ChatInfo.SendAddonMessage then return end
+
+    local lb = ns.db and ns.db.char and ns.db.char.leaderboard
+    if not lb then return end
+
+    local totals = lb.totalAllTime or {}
+    local today = self:GetToday()
+    local tier = lb.currentTier or "none"
+
+    local data = string.format("%d|%s|%d|%d|%d|%d|%d",
+        GUILD_DATA_VERSION, tier,
+        totals.contacted or 0, totals.invited or 0, totals.joined or 0,
+        today.contacted or 0, today.joined or 0)
+
+    pcall(C_ChatInfo.SendAddonMessage, ADDON_PREFIX, data, "GUILD")
+end
+
+function L:_ReceiveGuildData(sender, message)
+    if not sender or not message then return end
+    local key = ns.Util_Key(sender)
+    if not key then return end
+
+    local parts = {}
+    for part in message:gmatch("[^|]+") do
+        parts[#parts + 1] = part
+    end
+    if #parts < 7 then return end
+    if tonumber(parts[1]) ~= GUILD_DATA_VERSION then return end
+
+    if not ns.db.global.guildRanking then
+        ns.db.global.guildRanking = {}
+    end
+
+    ns.db.global.guildRanking[key] = {
+        name = key,
+        tier = parts[2],
+        totalContacted = tonumber(parts[3]) or 0,
+        totalInvited = tonumber(parts[4]) or 0,
+        totalJoined = tonumber(parts[5]) or 0,
+        todayContacted = tonumber(parts[6]) or 0,
+        todayJoined = tonumber(parts[7]) or 0,
+        lastUpdate = time(),
+    }
+end
+
+function L:_CleanupGuildRanking()
+    if not ns.db.global.guildRanking then return end
+    local cutoff = time() - (7 * 86400)
+    local toRemove = {}
+    for key, data in pairs(ns.db.global.guildRanking) do
+        if (data.lastUpdate or 0) < cutoff then
+            toRemove[#toRemove + 1] = key
+        end
+    end
+    for _, key in ipairs(toRemove) do
+        ns.db.global.guildRanking[key] = nil
+    end
+end
+
+function L:GetGuildRanking()
+    if not ns.db.global.guildRanking then
+        ns.db.global.guildRanking = {}
+    end
+
+    -- Include self in the ranking
+    local myName = UnitName("player")
+    local myRealm = GetRealmName()
+    if myName and myRealm then
+        local myKey = ns.Util_Key(myName .. "-" .. myRealm)
+        local lb = ns.db.char.leaderboard
+        if lb and myKey then
+            local totals = lb.totalAllTime or {}
+            local today = self:GetToday()
+            ns.db.global.guildRanking[myKey] = {
+                name = myKey,
+                tier = lb.currentTier or "none",
+                totalContacted = totals.contacted or 0,
+                totalInvited = totals.invited or 0,
+                totalJoined = totals.joined or 0,
+                todayContacted = today.contacted or 0,
+                todayJoined = today.joined or 0,
+                lastUpdate = time(),
+                isSelf = true,
+            }
+        end
+    end
+
+    local ranking = {}
+    for _, data in pairs(ns.db.global.guildRanking) do
+        ranking[#ranking + 1] = data
+    end
+
+    table.sort(ranking, function(a, b)
+        if (a.totalJoined or 0) ~= (b.totalJoined or 0) then
+            return (a.totalJoined or 0) > (b.totalJoined or 0)
+        end
+        return (a.totalContacted or 0) > (b.totalContacted or 0)
+    end)
+
+    return ranking
+end
+
+local TIER_LABELS = {
+    none = {name = "Debutant",  color = {0.55, 0.58, 0.66}},
+    bronze = {name = "Bronze",  color = {0.80, 0.50, 0.20}},
+    silver = {name = "Argent",  color = {0.75, 0.75, 0.80}},
+    gold = {name = "Or",        color = {1.00, 0.84, 0.00}},
+    diamond = {name = "Diamant",color = {0.70, 0.85, 1.00}},
+}
+
+function L:GetTierLabel(tierId)
+    return TIER_LABELS[tierId or "none"] or TIER_LABELS.none
 end

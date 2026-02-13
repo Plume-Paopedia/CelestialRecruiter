@@ -306,6 +306,7 @@ function ns.UI_BuildQueue(parent)
         updatePreview(nil)
     end)
     qd.tplDD:SetPoint("LEFT", 0, 0)
+    W.AddTooltip(qd.tplDD, "Modele", "Choisir le modele de message utilise pour recruter.")
 
     local tplLabel = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     tplLabel:SetPoint("RIGHT", qd.tplDD, "LEFT", -6, 0)
@@ -320,8 +321,8 @@ function ns.UI_BuildQueue(parent)
 
     local sortItems = {
         {value = "class",    label = "Classe"},
-        {value = "lvl_desc", label = "Niv \226\134\147"},
-        {value = "lvl_asc",  label = "Niv \226\134\145"},
+        {value = "lvl_desc", label = "Niv (desc)"},
+        {value = "lvl_asc",  label = "Niv (asc)"},
         {value = "name",     label = "Nom"},
         {value = "score",    label = "Score Rep"},
     }
@@ -331,6 +332,7 @@ function ns.UI_BuildQueue(parent)
         ns.UI_Refresh()
     end)
     qd.sortDD:SetPoint("LEFT", sortLabel, "RIGHT", 6, 0)
+    W.AddTooltip(qd.sortDD, "Tri", "Changer l'ordre d'affichage de la file.")
 
     -- Count label
     qd.countText = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -344,12 +346,14 @@ function ns.UI_BuildQueue(parent)
         ns.UI_Refresh()
     end)
     qd.bestFirstBtn:SetPoint("LEFT", qd.countText, "RIGHT", 12, 0)
+    W.AddTooltip(qd.bestFirstBtn, "Meilleur d'abord", "Trie par score de reputation decroissant.")
 
     -- "Recruter tout" button (batch recruit)
     qd.recruitAllBtn = W.MakeBtn(controls, "Recruter tout", 110, "s", function()
         batchRecruitAll()
     end)
     qd.recruitAllBtn:SetPoint("LEFT", qd.bestFirstBtn, "RIGHT", 6, 0)
+    W.AddTooltip(qd.recruitAllBtn, "Recruter tout", "Lance le recrutement automatique pour tous les joueurs affiches.", "Respecte les cooldowns anti-spam.")
 
     -- "Filtres" button + active filter badge
     qd.filterBtn = W.MakeBtn(controls, "Filtres", 70, "n", function()
@@ -363,6 +367,7 @@ function ns.UI_BuildQueue(parent)
         end
     end)
     qd.filterBtn:SetPoint("LEFT", qd.recruitAllBtn, "RIGHT", 6, 0)
+    W.AddTooltip(qd.filterBtn, "Filtres", "Affiche ou masque le panneau de filtres avances.")
 
     qd.filterBadge = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     qd.filterBadge:SetPoint("LEFT", qd.filterBtn, "RIGHT", 3, 0)
@@ -511,7 +516,7 @@ function ns.UI_RefreshQueue()
     local rows = scroll.rows
 
     if #filtered == 0 then
-        scroll:ShowEmpty("|cffFFD700*|r", "File d'attente vide")
+        scroll:ShowEmpty("|TInterface\\Icons\\Spell_ChargePositive:14:14:0:0|t", "File d'attente vide")
         for _, r in ipairs(rows) do r:Hide() end
         scroll:SetH(scroll.sf:GetHeight())
         return

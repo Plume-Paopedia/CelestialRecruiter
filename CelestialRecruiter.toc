@@ -36,6 +36,7 @@ Modules\Goals.lua
 Modules\Leaderboard.lua
 Modules\SmartSuggestions.lua
 Modules\Discord.lua
+Modules\DiscordQueue.lua
 Modules\BulkOperations.lua
 
 UI\Widgets.lua

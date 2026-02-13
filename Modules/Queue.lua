@@ -68,9 +68,17 @@ function ns.Queue_Whisper(key, tplId)
   end
 
   ns.AntiSpam_MarkWhisper(key)
-  ns.DB_UpsertContact(key, { status = "contacted", lastTemplate = actualTplId })
+  ns.DB_UpsertContact(key, { status = "contacted", lastTemplate = actualTplId, recruitedBy = UnitName("player") })
   ns.DB_Log("OUT", "Message envoye a " .. key .. " (tpl: " .. tostring(actualTplId) .. ")")
   if ns.sessionStats then ns.sessionStats.whispersSent = ns.sessionStats.whispersSent + 1 end
+
+  -- Discord notification + auto-flush
+  if ns.DiscordQueue and ns.DiscordQueue.NotifyWhisperSent then
+    ns.DiscordQueue:NotifyWhisperSent(key, actualTplId)
+    if ns.DiscordQueue.ScheduleAutoFlush then
+      ns.DiscordQueue:ScheduleAutoFlush()
+    end
+  end
 
   -- Record A/B Testing
   if ns.ABTesting and ns.ABTesting.RecordSent then
@@ -106,7 +114,13 @@ function ns.Queue_Recruit(key, tplId)
   -- Suppress individual notifications during combined recruit
   ns._silentNotifications = true
   local msgOk, msgWhy = ns.Queue_Whisper(key, tplId)
-  local invOk, invWhy = ns.Queue_Invite(key)
+
+  -- Skip guild invite if target already has a guild (it would fail anyway)
+  local invOk, invWhy = false, "guilded"
+  local c = ns.DB_GetContact(key)
+  if not c or not c.guild or c.guild == "" then
+    invOk, invWhy = ns.Queue_Invite(key)
+  end
   ns._silentNotifications = false
 
   if not msgOk and not invOk then
@@ -164,9 +178,17 @@ function ns.Queue_Invite(key)
   end
 
   ns.AntiSpam_MarkInvite(key)
-  ns.DB_UpsertContact(key, { status = "invited" })
+  ns.DB_UpsertContact(key, { status = "invited", recruitedBy = UnitName("player") })
   ns.DB_Log("INV", "Invitation guilde -> " .. key)
   if ns.sessionStats then ns.sessionStats.invitesSent = ns.sessionStats.invitesSent + 1 end
+
+  -- Discord notification + auto-flush
+  if ns.DiscordQueue and ns.DiscordQueue.NotifyInviteSent then
+    ns.DiscordQueue:NotifyInviteSent(key)
+    if ns.DiscordQueue.ScheduleAutoFlush then
+      ns.DiscordQueue:ScheduleAutoFlush()
+    end
+  end
 
   -- Record statistics
   if ns.Statistics and ns.Statistics.RecordEvent then

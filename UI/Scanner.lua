@@ -8,6 +8,16 @@ local format = string.format
 -- ═══════════════════════════════════════════════════════════════════
 
 local sd = {}
+local _lastAmbientTime = 0
+
+-- Pre-computed color strings (avoid format() in tight loops)
+local MUTED_HEX = format("%02x%02x%02x", C.muted[1]*255, C.muted[2]*255, C.muted[3]*255)
+local STATUS_BLACKLIST = "|cffff6666Blackliste|r"
+local STATUS_CROSSREALM = "|cffffb347Inter-royaume|r"
+local STATUS_IGNORED = "|cff" .. MUTED_HEX .. "Ignore|r"
+local STATUS_QUEUED = "|cffffd700En file|r"
+local STATUS_RECENT_INVITE = "|cffFFA500Invite recemment|r"
+local NAME_FALLBACK_PREFIX = "|cff00aaff"
 
 local function makeInput(parent, width)
     local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
@@ -45,6 +55,7 @@ local function MakeScannerRow(parent, i)
 
     -- Class color bar (3px left edge)
     row.bar = row:CreateTexture(nil, "OVERLAY")
+    row.bar:SetTexture(W.SOLID)
     row.bar:SetWidth(3)
     row.bar:SetPoint("TOPLEFT")
     row.bar:SetPoint("BOTTOMLEFT")
@@ -126,6 +137,7 @@ function ns.UI_BuildScanner(parent)
         ns.UI_Refresh()
     end)
     sd.scanBtn:SetPoint("LEFT", 0, 0)
+    W.AddTooltip(sd.scanBtn, "Scanner", "Lance un scan /who par tranches de niveaux.")
 
     -- Pulse glow overlay
     sd.scanGlow = sd.scanBtn:CreateTexture(nil, "BACKGROUND")
@@ -151,6 +163,7 @@ function ns.UI_BuildScanner(parent)
         ns.UI_Refresh()
     end)
     sd.stopBtn:SetPoint("LEFT", sd.scanBtn, "RIGHT", 6, 0)
+    W.AddTooltip(sd.stopBtn, "Stop", "Arrete le scan en cours et l'auto-scan.")
 
     -- Import /who
     sd.importBtn = W.MakeBtn(controls, "Importer /who", 100, "n", function()
@@ -159,6 +172,7 @@ function ns.UI_BuildScanner(parent)
         ns.UI_Refresh()
     end)
     sd.importBtn:SetPoint("LEFT", sd.stopBtn, "RIGHT", 6, 0)
+    W.AddTooltip(sd.importBtn, "Importer /who", "Importe les resultats de la fenetre /who actuelle.")
 
     -- Clear
     sd.clearBtn = W.MakeBtn(controls, "Vider", 60, "n", function()
@@ -166,6 +180,7 @@ function ns.UI_BuildScanner(parent)
         ns.UI_Refresh()
     end)
     sd.clearBtn:SetPoint("LEFT", sd.importBtn, "RIGHT", 6, 0)
+    W.AddTooltip(sd.clearBtn, "Vider", "Supprime tous les resultats du scan.")
 
     -- Auto-Scan checkbox
     sd.autoScanCheck = W.MakeCheck(controls, "Auto",
@@ -215,6 +230,7 @@ function ns.UI_BuildScanner(parent)
     sd.lvlMinInput = makeInput(configBar, 44)
     sd.lvlMinInput:SetPoint("LEFT", lvlLabel, "RIGHT", 6, 0)
     sd.lvlMinInput:SetText(tostring(ns.db and ns.db.profile.scanLevelMin or 10))
+    W.AddTooltip(sd.lvlMinInput, "Niveau minimum", "Le scan cherchera a partir de ce niveau.")
 
     local dash = configBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     dash:SetPoint("LEFT", sd.lvlMinInput, "RIGHT", 4, 0)
@@ -224,6 +240,7 @@ function ns.UI_BuildScanner(parent)
     sd.lvlMaxInput = makeInput(configBar, 44)
     sd.lvlMaxInput:SetPoint("LEFT", dash, "RIGHT", 4, 0)
     sd.lvlMaxInput:SetText(tostring(ns.db and ns.db.profile.scanLevelMax or 80))
+    W.AddTooltip(sd.lvlMaxInput, "Niveau maximum", "Le scan cherchera jusqu'a ce niveau.")
 
     local sliceLabel = configBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sliceLabel:SetPoint("LEFT", sd.lvlMaxInput, "RIGHT", 16, 0)
@@ -233,6 +250,7 @@ function ns.UI_BuildScanner(parent)
     sd.sliceInput = makeInput(configBar, 36)
     sd.sliceInput:SetPoint("LEFT", sliceLabel, "RIGHT", 6, 0)
     sd.sliceInput:SetText(tostring(ns.db and ns.db.profile.scanLevelSlice or 5))
+    W.AddTooltip(sd.sliceInput, "Tranche", "Nombre de niveaux par requete /who.")
 
     -- Info label: scan mode
     local modeLabel = configBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -249,6 +267,7 @@ function ns.UI_BuildScanner(parent)
     sd.autoDelayInput = makeInput(configBar, 36)
     sd.autoDelayInput:SetPoint("LEFT", sd.autoDelayLabel, "RIGHT", 6, 0)
     sd.autoDelayInput:SetText(tostring(ns.db and ns.db.profile.scanAutoDelayMinutes or 5))
+    W.AddTooltip(sd.autoDelayInput, "Delai inter-cycle", "Minutes d'attente entre deux cycles auto-scan.")
     sd.autoDelayInput:SetScript("OnEnterPressed", function(s)
         local v = tonumber(s:GetText())
         if v then
@@ -397,6 +416,18 @@ function ns.UI_RefreshScanner()
         sd.progSpark:Hide()
     end
 
+    -- Ambient particles during active scanning (throttled: max 1 call / 2s)
+    if scanning then
+        local now = GetTime()
+        if now - _lastAmbientTime >= 2 then
+            _lastAmbientTime = now
+            local PS = ns.ParticleSystem
+            if PS and PS.PlayScannerAmbientEffect then
+                PS:PlayScannerAmbientEffect(sd.progBg)
+            end
+        end
+    end
+
     -- Percentage text on bar
     if total > 0 then
         sd.progText:SetText(format("%d%%   (%d / %d)", math.floor(prog * 100), sent, total))
@@ -471,12 +502,7 @@ function ns.UI_RefreshScanner()
     local scanRows = ns.Scanner_GetRows and ns.Scanner_GetRows() or {}
     local search = ns._ui_search or ""
 
-    -- Build queue lookup set
-    local queuedSet = {}
-    local queueKeys = ns.DB_QueueList and ns.DB_QueueList() or {}
-    for _, k in ipairs(queueKeys) do
-        queuedSet[k] = true
-    end
+    -- Queue lookup via DB_IsQueued (O(1) per key, no list rebuild)
 
     -- Filter and sort
     local filtered = {}
@@ -497,7 +523,7 @@ function ns.UI_RefreshScanner()
     local rows = scroll.rows
 
     if #filtered == 0 then
-        scroll:ShowEmpty("|cffFFD700*|r", "Aucun joueur scanne")
+        scroll:ShowEmpty("|TInterface\\Icons\\INV_Misc_Spyglass_03:14:14:0:0|t", "Aucun joueur scanne")
         for _, r in ipairs(rows) do r:Hide() end
         scroll:SetH(scroll.sf:GetHeight())
         return
@@ -514,23 +540,20 @@ function ns.UI_RefreshScanner()
         local key = rec.key
         local cf = rec.classFile or ""
         local skipped = rec.skipReason ~= nil
-        local queued = queuedSet[key]
-        local contact = ns.DB_GetContact and ns.DB_GetContact(key) or nil
+        local queued = ns.DB_IsQueued and ns.DB_IsQueued(key) or false
 
-        -- Store data for tooltip
+        -- Store data for tooltip (lazy, only on hover)
         row._boundKey = key
         row._boundScan = rec
 
         -- Class color bar
-        local cr, cg, cb = W.classRGB(cf)
-        row.bar:SetTexture(W.SOLID)
-        row.bar:SetVertexColor(cr, cg, cb)
+        row.bar:SetVertexColor(W.classRGB(cf))
 
-        -- Name (class colored)
+        -- Name (class colored, pre-computed hex)
         if cf ~= "" then
             row.name:SetText("|c" .. W.classHex(cf) .. key .. "|r")
         else
-            row.name:SetText("|cff00aaff" .. key .. "|r")
+            row.name:SetText(NAME_FALLBACK_PREFIX .. key .. "|r")
         end
 
         -- Level + class
@@ -552,44 +575,63 @@ function ns.UI_RefreshScanner()
         -- Zone
         row.zone:SetText(rec.zone or "")
 
-        -- Guild / Status label
+        -- Guild / Status label (pre-computed constants)
         if rec.skipReason == "blacklist" then
-            row.status:SetText("|cffff6666Blackliste|r")
+            row.status:SetText(STATUS_BLACKLIST)
         elseif rec.skipReason == "crossrealm" then
-            row.status:SetText("|cffffb347Inter-royaume|r")
-        elseif contact and contact.status == "ignored" then
-            row.status:SetText("|cff" .. format("%02x%02x%02x", C.muted[1]*255, C.muted[2]*255, C.muted[3]*255) .. "Ignore|r")
+            row.status:SetText(STATUS_CROSSREALM)
+        elseif rec.skipReason == "recent_invite" then
+            local contact = ns.DB_GetContact and ns.DB_GetContact(key) or nil
+            if contact and (contact.lastInviteAt or 0) > 0 then
+                row.status:SetText("|cffFFA500Invite " .. ns.Util_FormatAgo(contact.lastInviteAt) .. "|r")
+            else
+                row.status:SetText(STATUS_RECENT_INVITE)
+            end
         elseif queued then
-            row.status:SetText("|cffffd700En file|r")
+            row.status:SetText(STATUS_QUEUED)
         elseif rec.guild and rec.guild ~= "" then
             row.status:SetText("|cffffb347<" .. rec.guild .. ">|r")
         else
-            row.status:SetText("")
+            -- Only check contact status for non-skipped, non-queued, unguilded
+            local contact = ns.DB_GetContact and ns.DB_GetContact(key) or nil
+            if contact and contact.status == "ignored" then
+                row.status:SetText(STATUS_IGNORED)
+            else
+                row.status:SetText("")
+            end
         end
 
         -- Row alpha: dimmed for ineligible
         row:SetAlpha(skipped and 0.5 or 1)
 
-        -- Add button: only for eligible not already queued
+        -- Add button: only rewire closure when key changes (avoids GC churn)
         if not skipped and not queued then
             row.addBtn:Show()
             row.addBtn:SetOff(false)
-            row.addBtn:SetScript("OnClick", function()
-                local patch = {
-                    name = rec.name,
-                    source = "scanner",
-                    classFile = rec.classFile or "",
-                    classLabel = rec.classLabel or "",
-                    level = rec.level or 0,
-                    race = rec.race or "",
-                    zone = rec.zone or "",
-                }
-                ns.DB_UpsertContact(key, patch)
-                ns.DB_QueueAdd(key)
-                ns.UI_Refresh()
-            end)
+            if row._addBoundKey ~= key then
+                row._addBoundKey = key
+                row._addBoundRec = rec
+                row.addBtn:SetScript("OnClick", function()
+                    local r = row._addBoundRec
+                    ns.DB_UpsertContact(row._addBoundKey, {
+                        name = r.name,
+                        source = "scanner",
+                        classFile = r.classFile or "",
+                        classLabel = r.classLabel or "",
+                        level = r.level or 0,
+                        race = r.race or "",
+                        zone = r.zone or "",
+                        guild = r.guild or "",
+                    })
+                    ns.DB_QueueAdd(row._addBoundKey)
+                    ns.UI_Refresh()
+                end)
+            else
+                row._addBoundRec = rec
+            end
         else
             row.addBtn:Hide()
+            row._addBoundKey = nil
         end
     end
 

@@ -38,13 +38,13 @@ local CLASS_ABBR = {
     EVOKER      = "EV",
 }
 
--- Status chips: key, French label, color
+-- Status chips: key, French label, color, tooltip
 local STATUS_CHIPS = {
-    { key = "new",       label = "Nouv.",    color = {C.accent[1], C.accent[2], C.accent[3]} },
-    { key = "contacted", label = "Contact\195\169", color = {C.orange[1], C.orange[2], C.orange[3]} },
-    { key = "invited",   label = "Invit\195\169",   color = {C.green[1],  C.green[2],  C.green[3]}  },
-    { key = "joined",    label = "Rejoint",  color = {C.gold[1],   C.gold[2],   C.gold[3]}   },
-    { key = "ignored",   label = "Ignor\195\169",   color = {C.muted[1],  C.muted[2],  C.muted[3]}  },
+    { key = "new",       label = "Nouv.",    color = {C.accent[1], C.accent[2], C.accent[3]}, tip = "Joueurs jamais contactes." },
+    { key = "contacted", label = "Contact\195\169", color = {C.orange[1], C.orange[2], C.orange[3]}, tip = "Joueurs deja contactes par message." },
+    { key = "invited",   label = "Invit\195\169",   color = {C.green[1],  C.green[2],  C.green[3]}, tip = "Joueurs invites dans la guilde." },
+    { key = "joined",    label = "Rejoint",  color = {C.gold[1],   C.gold[2],   C.gold[3]}, tip = "Joueurs ayant rejoint la guilde." },
+    { key = "ignored",   label = "Ignor\195\169",   color = {C.muted[1],  C.muted[2],  C.muted[3]}, tip = "Joueurs temporairement ignores." },
 }
 
 ---------------------------------------------------------------------------
@@ -268,6 +268,8 @@ function W.MakeFilterBar(parent, context, onChanged)
             if onChanged then onChanged(fb:GetEffectiveHeight(), true) end
         end)
 
+        W.AddTooltip(btn, chip.label, chip.tip)
+
         chipBtns[chip.key] = btn
     end
 
@@ -282,6 +284,7 @@ function W.MakeFilterBar(parent, context, onChanged)
         if onChanged then onChanged(fb:GetEffectiveHeight(), true) end
     end)
     fb.sourceDD:SetPoint("TOPLEFT", chipX + 4, row2Y)
+    W.AddTooltip(fb.sourceDD, "Source", "Filtrer par origine du contact (scanner ou boite).")
 
     -- Cross-realm checkbox
     fb.xRealmCheck = W.MakeCheck(content, "Inter-r.", function()
@@ -291,6 +294,7 @@ function W.MakeFilterBar(parent, context, onChanged)
         if onChanged then onChanged(fb:GetEffectiveHeight(), true) end
     end)
     fb.xRealmCheck:SetPoint("LEFT", fb.sourceDD, "RIGHT", 10, 0)
+    W.AddTooltip(fb.xRealmCheck, "Inter-royaume", "N'afficher que les joueurs d'autres royaumes.")
 
     -- Opt-in checkbox
     fb.optInCheck = W.MakeCheck(content, "Opt-in", function()
@@ -300,6 +304,7 @@ function W.MakeFilterBar(parent, context, onChanged)
         if onChanged then onChanged(fb:GetEffectiveHeight(), true) end
     end)
     fb.optInCheck:SetPoint("LEFT", fb.xRealmCheck.label, "RIGHT", 10, 0)
+    W.AddTooltip(fb.optInCheck, "Opt-in", "N'afficher que les joueurs ayant utilise le mot cle.")
 
     -- Race dropdown (populated dynamically)
     local raceItems = {{value = "_all", label = "Race"}}
@@ -321,6 +326,7 @@ function W.MakeFilterBar(parent, context, onChanged)
         if onChanged then onChanged(fb:GetEffectiveHeight(), true) end
     end)
     fb.resetBtn:SetPoint("LEFT", fb.raceDD, "RIGHT", 6, 0)
+    W.AddTooltip(fb.resetBtn, "Reset filtres", "Reinitialise tous les filtres actifs.")
 
     ---------------------------------------------------------------------------
     -- Refresh race dropdown items dynamically

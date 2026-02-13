@@ -126,7 +126,7 @@ end
 ---------------------------------------------------------------------------
 -- Widget: Session Overview
 ---------------------------------------------------------------------------
-registerWidget("session_overview", "Session en cours", "|cff00aaffO|r",
+registerWidget("session_overview", "Session en cours", "|TInterface\\Icons\\Spell_Holy_BorrowedTime:14:14:0:0|t",
     function(card)
         local c = card._content
         card._statWhispers = CreateStatValue(c, "0", "Messages", C.accent, 0, 0)
@@ -156,7 +156,7 @@ registerWidget("session_overview", "Session en cours", "|cff00aaffO|r",
 ---------------------------------------------------------------------------
 -- Widget: Conversion Funnel
 ---------------------------------------------------------------------------
-registerWidget("conversion_funnel", "Entonnoir de conversion", "|cff33e07av|r",
+registerWidget("conversion_funnel", "Entonnoir de conversion", "|TInterface\\Icons\\INV_Misc_EngGizmos_20:14:14:0:0|t",
     function(card)
         local c = card._content
         local colors = {C.accent, C.orange, C.green, C.gold}
@@ -199,7 +199,7 @@ registerWidget("conversion_funnel", "Entonnoir de conversion", "|cff33e07av|r",
 ---------------------------------------------------------------------------
 -- Widget: Template Performance (A/B Testing)
 ---------------------------------------------------------------------------
-registerWidget("template_perf", "Performance des modeles", "|cffFF69B4*|r",
+registerWidget("template_perf", "Performance des modeles", "|TInterface\\Icons\\INV_Scroll_02:14:14:0:0|t",
     function(card)
         local c = card._content
         card._tplRows = {}
@@ -271,7 +271,7 @@ registerWidget("template_perf", "Performance des modeles", "|cffFF69B4*|r",
 ---------------------------------------------------------------------------
 -- Widget: Best Hours Heatmap
 ---------------------------------------------------------------------------
-registerWidget("best_hours", "Meilleures heures", "|cffFFD700*|r",
+registerWidget("best_hours", "Meilleures heures", "|TInterface\\Icons\\INV_Misc_PocketWatch_01:14:14:0:0|t",
     function(card)
         local c = card._content
         card._hourBlocks = {}
@@ -332,7 +332,7 @@ registerWidget("best_hours", "Meilleures heures", "|cffFFD700*|r",
 ---------------------------------------------------------------------------
 -- Widget: Active Campaigns
 ---------------------------------------------------------------------------
-registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00>|r",
+registerWidget("active_campaigns", "Campagnes actives", "|TInterface\\Icons\\INV_Banner_02:14:14:0:0|t",
     function(card)
         local c = card._content
         card._campRows = {}
@@ -409,7 +409,7 @@ registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00>|r",
 ---------------------------------------------------------------------------
 -- Widget: A/B Test Status
 ---------------------------------------------------------------------------
-registerWidget("ab_test_status", "Test A/B actif", "|cff9370DB?|r",
+registerWidget("ab_test_status", "Test A/B actif", "|TInterface\\Icons\\INV_Alchemy_Potion_02:14:14:0:0|t",
     function(card)
         local c = card._content
         card._abTestName = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -494,7 +494,7 @@ registerWidget("ab_test_status", "Test A/B actif", "|cff9370DB?|r",
 ---------------------------------------------------------------------------
 -- Widget: Reputation Leaderboard
 ---------------------------------------------------------------------------
-registerWidget("reputation_board", "Classement contacts", "|cff00d1ff#|r",
+registerWidget("reputation_board", "Classement contacts", "|TInterface\\Icons\\Achievement_Reputation_01:14:14:0:0|t",
     function(card)
         local c = card._content
         card._repRows = {}
@@ -565,7 +565,7 @@ registerWidget("reputation_board", "Classement contacts", "|cff00d1ff#|r",
 ---------------------------------------------------------------------------
 -- Widget: Weekly Trends
 ---------------------------------------------------------------------------
-registerWidget("weekly_trends", "Tendances semaine", "|cff66ff99+|r",
+registerWidget("weekly_trends", "Tendances semaine", "|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t",
     function(card)
         local c = card._content
         card._trendItems = {}
@@ -619,7 +619,7 @@ registerWidget("weekly_trends", "Tendances semaine", "|cff66ff99+|r",
 ---------------------------------------------------------------------------
 -- Widget: Goals & Achievements Progress
 ---------------------------------------------------------------------------
-registerWidget("goals_progress", "Succes et Objectifs", "|cffFFD700T|r",
+registerWidget("goals_progress", "Succes et Objectifs", "|TInterface\\Icons\\Achievement_General_StayClassy:14:14:0:0|t",
     function(card)
         local c = card._content
 
@@ -729,7 +729,7 @@ registerWidget("goals_progress", "Succes et Objectifs", "|cffFFD700T|r",
             local txt = card._recentUnlocks[i]
             if i <= #unlocks then
                 local u = unlocks[i]
-                txt:SetText("|cffFFD700*|r " .. (u.name or "?"))
+                txt:SetText((u.icon or "|TInterface\\Icons\\Achievement_General:14:14:0:0|t") .. " " .. (u.name or "?"))
                 txt:Show()
             else
                 txt:SetText("")
@@ -742,7 +742,7 @@ registerWidget("goals_progress", "Succes et Objectifs", "|cffFFD700T|r",
 ---------------------------------------------------------------------------
 -- Widget: Smart Suggestions
 ---------------------------------------------------------------------------
-registerWidget("smart_suggestions", "Suggestions", "|cff00d1ff?|r",
+registerWidget("smart_suggestions", "Suggestions", "|TInterface\\Icons\\INV_Misc_QuestionMark:14:14:0:0|t",
     function(card)
         local c = card._content
 
@@ -809,10 +809,11 @@ registerWidget("smart_suggestions", "Suggestions", "|cff00d1ff?|r",
             local sug = suggestions[i]
             local pColor = prioColors[sug.priority] or C.dim
 
-            row.title:SetText("|cff" .. string.format("%02x%02x%02x",
+            local hex = string.format("%02x%02x%02x",
                 math.floor(pColor[1] * 255),
                 math.floor(pColor[2] * 255),
-                math.floor(pColor[3] * 255)) .. "●|r " .. (sug.title or ""))
+                math.floor(pColor[3] * 255))
+            row.title:SetText("|cff" .. hex .. "-|r " .. (sug.title or ""))
             row.title:Show()
 
             -- Truncate description to fit in the card
@@ -834,7 +835,7 @@ registerWidget("smart_suggestions", "Suggestions", "|cff00d1ff?|r",
 ---------------------------------------------------------------------------
 -- Widget: Classement Personnel (Leaderboard)
 ---------------------------------------------------------------------------
-registerWidget("personal_leaderboard", "Classement personnel", "|cffFFD700\226\152\133|r",
+registerWidget("personal_leaderboard", "Classement personnel", "|TInterface\\Icons\\Achievement_General:12:12:0:0|t",
     function(card)
         local c = card._content
 

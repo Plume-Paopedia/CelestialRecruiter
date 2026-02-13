@@ -94,11 +94,17 @@ end
 
 function W.matchSearch(query, ...)
     if not query or query == "" then return true end
-    local blob = ""
+    -- Search each field individually (avoids string concatenation)
+    local lq = ns.Util_Lower(query)
     for i = 1, select("#", ...) do
-        blob = blob .. " " .. (select(i, ...) or "")
+        local field = select(i, ...)
+        if field and field ~= "" then
+            if ns.Util_Lower(field):find(lq, 1, true) then
+                return true
+            end
+        end
     end
-    return ns.Util_Lower(blob):find(query, 1, true) ~= nil
+    return false
 end
 
 function W.logColor(kind)
@@ -321,10 +327,14 @@ function W.MakeScroll(parent)
         local mx = max(0, ch:GetHeight() - s:GetHeight())
         s._targetScroll = max(0, min(mx, s._targetScroll - d * ROW_H * 3))
         s._scrollVelocity = -d * ROW_H * 2  -- Add momentum
+        -- Restart OnUpdate if stopped
+        if not s:GetScript("OnUpdate") then
+            s:SetScript("OnUpdate", s._scrollUpdateFn)
+        end
     end)
 
-    -- Smooth scroll update with easing
-    sf:SetScript("OnUpdate", function(s, elapsed)
+    -- Smooth scroll update with easing (stops when idle to save CPU)
+    local function scrollOnUpdate(s, elapsed)
         local mx = max(0, ch:GetHeight() - s:GetHeight())
         local current = s:GetVerticalScroll()
 
@@ -346,8 +356,12 @@ function W.MakeScroll(parent)
         elseif math.abs(diff) > 0.01 then
             s:SetVerticalScroll(s._targetScroll)
             updThumb()
+        else
+            -- At target, stop OnUpdate
+            s:SetScript("OnUpdate", nil)
         end
-    end)
+    end
+    sf._scrollUpdateFn = scrollOnUpdate
     sf:SetScript("OnSizeChanged", function(s)
         ch:SetWidth(s:GetWidth())
         updThumb()
@@ -701,7 +715,12 @@ end
 ---------------------------------------------------------------------------
 function W.ShowPlayerTooltip(anchor, key, scanData)
     if not key or key == "" then return end
-    GameTooltip:SetOwner(anchor, "ANCHOR_RIGHT")
+    local anchorX = anchor:GetCenter()
+    if anchorX and anchorX > (GetScreenWidth() * 0.6) then
+        GameTooltip:SetOwner(anchor, "ANCHOR_LEFT")
+    else
+        GameTooltip:SetOwner(anchor, "ANCHOR_RIGHT")
+    end
 
     local c = ns.DB_GetContact(key)
     local classFile = scanData and scanData.classFile
@@ -783,4 +802,22 @@ end
 
 function W.HidePlayerTooltip()
     GameTooltip:Hide()
+end
+
+---------------------------------------------------------------------------
+-- Tooltip: Generic tooltip helper (uses HookScript to preserve existing handlers)
+---------------------------------------------------------------------------
+function W.AddTooltip(frame, title, ...)
+    local lines = {...}
+    frame:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine(title, 1, 0.82, 0)
+        for _, line in ipairs(lines) do
+            GameTooltip:AddLine(line, 0.9, 0.9, 0.9, true)
+        end
+        GameTooltip:Show()
+    end)
+    frame:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
 end
