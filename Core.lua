@@ -74,8 +74,8 @@ function CR:OnEnable()
     if not c then return end
     -- Skip if already marked as joined
     if c.status == "joined" then return end
-    -- Only track contacts we interacted with
-    if c.status ~= "invited" and c.status ~= "contacted" and c.status ~= "new" then return end
+    -- Only track contacts we actually contacted or invited (not "new"/uncontacted)
+    if c.status ~= "invited" and c.status ~= "contacted" then return end
 
     local lastTemplate = c.lastTemplate
     local campaignId = c._campaignId
@@ -156,7 +156,8 @@ function CR:OnEnable()
   end
 
   -- Method 3: Periodic roster check for invited contacts
-  -- Runs every 30s, checks if any "invited" contacts are now guild members
+  -- Runs every 30s, checks if any "invited"/"contacted" contacts are now guild members
+  -- Also re-verifies "joined" contacts are still in guild (cleans up false positives)
   local rosterCheckInterval = 30
   C_Timer.NewTicker(rosterCheckInterval, function()
     if not IsInGuild() then return end
@@ -165,7 +166,7 @@ function CR:OnEnable()
     local totalMembers = GetNumGuildMembers()
     if totalMembers == 0 then return end
 
-    -- Build a set of current guild member names
+    -- Build a set of current guild member names (strict full Name-Realm keys)
     local guildMembers = {}
     for i = 1, totalMembers do
       local name = GetGuildRosterInfo(i)
@@ -173,26 +174,28 @@ function CR:OnEnable()
         local memberKey = ns.Util_Key(name)
         if memberKey then
           guildMembers[memberKey] = true
-          -- Also store without realm for matching
-          local nameOnly = memberKey:match("^([^%-]+)")
-          if nameOnly then
-            guildMembers[nameOnly] = true
-          end
         end
       end
     end
 
-    -- Check our invited/contacted contacts against guild roster
+    -- Check invited/contacted contacts against guild roster (strict match only)
     for key, c in pairs(ns.db.global.contacts) do
       if c.status == "invited" or c.status == "contacted" then
         if guildMembers[key] then
           onRecruitJoined(key)
+        end
+      end
+    end
+
+    -- Re-verify "joined" contacts: remove false positives not actually in guild
+    for key, c in pairs(ns.db.global.contacts) do
+      if c.status == "joined" and not guildMembers[key] then
+        if (c.lastInviteAt and c.lastInviteAt > 0) then
+          ns.DB_UpsertContact(key, { status = "invited" })
+        elseif (c.lastWhisperOut and c.lastWhisperOut > 0) then
+          ns.DB_UpsertContact(key, { status = "contacted" })
         else
-          -- Try matching without realm
-          local nameOnly = key:match("^([^%-]+)")
-          if nameOnly and guildMembers[nameOnly] then
-            onRecruitJoined(key)
-          end
+          ns.DB_UpsertContact(key, { status = "new" })
         end
       end
     end

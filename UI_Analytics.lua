@@ -477,34 +477,54 @@ function ns.UI_RefreshAnalytics()
     if not ns.Statistics then return end
     if not ad.cards then return end
 
-    -- 1. Summary Cards
-    local rates = ns.Statistics.GetConversionRates and ns.Statistics:GetConversionRates()
-    if rates then
-        if ad.cards.contacted then
-            ad.cards.contacted.value:SetText(tostring(rates.totalContacted or 0))
-        end
-        if ad.cards.invited then
-            ad.cards.invited.value:SetText(tostring(rates.totalInvited or 0))
-        end
-        if ad.cards.joined then
-            ad.cards.joined.value:SetText(tostring(rates.totalJoined or 0))
-        end
-        if ad.cards.conversion then
-            ad.cards.conversion.value:SetText(string.format("%.1f%%", rates.contactToJoin or 0))
+    -- 1. Summary Cards — count actual contact statuses from DB (reliable)
+    local realContacted, realInvited, realJoined = 0, 0, 0
+    if ns.db and ns.db.global and ns.db.global.contacts then
+        for _, c in pairs(ns.db.global.contacts) do
+            if c.status == "contacted" then
+                realContacted = realContacted + 1
+            elseif c.status == "invited" then
+                realInvited = realInvited + 1
+            elseif c.status == "joined" then
+                realJoined = realJoined + 1
+            end
         end
     end
+    -- In the funnel: contacted = everyone we reached out to (contacted + invited + joined)
+    -- invited = everyone we guild-invited (invited + joined)
+    -- joined = everyone who actually joined
+    local funnelContacted = realContacted + realInvited + realJoined
+    local funnelInvited = realInvited + realJoined
+    local funnelJoined = realJoined
+    local conversionPct = funnelContacted > 0 and (funnelJoined / funnelContacted * 100) or 0
 
-    -- 2. Conversion Funnel
-    if rates and ad.funnelBars then
-        local maxVal = math.max(1, rates.totalContacted or 1)
+    if ad.cards.contacted then
+        ad.cards.contacted.value:SetText(tostring(funnelContacted))
+    end
+    if ad.cards.invited then
+        ad.cards.invited.value:SetText(tostring(funnelInvited))
+    end
+    if ad.cards.joined then
+        ad.cards.joined.value:SetText(tostring(funnelJoined))
+    end
+    if ad.cards.conversion then
+        ad.cards.conversion.value:SetText(string.format("%.1f%%", conversionPct))
+    end
+
+    -- 2. Conversion Funnel — use same real counts
+    if ad.funnelBars then
+        local maxVal = math.max(1, funnelContacted)
         local maxWidth = (ad.funnelBars.contacted and ad.funnelBars.contacted.frame:GetWidth()) or 400
 
+        local funnelVals = {
+            contacted = funnelContacted,
+            invited = funnelInvited,
+            joined = funnelJoined,
+        }
         for _, def in ipairs({"contacted", "invited", "joined"}) do
             local bar = ad.funnelBars[def]
             if bar then
-                local val = (def == "contacted" and rates.totalContacted) or
-                           (def == "invited" and rates.totalInvited) or
-                           (def == "joined" and rates.totalJoined) or 0
+                local val = funnelVals[def] or 0
                 local pct = maxVal > 0 and (val / maxVal) or 0
                 bar.fill:SetWidth(math.max(1, maxWidth * pct))
                 bar.label:SetText(def:sub(1,1):upper() .. def:sub(2) .. ": " .. tostring(val))
