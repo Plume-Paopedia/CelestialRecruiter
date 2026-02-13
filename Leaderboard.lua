@@ -269,10 +269,14 @@ function L:_CleanupOldDays()
     local lb = ns.db.global.leaderboard
     local cutoff = date("%Y-%m-%d", time() - (365 * 24 * 3600))
 
+    local toRemove = {}
     for day in pairs(lb.daily) do
         if day < cutoff then
-            lb.daily[day] = nil
+            toRemove[#toRemove + 1] = day
         end
+    end
+    for _, day in ipairs(toRemove) do
+        lb.daily[day] = nil
     end
 end
 
