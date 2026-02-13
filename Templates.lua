@@ -27,7 +27,13 @@ end
 local function truncateWhisper(s)
   local maxLen = 240
   if #s <= maxLen then return s end
-  return s:sub(1, maxLen - 3) .. "..."
+  -- Find a safe cut point that doesn't split a multi-byte UTF-8 character
+  local cutAt = maxLen - 3
+  -- Walk back if we're in the middle of a UTF-8 continuation byte (10xxxxxx)
+  while cutAt > 0 and s:byte(cutAt) >= 128 and s:byte(cutAt) < 192 do
+    cutAt = cutAt - 1
+  end
+  return s:sub(1, cutAt) .. "..."
 end
 
 function ns.Templates_Init()

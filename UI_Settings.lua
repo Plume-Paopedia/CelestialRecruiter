@@ -31,7 +31,7 @@ function ns.UI_BuildSettings(parent)
     sd.sf = sf
     sd.ch = ch
 
-    local p = ns.db.profile
+    local function p() return ns.db.profile end
     local y = 0
     local function row(h) y = y - h; return y end
 
@@ -44,33 +44,33 @@ function ns.UI_BuildSettings(parent)
     y = y - 8
 
     local guildName = W.MakeInput(ch, "Nom guilde", 200,
-        function() return p.guildName end,
-        function(v) p.guildName = ns.Util_Trim(v) end)
+        function() return p().guildName end,
+        function(v) p().guildName = ns.Util_Trim(v) end)
     guildName:SetPoint("TOPLEFT", 4, row(46))
 
     local discord = W.MakeInput(ch, "Discord", 200,
-        function() return p.discord end,
-        function(v) p.discord = ns.Util_Trim(v) end)
+        function() return p().discord end,
+        function(v) p().discord = ns.Util_Trim(v) end)
     discord:SetPoint("LEFT", guildName, "RIGHT", 12, 0)
 
     local raidDays = W.MakeInput(ch, "Jours raid", 200,
-        function() return p.raidDays end,
-        function(v) p.raidDays = ns.Util_Trim(v) end)
+        function() return p().raidDays end,
+        function(v) p().raidDays = ns.Util_Trim(v) end)
     raidDays:SetPoint("LEFT", discord, "RIGHT", 12, 0)
 
     local goal = W.MakeInput(ch, "Objectif", 200,
-        function() return p.goal end,
-        function(v) p.goal = ns.Util_Trim(v) end)
+        function() return p().goal end,
+        function(v) p().goal = ns.Util_Trim(v) end)
     goal:SetPoint("TOPLEFT", 4, row(46))
 
     local invKw = W.MakeInput(ch, "Mot cle opt-in", 200,
-        function() return p.inviteKeyword end,
-        function(v) p.inviteKeyword = ns.Util_Trim(v) end)
+        function() return p().inviteKeyword end,
+        function(v) p().inviteKeyword = ns.Util_Trim(v) end)
     invKw:SetPoint("LEFT", goal, "RIGHT", 12, 0)
 
     local keywords = W.MakeInput(ch, "Mots cles (virgules)", 420,
-        function() return table.concat(p.keywords or {}, ", ") end,
-        function(v) p.keywords = ns.Util_SplitComma(v) end)
+        function() return table.concat(p().keywords or {}, ", ") end,
+        function(v) p().keywords = ns.Util_SplitComma(v) end)
     keywords:SetPoint("TOPLEFT", 4, row(46))
 
     ---------------------------------------------------------------------------
@@ -133,38 +133,38 @@ function ns.UI_BuildSettings(parent)
     y = y - 8
 
     local cdWhisper = W.MakeNumInput(ch, "Cooldown message (s)", 145,
-        function() return p.cooldownWhisper end,
-        function(v) p.cooldownWhisper = v end, 180, 0, 86400)
+        function() return p().cooldownWhisper end,
+        function(v) p().cooldownWhisper = v end, 180, 0, 86400)
     cdWhisper:SetPoint("TOPLEFT", 4, row(46))
 
     local cdInvite = W.MakeNumInput(ch, "Cooldown invitation (s)", 145,
-        function() return p.cooldownInvite end,
-        function(v) p.cooldownInvite = v end, 300, 0, 86400)
+        function() return p().cooldownInvite end,
+        function(v) p().cooldownInvite = v end, 300, 0, 86400)
     cdInvite:SetPoint("LEFT", cdWhisper, "RIGHT", 12, 0)
 
     local maxApm = W.MakeNumInput(ch, "Max actions/min", 145,
-        function() return p.maxActionsPerMinute end,
-        function(v) p.maxActionsPerMinute = v end, 8, 1, 120)
+        function() return p().maxActionsPerMinute end,
+        function(v) p().maxActionsPerMinute = v end, 8, 1, 120)
     maxApm:SetPoint("LEFT", cdInvite, "RIGHT", 12, 0)
 
     local maxWph = W.MakeNumInput(ch, "Max messages/h", 145,
-        function() return p.maxWhispersPerHour end,
-        function(v) p.maxWhispersPerHour = v end, 20, 1, 500)
+        function() return p().maxWhispersPerHour end,
+        function(v) p().maxWhispersPerHour = v end, 20, 1, 500)
     maxWph:SetPoint("TOPLEFT", 4, row(46))
 
     local maxIph = W.MakeNumInput(ch, "Max invites/h", 145,
-        function() return p.maxInvitesPerHour end,
-        function(v) p.maxInvitesPerHour = v end, 10, 1, 200)
+        function() return p().maxInvitesPerHour end,
+        function(v) p().maxInvitesPerHour = v end, 10, 1, 200)
     maxIph:SetPoint("LEFT", maxWph, "RIGHT", 12, 0)
 
     local afkHold = W.MakeNumInput(ch, "Pause AFK/DND (s)", 145,
-        function() return p.afkDndHoldSeconds end,
-        function(v) p.afkDndHoldSeconds = v end, 900, 0, 86400)
+        function() return p().afkDndHoldSeconds end,
+        function(v) p().afkDndHoldSeconds = v end, 900, 0, 86400)
     afkHold:SetPoint("LEFT", maxIph, "RIGHT", 12, 0)
 
     local logLim = W.MakeNumInput(ch, "Limite logs", 145,
-        function() return p.logLimit end,
-        function(v) p.logLimit = v end, 300, 50, 1000)
+        function() return p().logLimit end,
+        function(v) p().logLimit = v end, 300, 50, 1000)
     logLim:SetPoint("TOPLEFT", 4, row(46))
 
     ---------------------------------------------------------------------------
@@ -176,28 +176,28 @@ function ns.UI_BuildSettings(parent)
     y = y - 8
 
     local lvlMin = W.MakeNumInput(ch, "Niveau min", 120,
-        function() return p.scanLevelMin end,
-        function(v) p.scanLevelMin = v end, 10, 1, 80)
+        function() return p().scanLevelMin end,
+        function(v) p().scanLevelMin = v end, 10, 1, 80)
     lvlMin:SetPoint("TOPLEFT", 4, row(46))
 
     local lvlMax = W.MakeNumInput(ch, "Niveau max", 120,
-        function() return p.scanLevelMax end,
-        function(v) p.scanLevelMax = v end, 80, 1, 80)
+        function() return p().scanLevelMax end,
+        function(v) p().scanLevelMax = v end, 80, 1, 80)
     lvlMax:SetPoint("LEFT", lvlMin, "RIGHT", 12, 0)
 
     local lvlSlice = W.MakeNumInput(ch, "Tranche niveau", 120,
-        function() return p.scanLevelSlice end,
-        function(v) p.scanLevelSlice = v end, 10, 1, 40)
+        function() return p().scanLevelSlice end,
+        function(v) p().scanLevelSlice = v end, 10, 1, 40)
     lvlSlice:SetPoint("LEFT", lvlMax, "RIGHT", 12, 0)
 
     local whoDelay = W.MakeNumInput(ch, "Delai WHO (s)", 120,
-        function() return p.scanWhoDelaySeconds end,
-        function(v) p.scanWhoDelaySeconds = v end, 6, 3, 30)
+        function() return p().scanWhoDelaySeconds end,
+        function(v) p().scanWhoDelaySeconds = v end, 6, 3, 30)
     whoDelay:SetPoint("TOPLEFT", 4, row(46))
 
     local whoTimeout = W.MakeNumInput(ch, "Timeout WHO (s)", 120,
-        function() return p.scanWhoTimeoutSeconds end,
-        function(v) p.scanWhoTimeoutSeconds = v end, 8, 3, 30)
+        function() return p().scanWhoTimeoutSeconds end,
+        function(v) p().scanWhoTimeoutSeconds = v end, 8, 3, 30)
     whoTimeout:SetPoint("LEFT", whoDelay, "RIGHT", 12, 0)
 
     ---------------------------------------------------------------------------
@@ -210,32 +210,32 @@ function ns.UI_BuildSettings(parent)
 
     local checks = {
         {"Exiger opt-in par mot cle",
-            function() return p.inviteKeywordOnly end,
-            function(v) p.inviteKeywordOnly = v end},
+            function() return p().inviteKeywordOnly end,
+            function(v) p().inviteKeywordOnly = v end},
         {"Inviter depuis scanner sans opt-in",
-            function() return p.scannerBypassOptIn end,
-            function(v) p.scannerBypassOptIn = v end},
+            function() return p().scannerBypassOptIn end,
+            function(v) p().scannerBypassOptIn = v end},
         {"Respecter AFK",
-            function() return p.respectAFK end,
-            function(v) p.respectAFK = v end},
+            function() return p().respectAFK end,
+            function(v) p().respectAFK = v end},
         {"Respecter DND",
-            function() return p.respectDND end,
-            function(v) p.respectDND = v end},
+            function() return p().respectDND end,
+            function(v) p().respectDND = v end},
         {"Bloquer en instance",
-            function() return p.blockInInstance end,
-            function(v) p.blockInInstance = v end},
+            function() return p().blockInInstance end,
+            function(v) p().blockInInstance = v end},
         {"Scanner inclut joueurs en guilde",
-            function() return p.scanIncludeGuilded end,
-            function(v) p.scanIncludeGuilded = v end},
+            function() return p().scanIncludeGuilded end,
+            function(v) p().scanIncludeGuilded = v end},
         {"Scanner inclut cross-realm",
-            function() return p.scanIncludeCrossRealm end,
-            function(v) p.scanIncludeCrossRealm = v end},
+            function() return p().scanIncludeCrossRealm end,
+            function(v) p().scanIncludeCrossRealm = v end},
         {"Scanner par classe (plus lent)",
-            function() return p.scanUseClassFilters end,
-            function(v) p.scanUseClassFilters = v end},
+            function() return p().scanUseClassFilters end,
+            function(v) p().scanUseClassFilters = v end},
         {"Bouton minimap",
-            function() return p.showMinimapButton end,
-            function(v) p.showMinimapButton = v; ns.Minimap_SetShown(v) end},
+            function() return p().showMinimapButton end,
+            function(v) p().showMinimapButton = v; ns.Minimap_SetShown(v) end},
     }
 
     sd.checks = {}

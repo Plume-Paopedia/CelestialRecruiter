@@ -152,6 +152,8 @@ end
 ---------------------------------------------------------------------------
 -- Overlay Frame Pool (for screen flash, expanding rings, etc.)
 ---------------------------------------------------------------------------
+local overlayTexPool = {}  -- pool of reusable overlay textures
+
 local function acquireOverlay(parent, strata, level)
     local f
     if #overlayAvail > 0 then
@@ -169,10 +171,35 @@ local function acquireOverlay(parent, strata, level)
     return f
 end
 
+--- Acquire a pooled texture for use on an overlay frame.
+local function acquireOverlayTex(overlayFrame, layer)
+    local tex
+    if #overlayTexPool > 0 then
+        tex = overlayTexPool[#overlayTexPool]
+        overlayTexPool[#overlayTexPool] = nil
+        tex:SetParent(overlayFrame)
+        tex:SetDrawLayer(layer or "BACKGROUND")
+    else
+        tex = overlayFrame:CreateTexture(nil, layer or "BACKGROUND")
+    end
+    tex:SetTexture(SOLID)
+    tex:SetBlendMode("BLEND")
+    tex:SetRotation(0)
+    tex:Show()
+    return tex
+end
+
+--- Release an overlay texture back to its pool.
+local function releaseOverlayTex(tex)
+    tex:Hide()
+    tex:ClearAllPoints()
+    tex:SetParent(poolParent)
+    overlayTexPool[#overlayTexPool + 1] = tex
+end
+
 local function releaseOverlay(f)
     f:Hide()
     f:SetScript("OnUpdate", nil)
-    -- Clear child textures created on the fly
     overlayAvail[#overlayAvail + 1] = f
 end
 
@@ -343,19 +370,16 @@ function PS:PlayRecruitJoinedEffect(frame)
     -- (C) Screen Flash  --  golden overlay 0.3s: alpha 0 -> 0.4 -> 0
     ---------------------------------------------------------------
     local flashFrame = acquireOverlay(frame, "HIGH", 70)
-    local flashTex = flashFrame:CreateTexture(nil, "BACKGROUND")
+    local flashTex = acquireOverlayTex(flashFrame, "BACKGROUND")
     flashTex:SetAllPoints(flashFrame)
-    flashTex:SetTexture(SOLID)
     flashTex:SetVertexColor(COLOR_GOLD[1], COLOR_GOLD[2], COLOR_GOLD[3], 0)
-    flashTex:Show()
 
     local flashTime = 0
     local flashDuration = 0.3
     flashFrame:SetScript("OnUpdate", function(self, elapsed)
         flashTime = flashTime + elapsed
         if flashTime >= flashDuration then
-            flashTex:Hide()
-            flashTex:SetParent(nil)  -- detach so it can be GC'd
+            releaseOverlayTex(flashTex)
             releaseOverlay(flashFrame)
             return
         end
@@ -573,21 +597,17 @@ function PS:PlayScanCompleteEffect(frame)
     end
 
     -- Trailing sweep line (a bright bar moving left to right)
-    local sweepTex
     local sweepOverlay = acquireOverlay(frame, "HIGH", 65)
-    sweepTex = sweepOverlay:CreateTexture(nil, "OVERLAY")
-    sweepTex:SetTexture(SOLID)
+    local sweepTex = acquireOverlayTex(sweepOverlay, "OVERLAY")
     sweepTex:SetSize(3, fh * 0.8)
     sweepTex:SetVertexColor(COLOR_GREEN[1], COLOR_GREEN[2], COLOR_GREEN[3], 0.7)
     sweepTex:SetBlendMode("ADD")
-    sweepTex:Show()
 
     local sweepTime = 0
     sweepOverlay:SetScript("OnUpdate", function(self, elapsed)
         sweepTime = sweepTime + elapsed
         if sweepTime >= sweepDuration then
-            sweepTex:Hide()
-            sweepTex:SetParent(nil)
+            releaseOverlayTex(sweepTex)
             releaseOverlay(sweepOverlay)
             return
         end
@@ -610,18 +630,15 @@ function PS:PlayScanCompleteEffect(frame)
         if not frame:IsVisible() then return end
         -- Subtle green flash
         local finishOverlay = acquireOverlay(frame, "HIGH", 66)
-        local finishTex = finishOverlay:CreateTexture(nil, "BACKGROUND")
+        local finishTex = acquireOverlayTex(finishOverlay, "BACKGROUND")
         finishTex:SetAllPoints(finishOverlay)
-        finishTex:SetTexture(SOLID)
         finishTex:SetVertexColor(COLOR_GREEN[1], COLOR_GREEN[2], COLOR_GREEN[3], 0)
-        finishTex:Show()
 
         local ft = 0
         finishOverlay:SetScript("OnUpdate", function(self, elapsed)
             ft = ft + elapsed
             if ft >= 0.25 then
-                finishTex:Hide()
-                finishTex:SetParent(nil)
+                releaseOverlayTex(finishTex)
                 releaseOverlay(finishOverlay)
                 return
             end
@@ -734,19 +751,16 @@ function PS:PlayAchievementEffect(frame)
     -- (D) Screen Flash (purple tint)
     ---------------------------------------------------------------
     local flashFrame = acquireOverlay(frame, "HIGH", 70)
-    local flashTex = flashFrame:CreateTexture(nil, "BACKGROUND")
+    local flashTex = acquireOverlayTex(flashFrame, "BACKGROUND")
     flashTex:SetAllPoints(flashFrame)
-    flashTex:SetTexture(SOLID)
     flashTex:SetVertexColor(COLOR_PURPLE[1], COLOR_PURPLE[2], COLOR_PURPLE[3], 0)
-    flashTex:Show()
 
     local flashTime = 0
     local flashDur  = 0.35
     flashFrame:SetScript("OnUpdate", function(self, elapsed)
         flashTime = flashTime + elapsed
         if flashTime >= flashDur then
-            flashTex:Hide()
-            flashTex:SetParent(nil)
+            releaseOverlayTex(flashTex)
             releaseOverlay(flashFrame)
             return
         end

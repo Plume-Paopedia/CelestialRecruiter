@@ -45,11 +45,25 @@ local function serialize(t, indent)
     return result
 end
 
--- Deserialize string to table (simple eval)
+-- Maximum import size (1 MB) to prevent memory issues
+local MAX_IMPORT_SIZE = 1048576
+
+-- Deserialize string to table (safe eval with sandboxed environment)
 local function deserialize(str)
     if not str or str == "" then return nil end
 
-    -- Create safe environment for evaluation
+    -- Reject oversized input
+    if #str > MAX_IMPORT_SIZE then
+        return nil, "Donnees trop volumineuses (max 1 Mo)"
+    end
+
+    -- Basic structure validation: must start with a table constructor
+    local trimmed = str:match("^%s*(.-)%s*$")
+    if not trimmed or trimmed:sub(1, 1) ~= "{" then
+        return nil, "Format invalide : les donnees doivent commencer par '{'"
+    end
+
+    -- Create safe environment (no I/O, no OS, no dangerous functions)
     local env = {
         pairs = pairs,
         ipairs = ipairs,
@@ -70,7 +84,11 @@ local function deserialize(str)
     -- Execute and return result
     local success, result = pcall(func)
     if not success then
-        return nil, "Erreur d'exécution : " .. tostring(result)
+        return nil, "Erreur d'execution : " .. tostring(result)
+    end
+
+    if type(result) ~= "table" then
+        return nil, "Format invalide : resultat attendu de type table"
     end
 
     return result

@@ -704,6 +704,12 @@ function AS:StaggeredFadeIn(frames, delay, offset)
 
     for i, frame in ipairs(frames) do
         if frame and frame:IsShown() then
+            -- Stop any existing staggered animation
+            if frame._staggerAG then
+                frame._staggerAG:Stop()
+                frame._staggerAG = nil
+            end
+
             frame:SetAlpha(0)
             local originalPoints = {}
             for j = 1, frame:GetNumPoints() do
@@ -718,6 +724,7 @@ function AS:StaggeredFadeIn(frames, delay, offset)
 
             C_Timer.After((i - 1) * delay, function()
                 local ag = frame:CreateAnimationGroup()
+                frame._staggerAG = ag
 
                 local slide = ag:CreateAnimation("Translation")
                 slide:SetOffset(-offset, 0)
@@ -736,6 +743,7 @@ function AS:StaggeredFadeIn(frames, delay, offset)
                         frame:SetPoint(pointData[1], pointData[2], pointData[3], pointData[4], pointData[5])
                     end
                     frame:SetAlpha(1)
+                    frame._staggerAG = nil
                 end)
 
                 ag:Play()
@@ -752,7 +760,13 @@ function AS:ScalePop(frame, fromScale, toScale, duration)
     toScale = toScale or 1.0
     duration = duration or 0.3
 
+    -- Stop any existing scale pop animation
+    if frame._scalePopAG then
+        frame._scalePopAG:Stop()
+    end
+
     local ag = frame:CreateAnimationGroup()
+    frame._scalePopAG = ag
 
     local scale = ag:CreateAnimation("Scale")
     scale:SetScaleFrom(fromScale, fromScale)
@@ -769,6 +783,7 @@ function AS:ScalePop(frame, fromScale, toScale, duration)
 
     ag:SetScript("OnFinished", function()
         frame:SetAlpha(1)
+        frame._scalePopAG = nil
     end)
 
     ag:Play()
@@ -893,15 +908,35 @@ function AS:PulseGlow(frame, color, duration, loops)
     duration = duration or 1.5
     loops = loops or 3
 
-    local glow = frame:CreateTexture(nil, "OVERLAY")
-    glow:SetTexture(SOLID)
-    glow:SetBlendMode("ADD")
+    -- Clean up previous pulse glow on this frame
+    if frame._pulseGlowTex then
+        frame._pulseGlowTex:SetAlpha(0)
+        frame._pulseGlowTex:Hide()
+    end
+    if frame._pulseGlowAG then
+        frame._pulseGlowAG:Stop()
+    end
+
+    local glow = frame._pulseGlowTex
+    if not glow then
+        glow = frame:CreateTexture(nil, "OVERLAY")
+        glow:SetTexture(SOLID)
+        glow:SetBlendMode("ADD")
+        frame._pulseGlowTex = glow
+    end
     glow:SetAllPoints(frame)
     glow:SetVertexColor(color[1], color[2], color[3], 0)
+    glow:Show()
 
-    local ag = glow:CreateAnimationGroup()
+    local ag = frame._pulseGlowAG
+    if not ag then
+        ag = glow:CreateAnimationGroup()
+        frame._pulseGlowAG = ag
+    end
+    ag:Stop()
     ag:SetLooping("BOUNCE")
 
+    -- Clear old animations and create new
     local alpha = ag:CreateAnimation("Alpha")
     alpha:SetFromAlpha(0)
     alpha:SetToAlpha(0.4)
@@ -943,7 +978,14 @@ function AS:Spin(texture, duration, loops)
     duration = duration or 1.0
     loops = loops or 1
 
+    -- Stop any existing spin animation
+    if texture._spinAG then
+        texture._spinAG:Stop()
+    end
+
     local ag = texture:CreateAnimationGroup()
+    texture._spinAG = ag
+
     if loops > 1 then
         ag:SetLooping("REPEAT")
     end
@@ -958,6 +1000,11 @@ function AS:Spin(texture, duration, loops)
     if loops > 1 then
         C_Timer.After(duration * loops, function()
             ag:Stop()
+            texture._spinAG = nil
+        end)
+    else
+        ag:SetScript("OnFinished", function()
+            texture._spinAG = nil
         end)
     end
 end

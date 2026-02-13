@@ -272,33 +272,7 @@ function Charts:CreatePieChart(parent, size, data, options)
         sliceFrame:SetSize(size, size)
         sliceFrame:SetPoint("CENTER")
 
-        -- Draw slice using multiple lines (approximation)
-        local segments = math.max(2, math.floor(angle / (math.pi / 12)))
-        for j = 0, segments do
-            local theta = startAngle + (angle * j / segments)
-            local nextTheta = startAngle + (angle * (j + 1) / segments)
-
-            -- Outer points
-            local x1 = center + math.cos(theta) * (size / 2)
-            local y1 = center + math.sin(theta) * (size / 2)
-            local x2 = center + math.cos(nextTheta) * (size / 2)
-            local y2 = center + math.sin(nextTheta) * (size / 2)
-
-            -- Inner points
-            local x3 = center + math.cos(theta) * (size / 2 * innerRadius)
-            local y3 = center + math.sin(theta) * (size / 2 * innerRadius)
-            local x4 = center + math.cos(nextTheta) * (size / 2 * innerRadius)
-            local y4 = center + math.sin(nextTheta) * (size / 2 * innerRadius)
-
-            -- Draw quad approximation (2 triangles)
-            local tri1 = sliceFrame:CreateTexture(nil, "ARTWORK")
-            tri1:SetTexture(W.SOLID)
-            tri1:SetVertexColor(slice.color[1], slice.color[2], slice.color[3], 0.9)
-            -- Position triangles (simplified - WoW textures can't do arbitrary triangles easily)
-            -- So we'll use a circle mask approach instead
-        end
-
-        -- Simplified: Use a colored frame
+        -- Colored arc segment (WoW textures can't render arbitrary triangles)
         local arcTex = sliceFrame:CreateTexture(nil, "ARTWORK")
         arcTex:SetTexture(W.SOLID)
         arcTex:SetVertexColor(slice.color[1], slice.color[2], slice.color[3], 0.8)
