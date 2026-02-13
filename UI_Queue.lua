@@ -492,7 +492,12 @@ function ns.UI_RefreshQueue()
         row._boundScore = score
 
         -- Reputation score badge (colored)
-        local repClass, repLabel, repColor = getRep() and getRep():GetScoreClass(score) or "neutral", "Neutre", C.dim
+        local repClass, repLabel, repColor
+        if getRep() then
+            repClass, repLabel, repColor = getRep():GetScoreClass(score)
+        end
+        repClass = repClass or "neutral"
+        repColor = repColor or C.dim
         if getRep() then
             row.scoreBadge:SetText(getRep():GetBadge(score))
         end

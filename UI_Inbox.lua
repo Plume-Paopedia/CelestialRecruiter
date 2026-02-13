@@ -119,7 +119,12 @@ local function ShowInboxTooltip(anchor, key)
     -- Reputation score
     GameTooltip:AddLine(" ")
     local score = getRep() and getRep():CalculateScore(c) or 0
-    local _, scoreLabel, scoreCol = getRep() and getRep():GetScoreClass(score) or "neutral", "Neutre", C.dim
+    local _, scoreLabel, scoreCol
+    if getRep() then
+        _, scoreLabel, scoreCol = getRep():GetScoreClass(score)
+    end
+    scoreLabel = scoreLabel or "Neutre"
+    scoreCol = scoreCol or C.dim
     GameTooltip:AddDoubleLine("Score reputation :", tostring(score) .. " / 100", C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
     GameTooltip:AddDoubleLine("Classement :", scoreLabel, C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
 
