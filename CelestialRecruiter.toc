@@ -27,7 +27,9 @@ Filters.lua
 Statistics.lua
 ImportExport.lua
 AutoRecruiter.lua
+BulkOperations.lua
 Keybinds.lua
+Discord.lua
 Themes.lua
 ParticleSystem.lua
 AnimationSystem.lua

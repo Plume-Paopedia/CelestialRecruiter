@@ -18,6 +18,9 @@ function CR:OnInitialize()
   if ns.AutoRecruiter and ns.AutoRecruiter.Init then
     ns.AutoRecruiter:Init()
   end
+  if ns.Discord and ns.Discord.Init then
+    ns.Discord:Init()
+  end
 end
 
 function CR:OnEnable()
@@ -85,6 +88,11 @@ function CR:OnEnable()
       -- Play epic visual effects!
       if ns.ParticleSystem and ns.ParticleSystem.PlayRecruitJoinedEffect and ns.UI and ns.UI.mainFrame then
         ns.ParticleSystem:PlayRecruitJoinedEffect(ns.UI.mainFrame)
+      end
+
+      -- Notify Discord
+      if ns.Discord and ns.Discord.NotifyRecruitJoined then
+        ns.Discord:NotifyRecruitJoined(key, c)
       end
 
       ns.UI_Refresh()
