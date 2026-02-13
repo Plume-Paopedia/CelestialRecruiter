@@ -55,9 +55,20 @@ function ns.Queue_Whisper(key, tplId)
   SendChatMessage(msg, "WHISPER", nil, key)
 
   ns.AntiSpam_MarkWhisper(key)
-  ns.DB_UpsertContact(key, { status = "contacted" })
+  ns.DB_UpsertContact(key, { status = "contacted", lastTemplate = tplId })
   ns.DB_Log("OUT", "Message envoye a " .. key)
   if ns.sessionStats then ns.sessionStats.whispersSent = ns.sessionStats.whispersSent + 1 end
+
+  -- Record statistics
+  if ns.Statistics and ns.Statistics.RecordEvent then
+    ns.Statistics:RecordEvent("contacted", {template = tplId})
+  end
+
+  -- Show success notification
+  if ns.Notifications_Success then
+    ns.Notifications_Success("Message envoyé", key)
+  end
+
   ns.UI_Refresh()
   return true
 end
@@ -115,6 +126,17 @@ function ns.Queue_Invite(key)
   ns.DB_UpsertContact(key, { status = "invited" })
   ns.DB_Log("INV", "Invitation guilde -> " .. key)
   if ns.sessionStats then ns.sessionStats.invitesSent = ns.sessionStats.invitesSent + 1 end
+
+  -- Record statistics
+  if ns.Statistics and ns.Statistics.RecordEvent then
+    ns.Statistics:RecordEvent("invited")
+  end
+
+  -- Show success notification
+  if ns.Notifications_Success then
+    ns.Notifications_Success("Invitation envoyée", key)
+  end
+
   ns.UI_Refresh()
   return true
 end

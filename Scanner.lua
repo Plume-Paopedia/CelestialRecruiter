@@ -325,6 +325,11 @@ local function processWhoResults(completedQuery)
     if ns.sessionStats then
       ns.sessionStats.playersFound = ns.sessionStats.playersFound + addedPlayers
     end
+
+    -- Record statistics
+    if ns.Statistics and ns.Statistics.RecordEvent then
+      ns.Statistics:RecordEvent("found", {count = addedPlayers})
+    end
   end
 end
 
@@ -502,6 +507,11 @@ function ns.Scanner_ScanStep(clearCurrentList)
 
     ns.DB_Log("SCAN", ("Demarrage scan: %d requetes WHO"):format(#queries))
     if ns.sessionStats then ns.sessionStats.scansStarted = ns.sessionStats.scansStarted + 1 end
+
+    -- Record statistics
+    if ns.Statistics and ns.Statistics.RecordEvent then
+      ns.Statistics:RecordEvent("scan")
+    end
   end
 
   return sendNextQuery()

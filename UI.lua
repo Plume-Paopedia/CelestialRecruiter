@@ -147,7 +147,7 @@ local function CreateMainFrame()
     -- Version
     local ver = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ver:SetPoint("LEFT", title, "RIGHT", 8, 0)
-    ver:SetText("v2.7.0")
+    ver:SetText("v3.0.0")
     ver:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
     -- Close button with hover background
@@ -191,10 +191,22 @@ local function CreateMainFrame()
     searchPH:SetText("Recherche...")
     searchPH:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
+    -- Debounced search (wait 0.3s after last keystroke)
+    local searchDebounceTimer
     search:SetScript("OnTextChanged", function(s)
         ns._ui_search = ns.Util_Lower(ns.Util_Trim(s:GetText() or ""))
         searchPH:SetShown((s:GetText() or "") == "" and not s:HasFocus())
-        RefreshCurrent()
+
+        -- Cancel previous timer
+        if searchDebounceTimer then
+            searchDebounceTimer:Cancel()
+        end
+
+        -- Schedule refresh after 0.3s of no typing
+        searchDebounceTimer = C_Timer.NewTimer(0.3, function()
+            RefreshCurrent()
+            searchDebounceTimer = nil
+        end)
     end)
     search:SetScript("OnEscapePressed", function(s) s:ClearFocus() end)
     search:SetScript("OnEditFocusGained", function(s)
@@ -304,25 +316,54 @@ local function CreateTabs(parent)
         btn.t:SetText(tab.label)
         btn.t:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
-        -- Badge (count number)
+        -- Badge (count number) with pulse animation when > 0
         btn.badge = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         btn.badge:SetPoint("LEFT", btn.t, "RIGHT", 4, 0)
         btn.badge:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
         btn.badge:SetText("")
 
+        -- Badge pulse animation
+        btn.badgePulse = btn.badge:CreateAnimationGroup()
+        btn.badgePulse:SetLooping("BOUNCE")
+        local bp = btn.badgePulse:CreateAnimation("Scale")
+        bp:SetScaleFrom(1, 1)
+        bp:SetScaleTo(1.2, 1.2)
+        bp:SetDuration(0.8)
+        bp:SetSmoothing("IN_OUT")
+        bp:SetOrigin("LEFT", 0, 0)
+
         local tw = btn.t:GetStringWidth() + 28
         btn:SetWidth(tw)
         btn._key = tab.key
 
-        btn:SetScript("OnClick", function() SwitchTab(tab.key) end)
+        -- Smooth background transition on hover/click
+        btn._bgAnim = btn:CreateAnimationGroup()
+        local bgFade = btn._bgAnim:CreateAnimation("Alpha")
+        bgFade:SetDuration(0.15)
+        bgFade:SetSmoothing("OUT")
+
+        btn:SetScript("OnClick", function()
+            -- Quick click feedback
+            btn:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.20)
+            C_Timer.After(0.08, function()
+                if UI.active == btn._key then
+                    btn:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.10)
+                else
+                    btn:SetBackdropColor(0, 0, 0, 0)
+                end
+            end)
+            SwitchTab(tab.key)
+        end)
         btn:SetScript("OnEnter", function(s)
             if UI.active ~= s._key then
-                s:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.05)
+                s:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.08)
+                s.t:SetTextColor(C.text[1], C.text[2], C.text[3], 0.85)
             end
         end)
         btn:SetScript("OnLeave", function(s)
             if UI.active ~= s._key then
                 s:SetBackdropColor(0, 0, 0, 0)
+                s.t:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
             end
         end)
 
@@ -332,14 +373,34 @@ local function CreateTabs(parent)
 end
 
 ---------------------------------------------------------------------------
--- Content Panels (one per tab, hidden/shown)
+-- Content Panels (one per tab, hidden/shown with fade transitions)
 ---------------------------------------------------------------------------
 local function CreateContent(parent)
     for _, tab in ipairs(TABS) do
         local panel = CreateFrame("Frame", nil, parent)
         panel:SetPoint("TOPLEFT", 4, -78)
         panel:SetPoint("BOTTOMRIGHT", -4, 30)
+        panel:SetAlpha(0)
         panel:Hide()
+
+        -- Fade in/out animations for smooth transitions
+        panel._fadeIn = panel:CreateAnimationGroup()
+        local fadeIn = panel._fadeIn:CreateAnimation("Alpha")
+        fadeIn:SetFromAlpha(0)
+        fadeIn:SetToAlpha(1)
+        fadeIn:SetDuration(0.15)
+        fadeIn:SetSmoothing("OUT")
+
+        panel._fadeOut = panel:CreateAnimationGroup()
+        local fadeOut = panel._fadeOut:CreateAnimation("Alpha")
+        fadeOut:SetFromAlpha(1)
+        fadeOut:SetToAlpha(0)
+        fadeOut:SetDuration(0.12)
+        fadeOut:SetSmoothing("IN")
+        panel._fadeOut:SetScript("OnFinished", function()
+            panel:Hide()
+        end)
+
         tabPanels[tab.key] = panel
     end
 
@@ -414,17 +475,25 @@ local function CreateStatusBar(parent)
 end
 
 ---------------------------------------------------------------------------
--- Tab Switching
+-- Tab Switching (with smooth fade transitions)
 ---------------------------------------------------------------------------
 SwitchTab = function(tabKey)
+    local previousTab = UI.active
     UI.active = tabKey
 
-    -- Show/hide panels
+    -- Fade out previous panel, fade in new panel
     for key, panel in pairs(tabPanels) do
-        panel:SetShown(key == tabKey)
+        if key == previousTab and key ~= tabKey and panel:IsShown() then
+            -- Fade out previous tab
+            panel._fadeOut:Play()
+        elseif key == tabKey then
+            -- Fade in new tab
+            panel:Show()
+            panel._fadeIn:Play()
+        end
     end
 
-    -- Update button visual state + animated indicator target
+    -- Update button visual state with smooth transitions + animated indicator target
     for key, btn in pairs(tabBtns) do
         if key == tabKey then
             btn.t:SetTextColor(C.text[1], C.text[2], C.text[3])
@@ -488,7 +557,18 @@ UpdateBadges = function()
         local btn = tabBtns[tab.key]
         if btn and tab.badge then
             local text = tab.badge() or ""
+            local hadBadge = btn.badge:GetText() ~= ""
             btn.badge:SetText(text)
+
+            -- Pulse animation when badge appears or changes to non-zero
+            if text ~= "" and not hadBadge then
+                if btn.badgePulse then
+                    btn.badgePulse:Play()
+                end
+            elseif text == "" and btn.badgePulse then
+                btn.badgePulse:Stop()
+            end
+
             local base  = btn.t:GetStringWidth() + 28
             local extra = text ~= "" and (btn.badge:GetStringWidth() + 6) or 0
             btn:SetWidth(base + extra)

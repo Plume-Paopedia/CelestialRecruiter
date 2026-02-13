@@ -191,19 +191,56 @@ function W.MakeBtn(parent, text, w, style, onClick)
     b.t:SetText(text)
     b.t:SetTextColor(unpack(C.text))
     b._nc, b._hc, b._off, b._glow = nc, hc, false, glow
+
+    -- Smooth color transitions
+    b._targetR, b._targetG, b._targetB, b._targetA = unpack(nc)
+    b._currentR, b._currentG, b._currentB, b._currentA = unpack(nc)
+
+    b:SetScript("OnUpdate", function(s, elapsed)
+        -- Lerp to target color
+        local speed = 8
+        local dr = (s._targetR - s._currentR) * elapsed * speed
+        local dg = (s._targetG - s._currentG) * elapsed * speed
+        local db = (s._targetB - s._currentB) * elapsed * speed
+        local da = (s._targetA - s._currentA) * elapsed * speed
+
+        if math.abs(dr) < 0.001 and math.abs(dg) < 0.001 and math.abs(db) < 0.001 and math.abs(da) < 0.001 then
+            s._currentR, s._currentG, s._currentB, s._currentA = s._targetR, s._targetG, s._targetB, s._targetA
+        else
+            s._currentR = s._currentR + dr
+            s._currentG = s._currentG + dg
+            s._currentB = s._currentB + db
+            s._currentA = s._currentA + da
+        end
+
+        s:SetBackdropColor(s._currentR, s._currentG, s._currentB, s._currentA)
+    end)
+
     b:SetScript("OnEnter", function(s)
         if not s._off then
-            s:SetBackdropColor(unpack(s._hc))
+            s._targetR, s._targetG, s._targetB, s._targetA = unpack(s._hc)
             s._glow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.10)
             s._glow:Show()
         end
     end)
     b:SetScript("OnLeave", function(s)
-        if not s._off then s:SetBackdropColor(unpack(s._nc)) end
+        if not s._off then
+            s._targetR, s._targetG, s._targetB, s._targetA = unpack(s._nc)
+        end
         s._glow:Hide()
     end)
     b:SetScript("OnClick", function(s)
-        if not s._off and onClick then onClick() end
+        if not s._off and onClick then
+            -- Click feedback: quick brighten
+            local pr, pg, pb, pa = unpack(s._hc)
+            s:SetBackdropColor(math.min(1, pr * 1.2), math.min(1, pg * 1.2), math.min(1, pb * 1.2), pa)
+            C_Timer.After(0.08, function()
+                if s._targetR then
+                    s._currentR, s._currentG, s._currentB, s._currentA = s._targetR, s._targetG, s._targetB, s._targetA
+                end
+            end)
+            onClick()
+        end
     end)
     function b:SetLabel(t) self.t:SetText(t) end
     function b:SetOff(v)
@@ -265,11 +302,40 @@ function W.MakeScroll(parent)
         thumb:SetPoint("TOP", track, "TOP", 0, -sr * (track:GetHeight() - th))
     end
 
+    -- Smooth scrolling with momentum
+    sf._scrollVelocity = 0
+    sf._targetScroll = 0
     sf:EnableMouseWheel(true)
     sf:SetScript("OnMouseWheel", function(s, d)
         local mx = max(0, ch:GetHeight() - s:GetHeight())
-        s:SetVerticalScroll(max(0, min(mx, s:GetVerticalScroll() - d * ROW_H * 3)))
-        updThumb()
+        s._targetScroll = max(0, min(mx, s._targetScroll - d * ROW_H * 3))
+        s._scrollVelocity = -d * ROW_H * 2  -- Add momentum
+    end)
+
+    -- Smooth scroll update with easing
+    sf:SetScript("OnUpdate", function(s, elapsed)
+        local mx = max(0, ch:GetHeight() - s:GetHeight())
+        local current = s:GetVerticalScroll()
+
+        -- Apply velocity decay (momentum)
+        if math.abs(s._scrollVelocity) > 0.1 then
+            s._scrollVelocity = s._scrollVelocity * (1 - elapsed * 8)
+            s._targetScroll = s._targetScroll + s._scrollVelocity * elapsed * 60
+            s._targetScroll = max(0, min(mx, s._targetScroll))
+        else
+            s._scrollVelocity = 0
+        end
+
+        -- Smooth lerp to target
+        local diff = s._targetScroll - current
+        if math.abs(diff) > 0.5 then
+            local newScroll = current + diff * elapsed * 12
+            s:SetVerticalScroll(max(0, min(mx, newScroll)))
+            updThumb()
+        elseif math.abs(diff) > 0.01 then
+            s:SetVerticalScroll(s._targetScroll)
+            updThumb()
+        end
     end)
     sf:SetScript("OnSizeChanged", function(s)
         ch:SetWidth(s:GetWidth())
@@ -473,13 +539,31 @@ function W.MakeCheck(parent, label, get, set)
     f.label:SetText(label)
     f.label:SetTextColor(C.text[1], C.text[2], C.text[3])
 
+    -- Smooth check animation
+    f._checkScale = f:CreateAnimationGroup()
+    local scaleIn = f._checkScale:CreateAnimation("Scale")
+    scaleIn:SetScaleFrom(0.5, 0.5)
+    scaleIn:SetScaleTo(1, 1)
+    scaleIn:SetDuration(0.15)
+    scaleIn:SetSmoothing("OUT")
+    scaleIn:SetOrigin("CENTER", 0, 0)
+
     f:SetChecked(get() and true or false)
-    f:SetScript("OnClick", function(s) set(s:GetChecked() and true or false) end)
+    f:SetScript("OnClick", function(s)
+        local checked = s:GetChecked() and true or false
+        set(checked)
+        if checked then
+            -- Play check animation
+            s._checkScale:Play()
+        end
+    end)
     f:SetScript("OnEnter", function()
-        bd:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.5)
+        bd:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.7)
+        bg:SetVertexColor(0.08, 0.09, 0.15, 0.9)
     end)
     f:SetScript("OnLeave", function()
         bd:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.5)
+        bg:SetVertexColor(0.06, 0.07, 0.12, 0.8)
     end)
     return f
 end

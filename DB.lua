@@ -265,3 +265,72 @@ function ns.DB_ListContactsForInbox()
   end)
   return out
 end
+
+---------------------------------------------------------------------------
+-- Tags System
+---------------------------------------------------------------------------
+
+function ns.DB_AddTag(key, tag)
+  key = ns.Util_Key(key)
+  tag = ns.Util_Trim(tag)
+  if not key or tag == "" then return false end
+
+  local c = ns.DB_UpsertContact(key)
+  if not c.tags then c.tags = {} end
+
+  -- Check if tag already exists
+  for _, t in ipairs(c.tags) do
+    if t == tag then return false end
+  end
+
+  table.insert(c.tags, tag)
+  return true
+end
+
+function ns.DB_RemoveTag(key, tag)
+  key = ns.Util_Key(key)
+  tag = ns.Util_Trim(tag)
+  if not key or tag == "" then return false end
+
+  local c = ns.DB_GetContact(key)
+  if not c or not c.tags then return false end
+
+  for i, t in ipairs(c.tags) do
+    if t == tag then
+      table.remove(c.tags, i)
+      return true
+    end
+  end
+  return false
+end
+
+function ns.DB_HasTag(key, tag)
+  key = ns.Util_Key(key)
+  tag = ns.Util_Trim(tag)
+  if not key or tag == "" then return false end
+
+  local c = ns.DB_GetContact(key)
+  if not c or not c.tags then return false end
+
+  for _, t in ipairs(c.tags) do
+    if t == tag then return true end
+  end
+  return false
+end
+
+function ns.DB_GetAllTags()
+  local tags = {}
+  local seen = {}
+  for _, c in pairs(ns.db.global.contacts) do
+    if c and c.tags then
+      for _, tag in ipairs(c.tags) do
+        if not seen[tag] then
+          seen[tag] = true
+          table.insert(tags, tag)
+        end
+      end
+    end
+  end
+  table.sort(tags)
+  return tags
+end

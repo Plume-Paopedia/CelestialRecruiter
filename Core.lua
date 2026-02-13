@@ -6,6 +6,12 @@ function CR:OnInitialize()
   ns.DB_Init()
   ns.Templates_Init()
   ns.Queue_Init()
+  if ns.Filters and ns.Filters.Init then
+    ns.Filters:Init()
+  end
+  if ns.Statistics and ns.Statistics.Init then
+    ns.Statistics:Init()
+  end
 end
 
 function CR:OnEnable()
@@ -24,6 +30,19 @@ function CR:OnEnable()
   ns.UI_Init()
   ns.Inbox_Init()
 
+  -- Auto-backup once per day
+  if ns.ImportExport then
+    local lastBackup = ns.db.global.lastAutoBackup or 0
+    local now = time()
+    local dayInSeconds = 24 * 3600
+
+    if now - lastBackup > dayInSeconds then
+      ns.ImportExport:CreateAutoBackup()
+      ns.db.global.lastAutoBackup = now
+      ns.Util_Print("Sauvegarde automatique effectuée")
+    end
+  end
+
   -- Track guild joins from invited contacts
   CR:RegisterEvent("CHAT_MSG_SYSTEM", function(_, msg)
     if not msg then return end
@@ -40,6 +59,17 @@ function CR:OnEnable()
       if ns.sessionStats then
         ns.sessionStats.recruitsJoined = ns.sessionStats.recruitsJoined + 1
       end
+
+      -- Record statistics
+      if ns.Statistics and ns.Statistics.RecordEvent then
+        ns.Statistics:RecordEvent("joined", {contact = c})
+      end
+
+      -- Show celebration notification
+      if ns.Notifications_Success then
+        ns.Notifications_Success("🎉 Nouvelle recrue !", key .. " a rejoint la guilde")
+      end
+
       ns.UI_Refresh()
     end
   end)
