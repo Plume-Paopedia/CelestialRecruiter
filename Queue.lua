@@ -75,8 +75,8 @@ function ns.Queue_Whisper(key, tplId)
     ns.Statistics:RecordEvent("contacted", {template = actualTplId})
   end
 
-  -- Show success notification
-  if ns.Notifications_Success then
+  -- Show success notification (unless silenced by Queue_Recruit)
+  if not ns._silentNotifications and ns.Notifications_Success then
     ns.Notifications_Success("Message envoyé", key)
   end
 
@@ -85,10 +85,22 @@ function ns.Queue_Whisper(key, tplId)
 end
 
 function ns.Queue_Recruit(key, tplId)
+  -- Suppress individual notifications during combined recruit
+  ns._silentNotifications = true
   local msgOk, msgWhy = ns.Queue_Whisper(key, tplId)
   local invOk, invWhy = ns.Queue_Invite(key)
+  ns._silentNotifications = false
+
   if not msgOk and not invOk then
     return false, msgWhy or invWhy
+  end
+
+  -- Show one combined notification
+  if ns.Notifications_Success then
+    local parts = {}
+    if msgOk then parts[#parts + 1] = "Message" end
+    if invOk then parts[#parts + 1] = "Invitation" end
+    ns.Notifications_Success(table.concat(parts, " + "), key)
   end
   return true
 end
@@ -143,8 +155,8 @@ function ns.Queue_Invite(key)
     ns.Statistics:RecordEvent("invited")
   end
 
-  -- Show success notification
-  if ns.Notifications_Success then
+  -- Show success notification (unless silenced by Queue_Recruit)
+  if not ns._silentNotifications and ns.Notifications_Success then
     ns.Notifications_Success("Invitation envoyée", key)
   end
 
