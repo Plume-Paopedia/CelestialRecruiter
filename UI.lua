@@ -484,9 +484,17 @@ SwitchTab = function(tabKey)
     -- Fade out previous panel, fade in new panel
     for key, panel in pairs(tabPanels) do
         if key == previousTab and key ~= tabKey and panel:IsShown() then
+            -- Stop any ongoing animations before starting fade out
+            panel._fadeIn:Stop()
+            panel._fadeOut:Stop()
             -- Fade out previous tab
             panel._fadeOut:Play()
         elseif key == tabKey then
+            -- Stop any ongoing animations before starting fade in
+            panel._fadeIn:Stop()
+            panel._fadeOut:Stop()
+            -- Ensure alpha is reset before showing
+            panel:SetAlpha(0)
             -- Fade in new tab
             panel:Show()
             panel._fadeIn:Play()

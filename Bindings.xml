@@ -1,32 +1,32 @@
 <Bindings>
-    <Binding name="CR_TOGGLE" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_TOGGLE" header="CELESTIALRECRUITER">
         CR_ToggleUI()
     </Binding>
-    <Binding name="CR_SCAN" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_SCAN">
         CR_Scan()
     </Binding>
-    <Binding name="CR_NEXT_RECRUIT" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_NEXT_RECRUIT">
         CR_RecruitNext()
     </Binding>
-    <Binding name="CR_NEXT_INVITE" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_NEXT_INVITE">
         CR_InviteNext()
     </Binding>
-    <Binding name="CR_NEXT_WHISPER" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_NEXT_WHISPER">
         CR_WhisperNext()
     </Binding>
-    <Binding name="CR_AUTO_TOGGLE" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_AUTO_TOGGLE">
         CR_AutoToggle()
     </Binding>
-    <Binding name="CR_TAB_SCANNER" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_TAB_SCANNER">
         CR_TabScanner()
     </Binding>
-    <Binding name="CR_TAB_QUEUE" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_TAB_QUEUE">
         CR_TabQueue()
     </Binding>
-    <Binding name="CR_TAB_INBOX" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_TAB_INBOX">
         CR_TabInbox()
     </Binding>
-    <Binding name="CR_TAB_SETTINGS" header="CELESTIALRECRUITER" runOnUp="false">
+    <Binding name="CR_TAB_SETTINGS">
         CR_TabSettings()
     </Binding>
 </Bindings>

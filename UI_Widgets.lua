@@ -221,6 +221,11 @@ function W.MakeBtn(parent, text, w, style, onClick)
             s._targetR, s._targetG, s._targetB, s._targetA = unpack(s._hc)
             s._glow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.10)
             s._glow:Show()
+
+            -- Subtle sparkle effect on hover
+            if ns.ParticleSystem and ns.ParticleSystem.PlayHoverEffect then
+                ns.ParticleSystem:PlayHoverEffect(s)
+            end
         end
     end)
     b:SetScript("OnLeave", function(s)
@@ -239,6 +244,12 @@ function W.MakeBtn(parent, text, w, style, onClick)
                     s._currentR, s._currentG, s._currentB, s._currentA = s._targetR, s._targetG, s._targetB, s._targetA
                 end
             end)
+
+            -- Click effect with particles
+            if ns.ParticleSystem and ns.ParticleSystem.PlayClickEffect then
+                ns.ParticleSystem:PlayClickEffect(s)
+            end
+
             onClick()
         end
     end)

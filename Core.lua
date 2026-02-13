@@ -33,6 +33,12 @@ function CR:OnEnable()
   ns.AntiSpam_Init()
   ns.Scanner_Init()
   ns.Minimap_Init()
+
+  -- Initialize particle system
+  if ns.ParticleSystem and ns.ParticleSystem.Init then
+    ns.ParticleSystem:Init()
+  end
+
   ns.UI_Init()
   ns.Inbox_Init()
 
@@ -74,6 +80,11 @@ function CR:OnEnable()
       -- Show celebration notification
       if ns.Notifications_Success then
         ns.Notifications_Success("🎉 Nouvelle recrue !", key .. " a rejoint la guilde")
+      end
+
+      -- Play epic visual effects!
+      if ns.ParticleSystem and ns.ParticleSystem.PlayRecruitJoinedEffect and ns.UI and ns.UI.mainFrame then
+        ns.ParticleSystem:PlayRecruitJoinedEffect(ns.UI.mainFrame)
       end
 
       ns.UI_Refresh()
