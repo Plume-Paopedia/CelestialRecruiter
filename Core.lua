@@ -21,6 +21,12 @@ function CR:OnInitialize()
   if ns.Discord and ns.Discord.Init then
     ns.Discord:Init()
   end
+  if ns.ABTesting and ns.ABTesting.Init then
+    ns.ABTesting:Init()
+  end
+  if ns.Campaigns and ns.Campaigns.Init then
+    ns.Campaigns:Init()
+  end
 end
 
 function CR:OnEnable()
@@ -93,6 +99,16 @@ function CR:OnEnable()
       -- Notify Discord
       if ns.Discord and ns.Discord.NotifyRecruitJoined then
         ns.Discord:NotifyRecruitJoined(key, c)
+      end
+
+      -- Record A/B Testing outcome
+      if ns.ABTesting and ns.ABTesting.RecordJoined and c.lastTemplate then
+        ns.ABTesting:RecordJoined(c.lastTemplate)
+      end
+
+      -- Record Campaigns outcome
+      if ns.Campaigns and c._campaignId then
+        ns.Campaigns:RecordJoined(c._campaignId, key)
       end
 
       ns.UI_Refresh()

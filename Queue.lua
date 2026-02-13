@@ -46,7 +46,13 @@ function ns.Queue_Whisper(key, tplId)
     return false, tostring(why)
   end
 
-  local msg = ns.Templates_Render(key, tplId)
+  -- A/B Testing: pick template variant if a test is active
+  local actualTplId = tplId
+  if ns.ABTesting and ns.ABTesting.PickTemplate then
+    actualTplId = ns.ABTesting:PickTemplate(tplId)
+  end
+
+  local msg = ns.Templates_Render(key, actualTplId)
   if msg == "" then
     ns.Util_Print("Message bloque (modele vide)")
     return false, "empty_template"
@@ -55,13 +61,18 @@ function ns.Queue_Whisper(key, tplId)
   SendChatMessage(msg, "WHISPER", nil, key)
 
   ns.AntiSpam_MarkWhisper(key)
-  ns.DB_UpsertContact(key, { status = "contacted", lastTemplate = tplId })
-  ns.DB_Log("OUT", "Message envoye a " .. key)
+  ns.DB_UpsertContact(key, { status = "contacted", lastTemplate = actualTplId })
+  ns.DB_Log("OUT", "Message envoye a " .. key .. " (tpl: " .. actualTplId .. ")")
   if ns.sessionStats then ns.sessionStats.whispersSent = ns.sessionStats.whispersSent + 1 end
+
+  -- Record A/B Testing
+  if ns.ABTesting and ns.ABTesting.RecordSent then
+    ns.ABTesting:RecordSent(actualTplId)
+  end
 
   -- Record statistics
   if ns.Statistics and ns.Statistics.RecordEvent then
-    ns.Statistics:RecordEvent("contacted", {template = tplId})
+    ns.Statistics:RecordEvent("contacted", {template = actualTplId})
   end
 
   -- Show success notification

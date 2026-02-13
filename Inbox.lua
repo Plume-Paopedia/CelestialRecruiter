@@ -55,6 +55,17 @@ function ns.Inbox_Init()
       return
     end
 
+    -- Record A/B Testing reply (if contact was previously messaged)
+    local contact = ns.DB_GetContact(key)
+    if contact and contact.lastTemplate and ns.ABTesting and ns.ABTesting.RecordReply then
+      ns.ABTesting:RecordReply(contact.lastTemplate)
+    end
+
+    -- Record Campaign reply
+    if contact and contact._campaignId and ns.Campaigns and ns.Campaigns.RecordReply then
+      ns.Campaigns:RecordReply(contact._campaignId, key)
+    end
+
     ns.DB_Log("IN", "Ajout manuel requis dans la liste d'attente: " .. key)
 
     ns.UI_Refresh()

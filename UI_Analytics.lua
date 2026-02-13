@@ -319,6 +319,149 @@ function ns.UI_BuildAnalytics(panel)
 
     yOffset = yOffset - 70
 
+    -- ═══════════════════════════════════════════════════
+    -- Section 7: Dashboard Widgets
+    -- ═══════════════════════════════════════════════════
+    local widgetsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    widgetsLabel:SetPoint("TOPLEFT", 16, yOffset)
+    widgetsLabel:SetText("|cff00aaff>|r Tableau de bord")
+    widgetsLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+    yOffset = yOffset - 30
+
+    -- Dashboard widgets container
+    if ns.DashboardWidgets and ns.DashboardWidgets.Build then
+        local widgetContainer = CreateFrame("Frame", nil, content)
+        widgetContainer:SetPoint("TOPLEFT", 16, yOffset)
+        widgetContainer:SetPoint("RIGHT", content, "RIGHT", -16, 0)
+        widgetContainer:SetWidth(chartWidth - 40)
+
+        local widgetHeight = ns.DashboardWidgets:Build(widgetContainer)
+        widgetContainer:SetHeight(widgetHeight)
+        yOffset = yOffset - widgetHeight - 20
+        ad._widgetContainer = widgetContainer
+    end
+
+    -- ═══════════════════════════════════════════════════
+    -- Section 8: A/B Test Results
+    -- ═══════════════════════════════════════════════════
+    local abLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    abLabel:SetPoint("TOPLEFT", 16, yOffset)
+    abLabel:SetText("|cff9370DB>|r Tests A/B")
+    abLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+    yOffset = yOffset - 25
+
+    ad.abContainer = CreateFrame("Frame", nil, content)
+    ad.abContainer:SetPoint("TOPLEFT", 20, yOffset)
+    ad.abContainer:SetSize(chartWidth - 40, 180)
+
+    -- A/B Test info
+    ad.abTestInfo = ad.abContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.abTestInfo:SetPoint("TOPLEFT", 0, 0)
+    ad.abTestInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    ad.abTestInfo:SetText("Aucun test A/B configure")
+
+    ad.abVariantRows = {}
+    for i = 1, 5 do
+        local y = -(i - 1) * 30 - 20
+        local row = CreateFrame("Frame", nil, ad.abContainer, "BackdropTemplate")
+        row:SetSize(chartWidth - 40, 26)
+        row:SetPoint("TOPLEFT", 0, y)
+        row:SetBackdrop({bgFile = W.SOLID})
+        row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], (i % 2 == 0) and 0.2 or 0.35)
+
+        local name = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        name:SetPoint("LEFT", 8, 0)
+        name:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+        local sent = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        sent:SetPoint("LEFT", 120, 0)
+        sent:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        local replies = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        replies:SetPoint("LEFT", 200, 0)
+        replies:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        local joined = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        joined:SetPoint("LEFT", 280, 0)
+        joined:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        local rate = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rate:SetPoint("LEFT", 360, 0)
+        rate:SetTextColor(C.green[1], C.green[2], C.green[3])
+
+        local fill = row:CreateTexture(nil, "ARTWORK")
+        fill:SetTexture(W.SOLID)
+        fill:SetPoint("TOPLEFT", 440, -2)
+        fill:SetPoint("BOTTOMLEFT", 440, 2)
+        fill:SetWidth(1)
+        fill:SetVertexColor(C.purple[1], C.purple[2], C.purple[3], 0.5)
+
+        ad.abVariantRows[i] = {row = row, name = name, sent = sent, replies = replies, joined = joined, rate = rate, fill = fill}
+        row:Hide()
+    end
+
+    yOffset = yOffset - 200
+
+    -- ═══════════════════════════════════════════════════
+    -- Section 9: Campaign Overview
+    -- ═══════════════════════════════════════════════════
+    local campLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    campLabel:SetPoint("TOPLEFT", 16, yOffset)
+    campLabel:SetText("|cffFF8C00>|r Campagnes de recrutement")
+    campLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+    yOffset = yOffset - 25
+
+    ad.campContainer = CreateFrame("Frame", nil, content)
+    ad.campContainer:SetPoint("TOPLEFT", 20, yOffset)
+    ad.campContainer:SetSize(chartWidth - 40, 200)
+
+    ad.campInfo = ad.campContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.campInfo:SetPoint("TOPLEFT", 0, 0)
+    ad.campInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    ad.campInfo:SetText("Aucune campagne configuree")
+
+    ad.campRows = {}
+    for i = 1, 5 do
+        local y = -(i - 1) * 50 - 20
+        local row = CreateFrame("Frame", nil, ad.campContainer, "BackdropTemplate")
+        row:SetSize(chartWidth - 40, 46)
+        row:SetPoint("TOPLEFT", 0, y)
+        row:SetBackdrop({bgFile = W.SOLID, edgeFile = W.EDGE, edgeSize = 8, insets = {left = 2, right = 2, top = 2, bottom = 2}})
+        row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.6)
+        row:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.3)
+
+        local name = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        name:SetPoint("TOPLEFT", 10, -6)
+        name:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+        local status = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        status:SetPoint("TOPRIGHT", -10, -6)
+        status:SetTextColor(C.green[1], C.green[2], C.green[3])
+
+        local stats = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        stats:SetPoint("BOTTOMLEFT", 10, 6)
+        stats:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        -- Progress bar
+        local barBg = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        barBg:SetSize(200, 5)
+        barBg:SetPoint("BOTTOMRIGHT", -10, 8)
+        barBg:SetBackdrop({bgFile = W.SOLID})
+        barBg:SetBackdropColor(1, 1, 1, 0.06)
+
+        local barFill = barBg:CreateTexture(nil, "OVERLAY")
+        barFill:SetTexture(W.SOLID)
+        barFill:SetPoint("TOPLEFT")
+        barFill:SetPoint("BOTTOMLEFT")
+        barFill:SetWidth(1)
+        barFill:SetVertexColor(C.gold[1], C.gold[2], C.gold[3], 0.8)
+
+        ad.campRows[i] = {row = row, name = name, status = status, stats = stats, barBg = barBg, barFill = barFill}
+        row:Hide()
+    end
+
+    yOffset = yOffset - 280
+
     -- Set scroll content height
     scroll:SetH(math.abs(yOffset) + 20)
 
@@ -448,9 +591,118 @@ function ns.UI_RefreshAnalytics()
     end
 end
 
+    -- 6. Dashboard Widgets
+    if ns.DashboardWidgets and ns.DashboardWidgets.Refresh then
+        ns.DashboardWidgets:Refresh()
+    end
+
+    -- 7. A/B Test Results
+    if ad.abVariantRows and ns.ABTesting then
+        local tests = ns.ABTesting:GetAllTests()
+        if #tests > 0 then
+            local latestTest = tests[1]
+            ad.abTestInfo:SetText(("Test: %s  |  Status: %s  |  Min. echantillons: %d"):format(
+                latestTest.name,
+                latestTest.status,
+                latestTest.minSamples
+            ))
+
+            local results = ns.ABTesting:GetTestResults(latestTest.id)
+            local maxSent = 1
+            for _, r in ipairs(results) do
+                if r.sent > maxSent then maxSent = r.sent end
+            end
+
+            for i = 1, 5 do
+                local row = ad.abVariantRows[i]
+                if i <= #results then
+                    local r = results[i]
+                    row.name:SetText(r.templateId .. (r.isWinner and " |cffFFD700*|r" or ""))
+                    row.sent:SetText(("Env: %d"):format(r.sent))
+                    row.replies:SetText(("Rep: %d"):format(r.replies))
+                    row.joined:SetText(("Rec: %d"):format(r.joined))
+                    row.rate:SetText(("Score: %.1f%%"):format(r.score * 100))
+                    row.fill:SetWidth(math.max(1, 200 * (r.sent / maxSent)))
+
+                    if r.isWinner then
+                        row.name:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+                    else
+                        row.name:SetTextColor(C.text[1], C.text[2], C.text[3])
+                    end
+                    row.row:Show()
+                else
+                    row.row:Hide()
+                end
+            end
+        else
+            ad.abTestInfo:SetText("Aucun test A/B configure. Creez-en un dans les reglages.")
+            for _, row in ipairs(ad.abVariantRows) do
+                row.row:Hide()
+            end
+        end
+    end
+
+    -- 8. Campaign Overview
+    if ad.campRows and ns.Campaigns then
+        local campaigns = ns.Campaigns:GetAll()
+        if #campaigns > 0 then
+            local globalStats = ns.Campaigns:GetGlobalStats()
+            ad.campInfo:SetText(("Total: %d campagnes | %d actives | %d contactes | %d recrues"):format(
+                globalStats.campaigns, globalStats.active, globalStats.contacted, globalStats.joined
+            ))
+
+            for i = 1, 5 do
+                local row = ad.campRows[i]
+                if i <= #campaigns then
+                    local camp = campaigns[i]
+                    row.name:SetText(camp.name)
+                    row.name:Show()
+
+                    local statusColors = {
+                        draft = {C.dim[1], C.dim[2], C.dim[3]},
+                        active = {C.green[1], C.green[2], C.green[3]},
+                        paused = {C.orange[1], C.orange[2], C.orange[3]},
+                        completed = {C.gold[1], C.gold[2], C.gold[3]},
+                        archived = {C.muted[1], C.muted[2], C.muted[3]},
+                    }
+                    local sc = statusColors[camp.status] or statusColors.draft
+                    row.status:SetText(camp.status)
+                    row.status:SetTextColor(sc[1], sc[2], sc[3])
+
+                    row.stats:SetText(("Contactes: %d | Invites: %d | Recrues: %d/%d"):format(
+                        camp.stats.contacted, camp.stats.invited, camp.stats.joined, camp.goals.targetJoined
+                    ))
+
+                    -- Progress bar
+                    local pct = camp.goals.targetJoined > 0 and (camp.stats.joined / camp.goals.targetJoined) or 0
+                    pct = math.min(1, pct)
+                    row.barFill:SetWidth(math.max(1, row.barBg:GetWidth() * pct))
+
+                    row.row:Show()
+                else
+                    row.row:Hide()
+                end
+            end
+        else
+            ad.campInfo:SetText("Aucune campagne configuree. Creez-en une via /cr.")
+            for _, row in ipairs(ad.campRows) do
+                row.row:Hide()
+            end
+        end
+    end
+end
+
 ---------------------------------------------------------------------------
 -- Analytics Badge
 ---------------------------------------------------------------------------
 function ns.UI_AnalyticsBadge()
-    return ""
+    -- Show active campaign/test count
+    local badge = ""
+    if ns.Campaigns then
+        local active = ns.Campaigns:GetActiveCampaigns()
+        if #active > 0 then
+            badge = "|cff33e07a" .. #active .. "|r"
+        end
+    end
+    return badge
 end
