@@ -27,6 +27,12 @@ function CR:OnInitialize()
   if ns.Campaigns and ns.Campaigns.Init then
     ns.Campaigns:Init()
   end
+  if ns.Goals and ns.Goals.Init then
+    ns.Goals:Init()
+  end
+  if ns.SmartSuggestions and ns.SmartSuggestions.Init then
+    ns.SmartSuggestions:Init()
+  end
 end
 
 function CR:OnEnable()
@@ -114,6 +120,11 @@ function CR:OnEnable()
     -- Record Campaigns outcome
     if ns.Campaigns and campaignId then
       ns.Campaigns:RecordJoined(campaignId, key)
+    end
+
+    -- Record Goals activity
+    if ns.Goals and ns.Goals.RecordActivity then
+      ns.Goals:RecordActivity("join")
     end
 
     ns.UI_Refresh()

@@ -512,6 +512,11 @@ function ns.Scanner_ScanStep(clearCurrentList)
     if ns.Statistics and ns.Statistics.RecordEvent then
       ns.Statistics:RecordEvent("scan")
     end
+
+    -- Record Goals activity
+    if ns.Goals and ns.Goals.RecordActivity then
+      ns.Goals:RecordActivity("scan")
+    end
   end
 
   return sendNextQuery()

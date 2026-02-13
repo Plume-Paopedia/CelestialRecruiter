@@ -66,6 +66,11 @@ function ns.Inbox_Init()
       ns.Campaigns:RecordReply(contact._campaignId, key)
     end
 
+    -- Record Goals activity
+    if ns.Goals and ns.Goals.RecordActivity then
+      ns.Goals:RecordActivity("reply")
+    end
+
     ns.DB_Log("IN", "Ajout manuel requis dans la liste d'attente: " .. key)
 
     ns.UI_Refresh()

@@ -1,171 +1,656 @@
 local _, ns = ...
 local W = ns.UIWidgets
 local C = W.C
+local Rep = ns.Reputation
 
--- ═══════════════════════════════════════════════════════════════════
--- CelestialRecruiter  —  Inbox (Boite) Tab
--- ═══════════════════════════════════════════════════════════════════
+-- =====================================================================
+-- CelestialRecruiter  --  Inbox (Boite) Tab  --  Enhanced v3.1
+-- Conversation history, quick-reply, hot contact indicators
+-- =====================================================================
 
-local id = {}
+local ib = {}         -- module state
+local ROW_MAIN  = 44  -- main row height (name + preview)
+local ROW_REPLY = 28  -- inline reply editbox height
+local PREVIEW_CHARS = 60
 
 ---------------------------------------------------------------------------
--- Row Factory
+-- Sort / Filter state  (local to module, survives refresh)
+---------------------------------------------------------------------------
+ib.sortMode    = "recent"   -- "recent" | "score" | "hot"
+ib.hotOnly     = false
+ib.activeReply = nil        -- key of row currently showing reply box
+
+---------------------------------------------------------------------------
+-- Helpers
+---------------------------------------------------------------------------
+local function truncate(text, maxLen)
+    if not text or text == "" then return "" end
+    text = text:gsub("%s+", " ")
+    if #text <= maxLen then return text end
+    return text:sub(1, maxLen) .. "..."
+end
+
+local function scoreColor(score)
+    if score >= 80 then return C.orange end
+    if score >= 60 then return C.green  end
+    if score >= 40 then return C.dim    end
+    return C.muted
+end
+
+local function scoreBadgeText(score)
+    local col = scoreColor(score)
+    local hex = string.format("%02x%02x%02x", col[1] * 255, col[2] * 255, col[3] * 255)
+    return string.format("|cff%s%d|r", hex, score)
+end
+
+local function hotBadgeText()
+    local hex = string.format("%02x%02x%02x", C.orange[1] * 255, C.orange[2] * 255, C.orange[3] * 255)
+    return string.format("|cff%sHOT|r", hex)
+end
+
+local function statusDot(status)
+    local r, g, b = W.statusDotColor(status)
+    local hex = string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
+    return string.format("|cff%s\226\151\143|r", hex) -- Unicode bullet
+end
+
+local function classColoredName(key, classFile)
+    if classFile and classFile ~= "" then
+        return "|c" .. W.classHex(classFile) .. key .. "|r"
+    end
+    return "|cff" .. string.format("%02x%02x%02x", C.accent[1] * 255, C.accent[2] * 255, C.accent[3] * 255) .. key .. "|r"
+end
+
+local function agoFr(ts)
+    return ns.Util_FormatAgo(ts)
+end
+
+---------------------------------------------------------------------------
+-- Build template items list (for dropdown)
+---------------------------------------------------------------------------
+local function getTemplateItems()
+    local items = {}
+    local all = ns.Templates_All()
+    if all then
+        for id, obj in pairs(all) do
+            items[#items + 1] = { value = id, label = obj.name or id }
+        end
+    end
+    if #items == 0 then
+        items[#items + 1] = { value = "default", label = "Par defaut" }
+    end
+    return items
+end
+
+---------------------------------------------------------------------------
+-- Enhanced Tooltip (conversation context)
+---------------------------------------------------------------------------
+local function ShowInboxTooltip(anchor, key)
+    if not key or key == "" then return end
+    GameTooltip:SetOwner(anchor, "ANCHOR_RIGHT")
+
+    local c = ns.DB_GetContact(key)
+    if not c then
+        GameTooltip:AddLine(key, C.accent[1], C.accent[2], C.accent[3])
+        GameTooltip:Show()
+        return
+    end
+
+    -- Name with class color
+    local classFile = c.classFile
+    if classFile and classFile ~= "" then
+        GameTooltip:AddLine("|c" .. W.classHex(classFile) .. key .. "|r")
+    else
+        GameTooltip:AddLine(key, C.accent[1], C.accent[2], C.accent[3])
+    end
+
+    -- Level / class info
+    local parts = {}
+    if (c.level or 0) > 0 then
+        parts[#parts + 1] = "Niv " .. c.level
+    end
+    if c.classFile and c.classFile ~= "" then
+        parts[#parts + 1] = c.classFile
+    end
+    if #parts > 0 then
+        GameTooltip:AddLine(table.concat(parts, "  "), C.dim[1], C.dim[2], C.dim[3])
+    end
+
+    -- Reputation score
+    GameTooltip:AddLine(" ")
+    local score = Rep:CalculateScore(c)
+    local _, scoreLabel, scoreCol = Rep:GetScoreClass(score)
+    GameTooltip:AddDoubleLine("Score reputation:", tostring(score) .. " / 100", C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
+    GameTooltip:AddDoubleLine("Classement:", scoreLabel, C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
+
+    -- Score breakdown hints
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine("-- Facteurs de score --", C.gold[1], C.gold[2], C.gold[3])
+    if c.optedIn then
+        GameTooltip:AddDoubleLine("  Opt-in:", "+30", C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
+    end
+    if c.lastWhisperIn and c.lastWhisperOut and c.lastWhisperIn > c.lastWhisperOut then
+        GameTooltip:AddDoubleLine("  A repondu:", "+25", C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
+    end
+    if c.source == "inbox" then
+        GameTooltip:AddDoubleLine("  Nous a contacte:", "+20", C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
+    end
+    if c.status == "ignored" then
+        GameTooltip:AddDoubleLine("  Statut ignore:", "-50", C.dim[1], C.dim[2], C.dim[3], C.red[1], C.red[2], C.red[3])
+    end
+
+    -- Conversation summary
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine("-- Historique --", C.gold[1], C.gold[2], C.gold[3])
+
+    local sr, sg, sb = W.statusDotColor(c.status)
+    GameTooltip:AddDoubleLine("Statut:", c.status or "new", C.dim[1], C.dim[2], C.dim[3], sr, sg, sb)
+
+    if c.source and c.source ~= "" then
+        GameTooltip:AddDoubleLine("Source:", c.source, C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+    end
+    if c.optedIn then
+        GameTooltip:AddDoubleLine("Opt-in:", "Oui", C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
+    end
+
+    if (c.lastWhisperIn or 0) > 0 then
+        GameTooltip:AddDoubleLine("Dernier msg recu:", agoFr(c.lastWhisperIn), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+    end
+    if (c.lastWhisperOut or 0) > 0 then
+        GameTooltip:AddDoubleLine("Dernier msg envoye:", agoFr(c.lastWhisperOut), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+    end
+    if (c.lastInviteAt or 0) > 0 then
+        GameTooltip:AddDoubleLine("Derniere invitation:", agoFr(c.lastInviteAt), C.gold[1], C.gold[2], C.gold[3], C.text[1], C.text[2], C.text[3])
+    end
+
+    -- Notes
+    if c.notes and c.notes ~= "" then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Notes: " .. c.notes, C.dim[1], C.dim[2], C.dim[3], true)
+    end
+
+    -- Tags
+    if c.tags and #c.tags > 0 then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Tags: " .. table.concat(c.tags, ", "), C.purple[1], C.purple[2], C.purple[3], true)
+    end
+
+    GameTooltip:Show()
+end
+
+---------------------------------------------------------------------------
+-- Row Factory  (two-line main row: name line + preview line)
 ---------------------------------------------------------------------------
 local function MakeInboxRow(parent, i)
     local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    row:SetHeight(W.ROW_H)
-    row:SetBackdrop({bgFile = W.SOLID})
+    row:SetHeight(ROW_MAIN)
+    row:SetBackdrop({ bgFile = W.SOLID })
     W.SetRowBG(row, i)
     row:EnableMouse(true)
+
     row:SetScript("OnEnter", function(s)
         s:SetBackdropColor(unpack(C.hover))
-        W.ShowPlayerTooltip(s, s._boundKey)
+        ShowInboxTooltip(s, s._boundKey)
     end)
     row:SetScript("OnLeave", function(s)
         s:SetBackdropColor(unpack(s._bgc))
         W.HidePlayerTooltip()
     end)
 
-    -- Player name
+    -----------------------------------------------------------------------
+    -- Top line:  [score] [HOT?] [name] [status dot] [ago]
+    -----------------------------------------------------------------------
+    row.scoreBadge = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.scoreBadge:SetPoint("LEFT", 8, 6)
+    row.scoreBadge:SetWidth(30)
+    row.scoreBadge:SetJustifyH("CENTER")
+
+    row.hotBadge = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.hotBadge:SetPoint("LEFT", row.scoreBadge, "RIGHT", 2, 0)
+    row.hotBadge:SetWidth(32)
+    row.hotBadge:SetJustifyH("LEFT")
+
     row.name = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    row.name:SetPoint("LEFT", 10, 0)
-    row.name:SetWidth(200)
+    row.name:SetPoint("LEFT", row.hotBadge, "RIGHT", 2, 0)
+    row.name:SetWidth(160)
     row.name:SetJustifyH("LEFT")
     row.name:SetWordWrap(false)
 
-    -- Info (status, flags, time)
-    row.info = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    row.info:SetPoint("LEFT", 218, 0)
-    row.info:SetWidth(310)
-    row.info:SetJustifyH("LEFT")
-    row.info:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
-    row.info:SetWordWrap(false)
+    row.statusDot = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    row.statusDot:SetPoint("LEFT", row.name, "RIGHT", 4, 0)
+    row.statusDot:SetWidth(14)
 
-    -- Blacklist button (rightmost)
-    row.blBtn = W.MakeBtn(row, "Blacklist", 72, "d", nil)
-    row.blBtn:SetPoint("RIGHT", -6, 0)
+    row.ago = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.ago:SetPoint("LEFT", row.statusDot, "RIGHT", 4, 0)
+    row.ago:SetWidth(60)
+    row.ago:SetJustifyH("LEFT")
+    row.ago:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
-    -- Ignore button
-    row.ignBtn = W.MakeBtn(row, "Ignorer 7j", 80, "n", nil)
-    row.ignBtn:SetPoint("RIGHT", row.blBtn, "LEFT", -4, 0)
+    -----------------------------------------------------------------------
+    -- Second line:  preview of last message received (dim)
+    -----------------------------------------------------------------------
+    row.preview = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.preview:SetPoint("TOPLEFT", row.scoreBadge, "BOTTOMLEFT", 0, -1)
+    row.preview:SetPoint("RIGHT", row, "RIGHT", -280, 0)
+    row.preview:SetJustifyH("LEFT")
+    row.preview:SetWordWrap(false)
+    row.preview:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
-    -- Add to queue button
-    row.addBtn = W.MakeBtn(row, "+ Liste", 66, "s", nil)
-    row.addBtn:SetPoint("RIGHT", row.ignBtn, "LEFT", -4, 0)
+    -----------------------------------------------------------------------
+    -- Right-side action buttons
+    -----------------------------------------------------------------------
+    -- Blacklist (rightmost)
+    row.blBtn = W.MakeBtn(row, "Blacklist", 68, "d", nil)
+    row.blBtn:SetPoint("RIGHT", -6, 6)
 
+    -- Ignorer 7j
+    row.ignBtn = W.MakeBtn(row, "Ignorer 7j", 76, "n", nil)
+    row.ignBtn:SetPoint("RIGHT", row.blBtn, "LEFT", -3, 0)
+
+    -- + Liste
+    row.addBtn = W.MakeBtn(row, "+ Liste", 58, "s", nil)
+    row.addBtn:SetPoint("RIGHT", row.ignBtn, "LEFT", -3, 0)
+
+    -- Recruter
+    row.recruitBtn = W.MakeBtn(row, "Recruter", 66, "s", nil)
+    row.recruitBtn:SetPoint("RIGHT", row.addBtn, "LEFT", -3, 0)
+
+    -- Repondre
+    row.replyBtn = W.MakeBtn(row, "Repondre", 70, "p", nil)
+    row.replyBtn:SetPoint("RIGHT", row.recruitBtn, "LEFT", -3, 0)
+
+    -----------------------------------------------------------------------
+    -- Hot glow (persistent for score >= 70)
+    -----------------------------------------------------------------------
+    row.hotGlow = row:CreateTexture(nil, "BACKGROUND", nil, 1)
+    row.hotGlow:SetTexture(W.SOLID)
+    row.hotGlow:SetAllPoints()
+    row.hotGlow:SetVertexColor(C.orange[1], C.orange[2], C.orange[3], 0)
+    row.hotGlow:Hide()
+
+    -----------------------------------------------------------------------
+    -- Standard hover glow
+    -----------------------------------------------------------------------
     W.AddRowGlow(row)
+
+    -----------------------------------------------------------------------
+    -- Inline reply EditBox (hidden by default, shown below main row)
+    -----------------------------------------------------------------------
+    row.replyFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    row.replyFrame:SetHeight(ROW_REPLY)
+    row.replyFrame:SetBackdrop({ bgFile = W.SOLID })
+    row.replyFrame:SetBackdropColor(0.06, 0.08, 0.14, 0.95)
+    row.replyFrame:Hide()
+
+    row.replyEB = CreateFrame("EditBox", nil, row.replyFrame, "BackdropTemplate")
+    row.replyEB:SetPoint("TOPLEFT", 8, -3)
+    row.replyEB:SetPoint("BOTTOMRIGHT", -80, 3)
+    row.replyEB:SetBackdrop({
+        bgFile = W.SOLID, edgeFile = W.EDGE,
+        edgeSize = 8, insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    row.replyEB:SetBackdropColor(0.04, 0.05, 0.10, 0.90)
+    row.replyEB:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.5)
+    row.replyEB:SetFontObject(GameFontHighlightSmall)
+    row.replyEB:SetTextInsets(6, 6, 0, 0)
+    row.replyEB:SetAutoFocus(false)
+
+    -- Send button inside reply frame
+    row.sendBtn = W.MakeBtn(row.replyFrame, "Envoyer", 66, "p", nil)
+    row.sendBtn:SetPoint("RIGHT", -6, 0)
+
     return row
 end
 
 ---------------------------------------------------------------------------
--- Build
+-- Build (called once from UI.lua)
 ---------------------------------------------------------------------------
 function ns.UI_BuildInbox(parent)
-    id.scroll = W.MakeScroll(parent)
-    id.scroll.frame:SetPoint("TOPLEFT", 8, -8)
-    id.scroll.frame:SetPoint("BOTTOMRIGHT", -8, 8)
+    -----------------------------------------------------------------------
+    -- Top controls bar: sort dropdown + hot only toggle
+    -----------------------------------------------------------------------
+    local bar = CreateFrame("Frame", nil, parent)
+    bar:SetHeight(28)
+    bar:SetPoint("TOPLEFT", 8, -8)
+    bar:SetPoint("TOPRIGHT", -8, -8)
+    ib.bar = bar
+
+    -- Sort dropdown
+    local sortItems = {
+        { value = "recent", label = "Recent" },
+        { value = "score",  label = "Score" },
+        { value = "hot",    label = "Hot d'abord" },
+    }
+    ib.sortDD = W.MakeDropdown(bar, 130, sortItems, ib.sortMode, function(v)
+        ib.sortMode = v
+        ns.UI_RefreshInbox()
+    end)
+    ib.sortDD:SetPoint("LEFT", 0, 0)
+
+    -- "Hot leads" toggle checkbox
+    ib.hotCheck = W.MakeCheck(bar, "Hot leads only", function() return ib.hotOnly end, function(v)
+        ib.hotOnly = v
+        ns.UI_RefreshInbox()
+    end)
+    ib.hotCheck:SetPoint("LEFT", ib.sortDD, "RIGHT", 14, 0)
+
+    -----------------------------------------------------------------------
+    -- Scroll area (below control bar)
+    -----------------------------------------------------------------------
+    ib.scroll = W.MakeScroll(parent)
+    ib.scroll.frame:SetPoint("TOPLEFT", 8, -40)
+    ib.scroll.frame:SetPoint("BOTTOMRIGHT", -8, 8)
+end
+
+---------------------------------------------------------------------------
+-- Sorting comparators
+---------------------------------------------------------------------------
+local function sortFiltered(filtered)
+    local mode = ib.sortMode or "recent"
+    if mode == "recent" then
+        table.sort(filtered, function(a, b)
+            local ta = a.contact.lastWhisperIn or 0
+            local tb = b.contact.lastWhisperIn or 0
+            if ta == tb then return a.key < b.key end
+            return ta > tb
+        end)
+    elseif mode == "score" then
+        table.sort(filtered, function(a, b)
+            if a.score == b.score then return a.key < b.key end
+            return a.score > b.score
+        end)
+    elseif mode == "hot" then
+        table.sort(filtered, function(a, b)
+            local aHot = a.score >= 70
+            local bHot = b.score >= 70
+            if aHot ~= bHot then return aHot end
+            if a.score == b.score then
+                local ta = a.contact.lastWhisperIn or 0
+                local tb = b.contact.lastWhisperIn or 0
+                if ta == tb then return a.key < b.key end
+                return ta > tb
+            end
+            return a.score > b.score
+        end)
+    end
+end
+
+---------------------------------------------------------------------------
+-- Wire a single row to a contact entry
+---------------------------------------------------------------------------
+local function BindRow(row, key, c, score, now, tplItems)
+    local ignored = c.status == "ignored" and (c.ignoredUntil or 0) > now
+
+    -----------------------------------------------------------------------
+    -- Score badge
+    -----------------------------------------------------------------------
+    row.scoreBadge:SetText(scoreBadgeText(score))
+
+    -- HOT badge
+    if score >= 80 then
+        row.hotBadge:SetText(hotBadgeText())
+        row.hotBadge:Show()
+    else
+        row.hotBadge:SetText("")
+        row.hotBadge:Hide()
+    end
+
+    -- Hot glow for score >= 70
+    if score >= 70 then
+        row.hotGlow:SetVertexColor(C.orange[1], C.orange[2], C.orange[3], 0.06)
+        row.hotGlow:Show()
+    else
+        row.hotGlow:Hide()
+    end
+
+    -----------------------------------------------------------------------
+    -- Name in class color
+    -----------------------------------------------------------------------
+    row.name:SetText(classColoredName(key, c.classFile))
+
+    -- Status dot
+    row.statusDot:SetText(statusDot(c.status))
+
+    -- Time ago
+    if (c.lastWhisperIn or 0) > 0 then
+        row.ago:SetText("il y a " .. agoFr(c.lastWhisperIn))
+    else
+        row.ago:SetText("")
+    end
+
+    -----------------------------------------------------------------------
+    -- Preview (last message received) -- we show source/flags as stand-in
+    -----------------------------------------------------------------------
+    local previewParts = {}
+    if c.optedIn then previewParts[#previewParts + 1] = "|cff33e07a[opt-in]|r" end
+    if c.source and c.source ~= "" then previewParts[#previewParts + 1] = c.source end
+    if ignored then previewParts[#previewParts + 1] = "|cffffb347[ignore]|r" end
+    if (c.lastWhisperOut or 0) > 0 then
+        previewParts[#previewParts + 1] = "msg envoye: " .. agoFr(c.lastWhisperOut)
+    end
+    if c.lastTemplate and c.lastTemplate ~= "" then
+        previewParts[#previewParts + 1] = "(tpl: " .. tostring(c.lastTemplate) .. ")"
+    end
+    local previewStr = table.concat(previewParts, "  ")
+    row.preview:SetText(truncate(previewStr, PREVIEW_CHARS))
+
+    -----------------------------------------------------------------------
+    -- Button labels
+    -----------------------------------------------------------------------
+    row.ignBtn:SetLabel(ignored and "Retirer ign." or "Ignorer 7j")
+
+    -----------------------------------------------------------------------
+    -- Wire buttons (only if key changed to avoid redundant closures)
+    -----------------------------------------------------------------------
+    if row._boundKey ~= key then
+        row._boundKey = key
+
+        -- + Liste
+        row.addBtn:SetScript("OnClick", function()
+            if ns.DB_QueueAdd(key) then
+                ns.DB_Log("QUEUE", "Ajout liste: " .. key)
+            end
+            ns.UI_Refresh()
+        end)
+
+        -- Blacklist
+        row.blBtn:SetScript("OnClick", function()
+            ns.DB_SetBlacklisted(key, true)
+            ns.DB_QueueRemove(key)
+            ns.DB_Log("BL", "Blacklist: " .. key)
+            ns.UI_Refresh()
+        end)
+
+        -- Recruter (message + invite via current template)
+        row.recruitBtn:SetScript("OnClick", function()
+            local tplId = ns._ui_tpl or "default"
+            ns.Queue_Recruit(key, tplId)
+        end)
+
+        -- Repondre toggle
+        row.replyBtn:SetScript("OnClick", function()
+            if ib.activeReply == key then
+                -- Hide reply
+                row.replyFrame:Hide()
+                ib.activeReply = nil
+                ns.UI_RefreshInbox()
+            else
+                -- Close any other open reply
+                ib.activeReply = key
+                ns.UI_RefreshInbox()
+                row.replyEB:SetText("")
+                row.replyEB:SetFocus()
+            end
+        end)
+
+        -- Reply EditBox: Enter = send whisper
+        row.replyEB:SetScript("OnEnterPressed", function(s)
+            local msg = s:GetText()
+            if msg and msg ~= "" then
+                SendChatMessage(msg, "WHISPER", nil, key)
+                ns.DB_UpsertContact(key, {
+                    status = "contacted",
+                    lastWhisperOut = ns.Util_Now(),
+                })
+                ns.DB_Log("OUT", "Reponse manuelle a " .. key .. ": " .. truncate(msg, 80))
+            end
+            s:SetText("")
+            s:ClearFocus()
+            row.replyFrame:Hide()
+            ib.activeReply = nil
+            ns.UI_RefreshInbox()
+        end)
+
+        row.replyEB:SetScript("OnEscapePressed", function(s)
+            s:SetText("")
+            s:ClearFocus()
+            row.replyFrame:Hide()
+            ib.activeReply = nil
+            ns.UI_RefreshInbox()
+        end)
+
+        -- Send button inside reply frame
+        row.sendBtn:SetScript("OnClick", function()
+            local msg = row.replyEB:GetText()
+            if msg and msg ~= "" then
+                SendChatMessage(msg, "WHISPER", nil, key)
+                ns.DB_UpsertContact(key, {
+                    status = "contacted",
+                    lastWhisperOut = ns.Util_Now(),
+                })
+                ns.DB_Log("OUT", "Reponse manuelle a " .. key .. ": " .. truncate(msg, 80))
+            end
+            row.replyEB:SetText("")
+            row.replyEB:ClearFocus()
+            row.replyFrame:Hide()
+            ib.activeReply = nil
+            ns.UI_RefreshInbox()
+        end)
+    end
+
+    -- Ignore button always rewired (depends on current ignored state)
+    row.ignBtn:SetScript("OnClick", function()
+        if ignored then
+            ns.DB_UpsertContact(key, { status = "new", ignoredUntil = 0 })
+            ns.DB_Log("IGNORE", "Retrait ignore: " .. key)
+        else
+            ns.DB_UpsertContact(key, {
+                status = "ignored",
+                ignoredUntil = ns.Util_Now() + 7 * 86400,
+            })
+            ns.DB_QueueRemove(key)
+            ns.DB_Log("IGNORE", "Ignore 7j: " .. key)
+        end
+        ns.UI_Refresh()
+    end)
 end
 
 ---------------------------------------------------------------------------
 -- Refresh
 ---------------------------------------------------------------------------
 function ns.UI_RefreshInbox()
-    if not id.scroll then return end
+    if not ib.scroll then return end
 
     local search = ns._ui_search or ""
-    local now = ns.Util_Now()
+    local now    = ns.Util_Now()
 
-    local allKeys = ns.DB_ListContactsForInbox()
+    -----------------------------------------------------------------------
+    -- 1.  Gather & filter contacts
+    -----------------------------------------------------------------------
+    local allKeys  = ns.DB_ListContactsForInbox()
     local filtered = {}
+
     for _, key in ipairs(allKeys) do
         local c = ns.DB_GetContact(key)
         if c and not ns.DB_IsBlacklisted(key)
-            and (c.lastWhisperIn or 0) > 0
-            and W.matchSearch(search,
+           and (c.lastWhisperIn or 0) > 0
+           and W.matchSearch(search,
                 key, c.status or "", c.notes or "",
                 c.optedIn and "optin" or "", c.source or ""
-            )
+           )
         then
-            filtered[#filtered + 1] = {key = key, contact = c}
+            local score = Rep:CalculateScore(c)
+
+            -- hot-only filter
+            if not ib.hotOnly or score >= 70 then
+                filtered[#filtered + 1] = {
+                    key     = key,
+                    contact = c,
+                    score   = score,
+                }
+            end
         end
     end
 
-    local scroll = id.scroll
-    local rows = scroll.rows
+    -----------------------------------------------------------------------
+    -- 2.  Sort
+    -----------------------------------------------------------------------
+    sortFiltered(filtered)
+
+    -----------------------------------------------------------------------
+    -- 3.  Template items (for future dropdown per-row if needed)
+    -----------------------------------------------------------------------
+    local tplItems = getTemplateItems()
+
+    -----------------------------------------------------------------------
+    -- 4.  Render rows
+    -----------------------------------------------------------------------
+    local scroll = ib.scroll
+    local rows   = scroll.rows
 
     if #filtered == 0 then
-        scroll:ShowEmpty("|cff8bc5ff*|r", "Aucun message entrant")
-        for _, r in ipairs(rows) do r:Hide() end
+        scroll:ShowEmpty("\240\159\147\172", "Aucun message recu. Les reponses a tes messages apparaitront ici.")
+        for _, r in ipairs(rows) do
+            r:Hide()
+            if r.replyFrame then r.replyFrame:Hide() end
+        end
         scroll:SetH(scroll.sf:GetHeight())
         return
     end
     scroll:HideEmpty()
 
+    local yOff = 0  -- cumulative Y offset for variable-height rows
+
     for i, item in ipairs(filtered) do
-        local key, c = item.key, item.contact
+        local key, c, score = item.key, item.contact, item.score
+
+        -- Ensure row exists
         if not rows[i] then rows[i] = MakeInboxRow(scroll.child, i) end
         local row = rows[i]
         row:Show()
-        row:SetPoint("TOPLEFT", scroll.child, "TOPLEFT", 0, -(i - 1) * W.ROW_H)
+
+        -- Position main row
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", scroll.child, "TOPLEFT", 0, -yOff)
         row:SetPoint("RIGHT", scroll.child, "RIGHT")
+        yOff = yOff + ROW_MAIN
 
-        -- Name
-        row.name:SetText("|cff00aaff" .. key .. "|r")
+        -- Bind data to row
+        BindRow(row, key, c, score, now, tplItems)
 
-        -- Flags + time
-        local flags = {}
-        if c.optedIn then flags[#flags + 1] = "|cff33e07aopt-in|r" end
-        if c.source == "scanner" then flags[#flags + 1] = "scanner" end
-        local ignored = c.status == "ignored" and (c.ignoredUntil or 0) > now
-        if ignored then flags[#flags + 1] = "|cffffb347ignore|r" end
-        local flagStr = #flags > 0 and ("  " .. table.concat(flags, " ")) or ""
-        row.info:SetText(("[%s]%s  dernier: %s"):format(
-            c.status or "new", flagStr, ns.Util_FormatAgo(c.lastWhisperIn)
-        ))
-
-        -- Update ignore button label (always needed since state can change)
-        row.ignBtn:SetLabel(ignored and "Retirer ign." or "Ignorer 7j")
-
-        -- Only rewire buttons if the bound key changed
-        if row._boundKey ~= key then
-            row._boundKey = key
-            row.addBtn:SetScript("OnClick", function()
-                if ns.DB_QueueAdd(key) then
-                    ns.DB_Log("QUEUE", "Ajout liste: " .. key)
-                end
-                ns.UI_Refresh()
-            end)
-            row.blBtn:SetScript("OnClick", function()
-                ns.DB_SetBlacklisted(key, true)
-                ns.DB_QueueRemove(key)
-                ns.DB_Log("BL", "Blacklist: " .. key)
-                ns.UI_Refresh()
-            end)
+        -- Inline reply frame positioning
+        if ib.activeReply == key then
+            row.replyFrame:ClearAllPoints()
+            row.replyFrame:SetPoint("TOPLEFT", scroll.child, "TOPLEFT", 0, -yOff)
+            row.replyFrame:SetPoint("RIGHT", scroll.child, "RIGHT")
+            row.replyFrame:Show()
+            yOff = yOff + ROW_REPLY
+        else
+            row.replyFrame:Hide()
         end
-
-        -- Ignore button always rewired (depends on ignored state which changes)
-        row.ignBtn:SetScript("OnClick", function()
-            if ignored then
-                ns.DB_UpsertContact(key, {status = "new", ignoredUntil = 0})
-                ns.DB_Log("IGNORE", "Retrait ignore: " .. key)
-            else
-                ns.DB_UpsertContact(key, {
-                    status = "ignored",
-                    ignoredUntil = ns.Util_Now() + 7 * 86400,
-                })
-                ns.DB_QueueRemove(key)
-                ns.DB_Log("IGNORE", "Ignore 7j: " .. key)
-            end
-            ns.UI_Refresh()
-        end)
     end
 
-    for i = #filtered + 1, #rows do rows[i]:Hide() end
-    scroll:SetH(#filtered * W.ROW_H)
+    -- Hide unused rows
+    for i = #filtered + 1, #rows do
+        rows[i]:Hide()
+        if rows[i].replyFrame then rows[i].replyFrame:Hide() end
+    end
+
+    scroll:SetH(yOff)
 end
 
 ---------------------------------------------------------------------------
--- Badge
+-- Badge (unread count for tab label)
 ---------------------------------------------------------------------------
 function ns.UI_InboxBadge()
     local n = 0

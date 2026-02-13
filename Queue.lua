@@ -75,6 +75,11 @@ function ns.Queue_Whisper(key, tplId)
     ns.Statistics:RecordEvent("contacted", {template = actualTplId})
   end
 
+  -- Record Goals activity
+  if ns.Goals and ns.Goals.RecordActivity then
+    ns.Goals:RecordActivity("contact")
+  end
+
   -- Show success notification (unless silenced by Queue_Recruit)
   if not ns._silentNotifications and ns.Notifications_Success then
     ns.Notifications_Success("Message envoyé", key)
@@ -153,6 +158,11 @@ function ns.Queue_Invite(key)
   -- Record statistics
   if ns.Statistics and ns.Statistics.RecordEvent then
     ns.Statistics:RecordEvent("invited")
+  end
+
+  -- Record Goals activity
+  if ns.Goals and ns.Goals.RecordActivity then
+    ns.Goals:RecordActivity("invite")
   end
 
   -- Show success notification (unless silenced by Queue_Recruit)
