@@ -68,15 +68,27 @@ function Filters:SetText(text)
 end
 
 function Filters:ToggleStatus(status)
-    self.active.status[status] = not self.active.status[status]
+    if self.active.status[status] then
+        self.active.status[status] = nil
+    else
+        self.active.status[status] = true
+    end
 end
 
 function Filters:ToggleClass(classFile)
-    self.active.classes[classFile] = not self.active.classes[classFile]
+    if self.active.classes[classFile] then
+        self.active.classes[classFile] = nil
+    else
+        self.active.classes[classFile] = true
+    end
 end
 
 function Filters:ToggleTag(tag)
-    self.active.tags[tag] = not self.active.tags[tag]
+    if self.active.tags[tag] then
+        self.active.tags[tag] = nil
+    else
+        self.active.tags[tag] = true
+    end
 end
 
 function Filters:SetLevelRange(minLevel, maxLevel)

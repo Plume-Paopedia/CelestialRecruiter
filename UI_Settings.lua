@@ -248,7 +248,7 @@ function ns.UI_BuildSettings(parent)
     ---------------------------------------------------------------------------
     -- Section: Blacklist
     ---------------------------------------------------------------------------
-    local h5 = W.MakeHeader(ch, "Blacklist")
+    local h5 = W.MakeHeader(ch, "Liste noire")
     h5:SetPoint("TOPLEFT", 4, row(30))
     W.MakeSeparator(ch, h5)
     y = y - 8
@@ -268,7 +268,7 @@ function ns.UI_BuildSettings(parent)
     ---------------------------------------------------------------------------
     -- Section: A/B Testing
     ---------------------------------------------------------------------------
-    local hAB = W.MakeHeader(ch, "A/B Testing")
+    local hAB = W.MakeHeader(ch, "Test A/B")
     hAB:SetPoint("TOPLEFT", 4, row(30))
     W.MakeSeparator(ch, hAB)
     y = y - 8

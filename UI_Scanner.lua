@@ -80,7 +80,7 @@ function ns.UI_BuildScanner(parent)
     sd.stopBtn:SetPoint("LEFT", sd.scanBtn, "RIGHT", 6, 0)
 
     -- Import /who
-    sd.importBtn = W.MakeBtn(controls, "Import /who", 100, "n", function()
+    sd.importBtn = W.MakeBtn(controls, "Importer /who", 100, "n", function()
         local added, total = ns.Scanner_ImportCurrentWho()
         ns.Util_Print(("Import /who: %d/%d"):format(added or 0, total or 0))
         ns.UI_Refresh()

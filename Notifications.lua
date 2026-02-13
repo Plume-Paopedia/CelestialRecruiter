@@ -206,11 +206,18 @@ local function CreateToast()
     f:SetScript("OnLeave", function(self)
         close:SetAlpha(0)
         self:SetBackdropBorderColor(0.15, 0.18, 0.28, 0.55)
+        -- Cancel any previous timer before creating a new one
+        if self._hideTimer then
+            self._hideTimer:Cancel()
+            self._hideTimer = nil
+        end
         -- Resume timer with 2s remaining
         self._tb_paused = false
         self._hideTimer = C_Timer.NewTimer(2, function()
-            self._tb_paused = true
-            self._slideOut:Play()
+            if self:IsVisible() then
+                self._tb_paused = true
+                self._slideOut:Play()
+            end
         end)
     end)
 

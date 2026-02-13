@@ -1,7 +1,7 @@
 local _, ns = ...
 local W = ns.UIWidgets
 local C = W.C
-local Rep = ns.Reputation
+local function getRep() return ns.Reputation end
 
 -- =====================================================================
 -- CelestialRecruiter  --  Inbox (Boite) Tab  --  Enhanced v3.1
@@ -45,7 +45,7 @@ end
 
 local function hotBadgeText()
     local hex = string.format("%02x%02x%02x", C.orange[1] * 255, C.orange[2] * 255, C.orange[3] * 255)
-    return string.format("|cff%sTOP|r", hex)
+    return string.format("|cff%sPRIO|r", hex)
 end
 
 local function statusDot(status)
@@ -118,8 +118,8 @@ local function ShowInboxTooltip(anchor, key)
 
     -- Reputation score
     GameTooltip:AddLine(" ")
-    local score = Rep:CalculateScore(c)
-    local _, scoreLabel, scoreCol = Rep:GetScoreClass(score)
+    local score = getRep() and getRep():CalculateScore(c) or 0
+    local _, scoreLabel, scoreCol = getRep() and getRep():GetScoreClass(score) or "neutral", "Neutre", C.dim
     GameTooltip:AddDoubleLine("Score reputation :", tostring(score) .. " / 100", C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
     GameTooltip:AddDoubleLine("Classement :", scoreLabel, C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
 
@@ -240,7 +240,7 @@ local function MakeInboxRow(parent, i)
     -- Right-side action buttons
     -----------------------------------------------------------------------
     -- Blacklist (rightmost)
-    row.blBtn = W.MakeBtn(row, "Blacklist", 68, "d", nil)
+    row.blBtn = W.MakeBtn(row, "Bloquer", 68, "d", nil)
     row.blBtn:SetPoint("RIGHT", -6, 6)
 
     -- Ignorer 7j
@@ -573,7 +573,7 @@ function ns.UI_RefreshInbox()
                 c.optedIn and "optin" or "", c.source or ""
            )
         then
-            local score = Rep:CalculateScore(c)
+            local score = getRep() and getRep():CalculateScore(c) or 0
 
             -- hot-only filter
             if not ib.hotOnly or score >= 70 then

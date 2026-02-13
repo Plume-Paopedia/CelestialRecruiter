@@ -98,13 +98,13 @@ end
 
 function ns.Util_FormatAgo(ts)
   ts = tonumber(ts) or 0
-  if ts <= 0 then return "n/a" end
+  if ts <= 0 then return "n/d" end
   local d = time() - ts
   if d < 0 then d = 0 end
   if d < 60 then return d .. "s" end
   if d < 3600 then return math.floor(d/60) .. "m" end
   if d < 86400 then return math.floor(d/3600) .. "h" end
-  return math.floor(d/86400) .. "d"
+  return math.floor(d/86400) .. "j"
 end
 
 function ns.Util_TableHas(t, v)

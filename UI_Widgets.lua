@@ -732,7 +732,7 @@ function W.ShowPlayerTooltip(anchor, key, scanData)
             GameTooltip:AddLine(scanData.zone, C.dim[1], C.dim[2], C.dim[3])
         end
         if scanData.crossRealm then
-            GameTooltip:AddLine("Cross-realm", C.orange[1], C.orange[2], C.orange[3])
+            GameTooltip:AddLine("Inter-royaume", C.orange[1], C.orange[2], C.orange[3])
         end
     end
 

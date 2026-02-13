@@ -8,20 +8,30 @@ local _, ns = ...
 ns.ImportExport = ns.ImportExport or {}
 local IE = ns.ImportExport
 
--- Serialize table to string (simple JSON-like format)
+-- Escape a string for safe Lua table constructor syntax
+local function escapeStr(s)
+    return s:gsub("\\", "\\\\"):gsub("\"", "\\\""):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("%z", "")
+end
+
+-- Serialize table to string (valid Lua table constructor)
 local function serialize(t, indent)
     indent = indent or 0
     local indentStr = string.rep("  ", indent)
     local result = "{\n"
 
     for k, v in pairs(t) do
-        local key = type(k) == "string" and ('"%s"'):format(k) or tostring(k)
+        local key
+        if type(k) == "string" then
+            key = '["' .. escapeStr(k) .. '"]'
+        else
+            key = "[" .. tostring(k) .. "]"
+        end
         result = result .. indentStr .. "  " .. key .. " = "
 
         if type(v) == "table" then
             result = result .. serialize(v, indent + 1)
         elseif type(v) == "string" then
-            result = result .. ('"%s"'):format(v:gsub('"', '\\"'))
+            result = result .. '"' .. escapeStr(v) .. '"'
         elseif type(v) == "boolean" then
             result = result .. tostring(v)
         else
@@ -51,7 +61,7 @@ local function deserialize(str)
     -- Try to load the string as a chunk
     local func, err = loadstring("return " .. str)
     if not func then
-        return nil, "Parse error: " .. tostring(err)
+        return nil, "Erreur d'analyse : " .. tostring(err)
     end
 
     -- Set environment (for Lua 5.1)
@@ -60,7 +70,7 @@ local function deserialize(str)
     -- Execute and return result
     local success, result = pcall(func)
     if not success then
-        return nil, "Execution error: " .. tostring(result)
+        return nil, "Erreur d'exécution : " .. tostring(result)
     end
 
     return result
@@ -333,7 +343,7 @@ function IE:RestoreAutoBackup(index)
     local backups = self:GetAutoBackups()
     local backup = backups[index]
     if not backup then
-        return false, "Backup introuvable"
+        return false, "Sauvegarde introuvable"
     end
 
     return self:ImportFullBackup(backup.data, {

@@ -346,7 +346,7 @@ function Camp:GetProgress(campId)
         },
         replies = stats.replies,
         duration = stats.startedAt > 0 and (time() - stats.startedAt) or 0,
-        contactCount = 0,  -- Will be filled below
+        contactCount = stats.contacted + stats.invited + stats.joined,
     }
 end
 

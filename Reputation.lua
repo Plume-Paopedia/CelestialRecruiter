@@ -254,13 +254,13 @@ function Rep:AutoTagByScore(key, score)
     local oldTags = {"hot", "promising", "neutral", "cold", "ignore"}
     for _, tag in ipairs(oldTags) do
         if ns.DB_HasTag and ns.DB_HasTag(key, tag) then
-            ns.DB_RemoveTag(key, tag)
+            if ns.DB_RemoveTag then ns.DB_RemoveTag(key, tag) end
         end
     end
 
     -- Add new score tag
     if class ~= "neutral" then  -- Don't tag neutral
-        ns.DB_AddTag(key, class)
+        if ns.DB_AddTag then ns.DB_AddTag(key, class) end
     end
 end
 
@@ -280,7 +280,7 @@ function Rep:AutoTagAll()
     end
 
     if ns.Notifications_Success then
-        ns.Notifications_Success("Auto-Tag", string.format("%d contacts evalues et etiquetes", count))
+        ns.Notifications_Success("Etiquetage auto", string.format("%d contacts evalues et etiquetes", count))
     end
     if ns.UI_Refresh then
         ns.UI_Refresh()

@@ -112,11 +112,15 @@ function AR:GetDailyLimits()
         }
     end
 
-    -- Cleanup old days
+    -- Cleanup old days (collect-then-delete for safe iteration)
+    local toRemove = {}
     for day in pairs(daily) do
         if day ~= today then
-            daily[day] = nil
+            toRemove[#toRemove + 1] = day
         end
+    end
+    for _, day in ipairs(toRemove) do
+        daily[day] = nil
     end
 
     local contactsRemaining = self.rules.dayLimits.maxContactsPerDay - daily[today].contacted
@@ -129,7 +133,7 @@ function AR:GetDailyLimits()
     }
 end
 
-function AR:IncrementDailyCount(type)
+function AR:IncrementDailyCount(kind)
     local today = date("%Y-%m-%d")
     if not ns.db.global.autoRecruiterDaily then
         ns.db.global.autoRecruiterDaily = {}
@@ -138,9 +142,9 @@ function AR:IncrementDailyCount(type)
         ns.db.global.autoRecruiterDaily[today] = {contacted = 0, invited = 0}
     end
 
-    if type == "contacted" then
+    if kind == "contacted" then
         ns.db.global.autoRecruiterDaily[today].contacted = ns.db.global.autoRecruiterDaily[today].contacted + 1
-    elseif type == "invited" then
+    elseif kind == "invited" then
         ns.db.global.autoRecruiterDaily[today].invited = ns.db.global.autoRecruiterDaily[today].invited + 1
     end
 end
@@ -332,7 +336,9 @@ function AR:ProcessNext()
             ns.DB_Log("AUTO", ("Échec recrutement %s: %s"):format(key, tostring(why)))
         end
     else
+        -- Daily limit exhausted for current mode
         self.stats.skipped = self.stats.skipped + 1
+        success = true  -- not a failure, just skipped due to limits
     end
 
     if not success then

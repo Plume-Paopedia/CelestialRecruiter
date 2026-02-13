@@ -1,6 +1,4 @@
 local _, ns = ...
-local W = ns.UIWidgets
-local C = W.C
 
 -- ═══════════════════════════════════════════════════════════════════
 -- CelestialRecruiter  —  Bulk Operations System
@@ -279,7 +277,7 @@ function BulkOps:BulkBlacklist(keys, callback)
         end
     end
 
-    ns.Notifications_Success("Blacklist", string.format("%d contact(s) blacklisté(s)", count))
+    if ns.Notifications_Success then ns.Notifications_Success("Liste noire", string.format("%d contact(s) bloque(s)", count)) end
     ns.UI_Refresh()
 
     if callback then callback(count) end
@@ -312,7 +310,7 @@ end
 
 function BulkOps:Undo()
     if not undoStack.operation then
-        ns.Notifications_Warning("Undo", "Rien à annuler")
+        if ns.Notifications_Warning then ns.Notifications_Warning("Annulation", "Rien a annuler") end
         return
     end
 

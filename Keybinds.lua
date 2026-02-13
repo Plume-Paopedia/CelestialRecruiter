@@ -36,28 +36,30 @@ function CR_Scan()
 end
 
 function CR_RecruitNext()
+    if not ns.DB_QueueList then return end
     local queue = ns.DB_QueueList()
     if #queue == 0 then
-        ns.Util_Print("File d'attente vide")
+        if ns.Util_Print then ns.Util_Print("File d'attente vide") end
         return
     end
 
     local key = queue[1]
     if ns.Queue_Recruit then
-        local template = ns.db.profile and ns._ui_tpl or "default"
+        local template = (ns.db and ns.db.profile and ns._ui_tpl) or "default"
         local ok, why = ns.Queue_Recruit(key, template)
         if not ok then
-            ns.Util_Print("Échec: " .. tostring(why))
-        else
+            if ns.Util_Print then ns.Util_Print("Échec : " .. tostring(why)) end
+        elseif ns.DB_QueueRemove then
             ns.DB_QueueRemove(key)
         end
     end
 end
 
 function CR_InviteNext()
+    if not ns.DB_QueueList then return end
     local queue = ns.DB_QueueList()
     if #queue == 0 then
-        ns.Util_Print("File d'attente vide")
+        if ns.Util_Print then ns.Util_Print("File d'attente vide") end
         return
     end
 
@@ -65,24 +67,25 @@ function CR_InviteNext()
     if ns.Queue_Invite then
         local ok, why = ns.Queue_Invite(key)
         if not ok then
-            ns.Util_Print("Échec: " .. tostring(why))
+            if ns.Util_Print then ns.Util_Print("Échec : " .. tostring(why)) end
         end
     end
 end
 
 function CR_WhisperNext()
+    if not ns.DB_QueueList then return end
     local queue = ns.DB_QueueList()
     if #queue == 0 then
-        ns.Util_Print("File d'attente vide")
+        if ns.Util_Print then ns.Util_Print("File d'attente vide") end
         return
     end
 
     local key = queue[1]
     if ns.Queue_Whisper then
-        local template = ns.db.profile and ns._ui_tpl or "default"
+        local template = (ns.db and ns.db.profile and ns._ui_tpl) or "default"
         local ok, why = ns.Queue_Whisper(key, template)
         if not ok then
-            ns.Util_Print("Échec: " .. tostring(why))
+            if ns.Util_Print then ns.Util_Print("Échec : " .. tostring(why)) end
         end
     end
 end

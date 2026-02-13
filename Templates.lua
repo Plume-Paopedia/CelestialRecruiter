@@ -97,7 +97,7 @@ function ns.Templates_Render(key, tplId)
 
   local out = tpl.text
   for token, value in pairs(map) do
-    out = out:gsub(token, value)
+    out = out:gsub(token, function() return value end)
   end
   out = clean(out)
   return truncateWhisper(out)

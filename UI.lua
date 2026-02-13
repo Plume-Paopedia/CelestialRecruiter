@@ -696,7 +696,7 @@ local function CreateStatusBar(parent)
         GameTooltip:AddLine(" ")
         -- Total recruits (all time, from contacts with status "joined")
         local totalJoined = 0
-        for _, c in pairs(ns.db.global.contacts) do
+        for _, c in pairs(ns.db.global.contacts or {}) do
             if c and c.status == "joined" then totalJoined = totalJoined + 1 end
         end
         GameTooltip:AddLine("Contacts : " .. W.countKeys(ns.db.global.contacts), C.dim[1], C.dim[2], C.dim[3])

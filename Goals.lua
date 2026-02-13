@@ -664,7 +664,7 @@ function G:CheckAchievements()
                         def.icon .. " " .. def.name .. " - " .. def.description
                     )
                 end
-                ns.DB_Log("GOAL", "Succes debloque: " .. def.name)
+                if ns.DB_Log then ns.DB_Log("GOAL", "Succes debloque: " .. def.name) end
             end
         end
     end

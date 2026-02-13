@@ -2,7 +2,7 @@ local _, ns = ...
 local W = ns.UIWidgets
 local C = W.C
 local format = string.format
-local Rep = ns.Reputation
+local function getRep() return ns.Reputation end
 
 -- ═══════════════════════════════════════════════════════════════════
 -- CelestialRecruiter  —  Queue (File d'attente) Tab
@@ -27,10 +27,10 @@ local REP_BAR_COLORS = {
 local scoreCache = {}
 
 local function getScore(contact)
-    if not contact then return 0 end
+    if not contact or not getRep() then return 0 end
     local key = contact.key or contact.name or ""
     if scoreCache[key] then return scoreCache[key] end
-    local score = Rep:CalculateScore(contact)
+    local score = getRep():CalculateScore(contact)
     scoreCache[key] = score
     return score
 end
@@ -39,9 +39,9 @@ end
 -- Reputation tooltip section
 ---------------------------------------------------------------------------
 local function addReputationTooltip(contact, score)
-    if not contact or not score then return end
+    if not contact or not score or not getRep() then return end
 
-    local class, label, color = Rep:GetScoreClass(score)
+    local class, label, color = getRep():GetScoreClass(score)
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine("-- Score de reputation --", C.gold[1], C.gold[2], C.gold[3])
     GameTooltip:AddDoubleLine("Score :", format("%d / 100", score),
@@ -72,13 +72,13 @@ local function addReputationTooltip(contact, score)
             C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
     end
     if contact.crossRealm then
-        GameTooltip:AddDoubleLine("  Cross-realm :", "-10",
+        GameTooltip:AddDoubleLine("  Inter-royaume :", "-10",
             C.dim[1], C.dim[2], C.dim[3], C.red[1], C.red[2], C.red[3])
     end
 
     -- Conversion probability
-    if Rep.PredictConversion then
-        local prob = Rep:PredictConversion(contact)
+    if getRep() and getRep().PredictConversion then
+        local prob = getRep():PredictConversion(contact)
         local pct = math.floor(prob * 100 + 0.5)
         local probColor
         if pct >= 60 then
@@ -105,7 +105,7 @@ local function MakeQueueRow(parent, i)
     row:SetScript("OnEnter", function(s)
         s:SetBackdropColor(unpack(C.hover))
         -- Enhanced tooltip with reputation breakdown
-        W.ShowPlayerTooltip(s, s._boundKey)
+        W.ShowPlayerTooltip(s, s._boundKey, s._boundContact)
         local c = s._boundContact
         if c and s._boundScore then
             addReputationTooltip(c, s._boundScore)
@@ -245,8 +245,8 @@ local function batchRecruitAll()
     table.sort(targets, function(a, b)
         local ca = ns.DB_GetContact(a)
         local cb = ns.DB_GetContact(b)
-        local sa = ca and Rep:CalculateScore(ca) or 0
-        local sb = cb and Rep:CalculateScore(cb) or 0
+        local sa = (ca and getRep()) and getRep():CalculateScore(ca) or 0
+        local sb = (cb and getRep()) and getRep():CalculateScore(cb) or 0
         return sa > sb
     end)
 
@@ -492,8 +492,10 @@ function ns.UI_RefreshQueue()
         row._boundScore = score
 
         -- Reputation score badge (colored)
-        local repClass, repLabel, repColor = Rep:GetScoreClass(score)
-        row.scoreBadge:SetText(Rep:GetBadge(score))
+        local repClass, repLabel, repColor = getRep() and getRep():GetScoreClass(score) or "neutral", "Neutre", C.dim
+        if getRep() then
+            row.scoreBadge:SetText(getRep():GetBadge(score))
+        end
 
         -- Reputation color bar (left edge)
         local repBarC = REP_BAR_COLORS[repClass] or REP_BAR_COLORS.neutral

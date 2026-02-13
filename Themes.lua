@@ -11,7 +11,7 @@ local Themes = ns.Themes
 -- Built-in theme presets
 Themes.presets = {
     dark = {
-        name = "Dark (Default)",
+        name = "Sombre (Defaut)",
         colors = {
             bg        = {0.05, 0.06, 0.11, 0.97},
             panel     = {0.08, 0.09, 0.16, 0.90},
@@ -33,7 +33,7 @@ Themes.presets = {
     },
 
     light = {
-        name = "Light",
+        name = "Clair",
         colors = {
             bg        = {0.95, 0.96, 0.98, 0.97},
             panel     = {0.98, 0.98, 0.99, 0.95},
@@ -55,7 +55,7 @@ Themes.presets = {
     },
 
     purple = {
-        name = "Purple Dream",
+        name = "Reve Violet",
         colors = {
             bg        = {0.08, 0.05, 0.12, 0.97},
             panel     = {0.10, 0.07, 0.16, 0.90},
@@ -77,7 +77,7 @@ Themes.presets = {
     },
 
     green = {
-        name = "Forest",
+        name = "Foret",
         colors = {
             bg        = {0.05, 0.10, 0.08, 0.97},
             panel     = {0.07, 0.12, 0.10, 0.90},
@@ -121,7 +121,7 @@ Themes.presets = {
     },
 
     amber = {
-        name = "Amber",
+        name = "Ambre",
         colors = {
             bg        = {0.10, 0.08, 0.05, 0.97},
             panel     = {0.14, 0.11, 0.07, 0.90},
@@ -155,7 +155,7 @@ function Themes:Init()
     -- Load custom theme if exists
     if ns.db and ns.db.profile and ns.db.profile.customTheme then
         self.presets.custom = {
-            name = "Custom",
+            name = "Personnalise",
             colors = ns.db.profile.customTheme,
         }
     end
@@ -244,12 +244,14 @@ end
 function Themes:ParseColorHex(hex)
     hex = hex:gsub("#", "")
     if #hex == 6 then
-        local r = tonumber(hex:sub(1, 2), 16) / 255
-        local g = tonumber(hex:sub(3, 4), 16) / 255
-        local b = tonumber(hex:sub(5, 6), 16) / 255
-        return r, g, b
+        local r = tonumber(hex:sub(1, 2), 16)
+        local g = tonumber(hex:sub(3, 4), 16)
+        local b = tonumber(hex:sub(5, 6), 16)
+        if r and g and b then
+            return r / 255, g / 255, b / 255
+        end
     end
-    return nil
+    return nil, nil, nil
 end
 
 -- Generate a complementary color scheme from a base color

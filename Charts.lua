@@ -58,10 +58,11 @@ function Charts:CreateLineChart(parent, width, height, data, options)
 
     -- Draw line segments
     local segments = {}
+    local dataSpan = math.max(1, #data - 1)
     for i = 1, #data - 1 do
-        local x1 = (i - 1) / (#data - 1) * width
+        local x1 = (i - 1) / dataSpan * width
         local y1 = ((data[i].value - minVal) / range) * height
-        local x2 = i / (#data - 1) * width
+        local x2 = i / dataSpan * width
         local y2 = ((data[i + 1].value - minVal) / range) * height
 
         -- Calculate line angle and length
@@ -83,7 +84,7 @@ function Charts:CreateLineChart(parent, width, height, data, options)
     -- Draw points
     if showPoints then
         for i, point in ipairs(data) do
-            local x = (i - 1) / (#data - 1) * width
+            local x = (i - 1) / dataSpan * width
             local y = ((point.value - minVal) / range) * height
 
             local dot = CreateFrame("Frame", nil, chart)
@@ -99,7 +100,7 @@ function Charts:CreateLineChart(parent, width, height, data, options)
             dot:EnableMouse(true)
             dot:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:AddLine(point.label or ("Point " .. i))
+                GameTooltip:AddLine(point.label or ("Donnee " .. i))
                 GameTooltip:AddLine(tostring(point.value), 1, 1, 1)
                 GameTooltip:Show()
 
@@ -194,7 +195,7 @@ function Charts:CreateBarChart(parent, width, height, data, options)
             )
 
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:AddLine(bar.label or ("Bar " .. i))
+            GameTooltip:AddLine(bar.label or ("Barre " .. i))
             GameTooltip:AddLine(tostring(bar.value), 1, 1, 1)
             if bar.tooltip then
                 GameTooltip:AddLine(bar.tooltip, C.dim[1], C.dim[2], C.dim[3], true)
@@ -400,8 +401,8 @@ function Charts:CreateHeatmap(parent, width, height, data, options)
             cell:SetScript("OnEnter", function(self)
                 cellTex:SetVertexColor(r * 1.2, g * 1.2, b * 1.2, 1)
                 GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-                GameTooltip:AddLine(string.format("Row %d, Col %d", row, col))
-                GameTooltip:AddLine(string.format("Value: %d", value), 1, 1, 1)
+                GameTooltip:AddLine(string.format("Ligne %d, Col %d", row, col))
+                GameTooltip:AddLine(string.format("Valeur : %d", value), 1, 1, 1)
                 GameTooltip:Show()
             end)
             cell:SetScript("OnLeave", function(self)

@@ -45,7 +45,7 @@ local function isBlockedByContext()
   if not ns.db.profile.blockInInstance then return false end
   local inInstance, instanceType = IsInInstance()
   if inInstance and instanceType and instanceType ~= "none" then
-    return true, "instance (" .. instanceType .. ")"
+    return true, "en instance (" .. instanceType .. ")"
   end
   return false
 end
@@ -55,15 +55,15 @@ local function canPassRate(kind)
   local p = ns.db.profile
 
   if wouldExceed(history.all, p.maxActionsPerMinute, 60, now) then
-    return false, "rate limit (minute)"
+    return false, "limite (minute)"
   end
 
   if kind == "whisper" and wouldExceed(history.whisper, p.maxWhispersPerHour, 3600, now) then
-    return false, "rate limit (whisper/hour)"
+    return false, "limite (chuchotements/heure)"
   end
 
   if kind == "invite" and wouldExceed(history.invite, p.maxInvitesPerHour, 3600, now) then
-    return false, "rate limit (invite/hour)"
+    return false, "limite (invitations/heure)"
   end
 
   return true
@@ -75,10 +75,10 @@ local function canPassAfkDnd(c)
 
   local now = ns.Util_Now()
   if ns.db.profile.respectAFK and (now - (c.lastAFKAt or 0)) < holdSeconds then
-    return false, "target AFK recently"
+    return false, "cible AFK recemment"
   end
   if ns.db.profile.respectDND and (now - (c.lastDNDAt or 0)) < holdSeconds then
-    return false, "target DND recently"
+    return false, "cible NPD recemment"
   end
   return true
 end
@@ -86,13 +86,13 @@ end
 local function canContactBase(key, kind)
   key = ns.Util_Key(key)
   if not key then
-    return false, "invalid target"
+    return false, "cible invalide"
   end
   if isSelfTarget(key) then
-    return false, "self target"
+    return false, "auto-ciblage"
   end
   if ns.DB_IsBlacklisted(key) then
-    return false, "blacklisted"
+    return false, "liste noire"
   end
 
   local blocked, reason = isBlockedByContext()
@@ -103,13 +103,13 @@ local function canContactBase(key, kind)
   local c = ns.DB_UpsertContact(key)
   local now = ns.Util_Now()
   if (c.ignoredUntil or 0) > now then
-    return false, "ignored"
+    return false, "ignore"
   end
 
   local cd = ns.Util_ToNumber(kind == "invite" and ns.db.profile.cooldownInvite or ns.db.profile.cooldownWhisper, kind == "invite" and 300 or 180, 0, 86400)
   local last = kind == "invite" and (c.lastInviteAt or 0) or (c.lastWhisperOut or 0)
   if (now - last) < cd then
-    return false, "cooldown"
+    return false, "temps de recharge"
   end
 
   if kind == "whisper" then
