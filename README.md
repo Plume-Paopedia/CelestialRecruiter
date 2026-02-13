@@ -1,346 +1,233 @@
-# CelestialRecruiter v3.0.0 🌟
+# CelestialRecruiter v3.3.0
 
-**L'addon de recrutement de guilde le plus avancé pour World of Warcraft**
+Assistant de recrutement de guilde complet pour World of Warcraft Retail.
+Scanner, file d'attente, templates, anti-spam, analytics, et bien plus.
 
-Un outil professionnel de recrutement avec intelligence artificielle, automatisation et analytics avancées.
-
----
-
-## ✨ Fonctionnalités v3.0.0
-
-### 🔍 Scanner Intelligent
-- **Scan /who automatisé** avec filtres multi-critères (niveau, classe, zone)
-- **Import instantané** des résultats /who actuels
-- **Détection automatique** des joueurs sans guilde
-- **Cross-realm support** avec filtrage optionnel
-- **Cooldown intelligent** pour respecter les limites Blizzard
-
-### 📋 Gestion de File d'Attente
-- **Organisation avancée** avec tri et filtrage
-- **Actions rapides** : recruter, inviter, message individuel ou en masse
-- **Statuts colorés** : nouveau, contacté, invité, rejoint, ignoré
-- **Tags personnalisés** pour catégoriser vos contacts
-- **Notes riches** sur chaque contact
-
-### 🤖 Auto-Recrutement Intelligent **[NOUVEAU]**
-- **Recrutement automatique** avec règles configurables
-- **Limites de sécurité** : max par session, par jour, par heure
-- **Restrictions horaires** (ex: recruter uniquement 18h-23h)
-- **Filtres avancés** : niveau, classe, cross-realm, opt-in
-- **Classes prioritaires** traitées en premier
-- **Pause/Reprise** à tout moment
-- **Statistiques temps réel** du processus
-
-### 🎨 Thèmes Visuels **[NOUVEAU]**
-- **6 thèmes préconçus** : Dark, Light, Purple Dream, Forest, Ocean, Amber
-- **Thème personnalisé** avec éditeur de couleurs
-- **Application instantanée** avec prévisualisation
-- **Générateur de palette** à partir d'une couleur de base
-
-### 📊 Statistiques & Analytics **[NOUVEAU]**
-- **Taux de conversion** (contacté → invité → rejoint)
-- **Meilleurs horaires** de recrutement
-- **Performance des templates** (taux de succès)
-- **Historique quotidien** (30 derniers jours)
-- **Distribution par classe** des recrues
-- **Tendances hebdomadaires** (comparaison semaine actuelle vs précédente)
-
-### 🔔 Notifications Toast **[NOUVEAU]**
-- **Notifications élégantes** en slide-in
-- **4 types** : succès, erreur, warning, info
-- **Auto-dismiss** configurable
-- **Empilables** jusqu'à 5 notifications
-- **Animations fluides** avec glass-morphism
-
-### 🎯 Filtres Avancés **[NOUVEAU]**
-- **Filtrage multi-critères** : statut, classe, niveau, tags, source
-- **Recherche texte** dans nom et notes
-- **Filtres sauvegardables** (presets)
-- **Application instantanée** avec debouncing
-- **Compteur de filtres actifs**
-
-### 💾 Import/Export & Backup **[NOUVEAU]**
-- **Export complet** : contacts, templates, settings, stats
-- **Import sélectif** (merge ou replace)
-- **Backup automatique quotidien** (conserve les 5 derniers)
-- **Partage de templates** entre personnages
-- **Format lisible** pour édition manuelle
-
-### ⌨️ Raccourcis Clavier **[NOUVEAU]**
-- **Toggle UI** : ouvrir/fermer l'interface
-- **Lancer scan** : démarrer un scan immédiatement
-- **Recruter suivant** : traiter le prochain en file
-- **Inviter suivant** : inviter le prochain en file
-- **Message suivant** : envoyer message au prochain
-- **Toggle auto-recrutement** : démarrer/arrêter l'auto
-- **Navigation tabs** : aller directement à Scanner/Queue/Inbox/Settings
-- **Configuration** dans ESC > Raccourcis clavier > CelestialRecruiter
-
-### 📨 Templates de Messages
-- **Templates pré-configurés** : défaut, raid, court
-- **Variables dynamiques** : `{name}`, `{guild}`, `{discord}`, `{raidDays}`, `{goal}`, `{inviteKeyword}`
-- **Éditeur intégré** avec prévisualisation
-- **Reset vers défaut** en un clic
-- **Troncature automatique** à 240 caractères
-
-### 🛡️ Anti-Spam & Sécurité
-- **Cooldowns personnalisables** (invitation, message)
-- **Rate limiting** : actions par minute, invitations/messages par heure
-- **Respect AFK/DND** avec période de rétention configurable
-- **Blocage en instance** optionnel
-- **Blacklist** permanente
-- **Ignore temporaire** avec expiration
-
-### 📬 Boîte de Réception
-- **Détection automatique** des mots-clés configurables
-- **Opt-in tracking** avec keyword `!invite` (configurable)
-- **Tri par récence** des messages reçus
-- **Statut des contacts** mis à jour automatiquement
-
-### 📜 Journaux d'Activité
-- **Historique complet** de toutes les actions
-- **Filtres par type** : SCAN, INV, OUT, IN, ERR, SKIP, etc.
-- **Codes couleur** pour identification rapide
-- **Limite configurable** (50-1000 entrées)
-- **Export possible** pour analyse externe
-
-### 🎨 Interface Moderne
-- **Design glass-morphism** avec effets de profondeur
-- **Animations fluides** : fade, slide, bounce, scale
-- **Smooth scrolling** avec momentum
-- **Transitions entre tabs** avec fade
-- **Badges pulsants** sur notifications
-- **Tooltips enrichis** avec informations détaillées
-- **Hover effects** sur tous les éléments interactifs
-- **Responsive** : redimensionnable (720x460 → 1400x900)
+**Auteur** : Plume | **Discord** : [discord.gg/7FbBTkrH](https://discord.gg/7FbBTkrH)
 
 ---
 
-## 📦 Installation
+## Installation
 
-1. Télécharger la dernière release v3.0.0
-2. Extraire le dossier `CelestialRecruiter` dans :
-   ```
-   World of Warcraft\_retail_\Interface\AddOns\
-   ```
-3. Relancer WoW ou taper `/reload`
-4. Configurer vos raccourcis clavier (ESC > Raccourcis clavier > CelestialRecruiter)
+1. Copier le dossier `CelestialRecruiter` dans `World of Warcraft\_retail_\Interface\AddOns\`
+2. `/reload` en jeu
+3. `/cr` pour ouvrir l'interface
 
 ---
 
-## 🚀 Guide Rapide
+## Commandes
 
-### Première Utilisation
-1. Ouvrir l'addon : `/cr` ou clic sur bouton minimap
-2. Onglet **Réglages** :
-   - Configurer nom de guilde, Discord, objectifs
-   - Ajuster niveaux min/max de scan
-   - Personnaliser templates de messages
-   - Définir mots-clés de détection
-3. Onglet **Scanner** :
-   - Clic sur "Scanner" pour lancer recherche
-   - Ou utiliser raccourci clavier (à configurer)
-4. Onglet **File d'attente** :
-   - Voir les contacts trouvés
-   - Actions individuelles ou en masse
-   - Filtrer selon vos critères
+| Commande | Action |
+|----------|--------|
+| `/cr` | Ouvrir / fermer l'interface |
+| `/cr reset` | Reinitialiser toutes les donnees |
+| `/cr help` | Aide rapide |
 
-### Mode Auto-Recrutement
-1. Configurer les règles dans **Réglages > Auto-Recrutement** :
-   - Mode : Message / Invitation / Les deux
-   - Template à utiliser
-   - Délai entre actions (15s recommandé)
-   - Limites quotidiennes et par session
-   - Restrictions horaires optionnelles
-   - Classes prioritaires
-2. Lancer avec bouton "Auto" ou raccourci clavier
-3. Surveiller la progression en temps réel
-4. Pause/Reprise selon besoin
-5. Stop automatique à la fin ou sur limites atteintes
+Les raccourcis clavier se configurent dans **ESC > Raccourcis > CelestialRecruiter**.
 
 ---
 
-## ⌨️ Commandes & Raccourcis
+## Fonctionnalites
 
-### Commandes Slash
-| Commande | Description |
-|----------|-------------|
-| `/cr` | Ouvrir/fermer l'interface |
-| `/cr reset` | Réinitialiser toutes les données |
-| `/cr help` | Afficher l'aide |
+### Scanner
+- Scan `/who` automatise avec filtres (niveau, classe, zone)
+- Import instantane des resultats `/who`
+- Detection joueurs sans guilde, support cross-realm
+- Cooldown intelligent respectant les limites Blizzard
 
-### Raccourcis Clavier (à configurer)
-| Action | Description |
-|--------|-------------|
-| Toggle UI | Ouvrir/fermer l'interface |
-| Lancer Scan | Démarrer un scan /who immédiatement |
-| Recruter Suivant | Traiter le prochain contact (message + invite) |
-| Inviter Suivant | Inviter le prochain contact |
-| Message Suivant | Envoyer message au prochain contact |
-| Toggle Auto | Démarrer/arrêter l'auto-recrutement |
-| Tab Scanner | Aller à l'onglet Scanner |
-| Tab Queue | Aller à l'onglet File d'attente |
-| Tab Inbox | Aller à l'onglet Boîte |
-| Tab Settings | Aller à l'onglet Réglages |
+### File d'attente
+- Tri par nom, niveau, classe, ou **score de reputation**
+- Actions rapides : recruter, inviter, whisper, ignorer, blacklist
+- Indicateurs colores par statut (nouveau, contacte, invite, rejoint)
+- Score de reputation avec badge colore et tooltip detaille
+- Bouton "Recruter tout" pour traitement en masse
+
+### Boite de reception
+- Detection automatique des mots-cles configurables
+- Opt-in tracking (keyword `!invite` par defaut)
+- Apercu des messages, indicateurs "HOT" pour contacts prometteurs
+- Reponse rapide en ligne avec editbox integre
+- Tri par recence, score, ou "Hot d'abord"
+
+### Templates de messages
+- 3 templates inclus (defaut, raid, court) + templates personnalises
+- Variables dynamiques : `{name}`, `{guild}`, `{discord}`, `{raidDays}`, `{goal}`, `{inviteKeyword}`
+- Editeur avec previsualisation en temps reel
+
+### Auto-recrutement
+- Recrutement automatique avec regles configurables
+- Limites de securite : par session, par jour, par heure
+- Restrictions horaires, classes prioritaires
+- Pause / reprise a tout moment
+
+### A/B Testing
+- Compare automatiquement l'efficacite de 2 templates
+- Algorithme Thompson Sampling pour allocation intelligente
+- Statistiques : taux de reponse, taux de conversion, score
+- Gestion dans l'onglet Reglages
+
+### Campagnes
+- Organise le recrutement en campagnes avec objectifs
+- Suivi de progression (contactes, reponses, recrues)
+- Etats : brouillon, active, en pause, terminee, archivee
+
+### Analytics
+- Funnel de conversion : contacte > invite > rejoint
+- Meilleurs horaires de recrutement
+- Performance par template et par classe
+- Tendances hebdomadaires (semaine actuelle vs precedente)
+- Vue dashboard avec widgets configurables
+
+### Reputation
+- Score 0-100 par contact base sur : opt-in, reponses, niveau, source
+- Classification : Hot Lead, Promising, Neutral, Cold
+- Prediction de conversion
+- Tags automatiques
+
+### Suggestions intelligentes
+- Meilleur moment pour recruter
+- Meilleur template a utiliser
+- Contacts a recontacter
+- Hot leads a traiter en priorite
+- Analyse des classes manquantes
+
+### Succes et objectifs
+- 25 succes deblocables en 4 categories (recrutement, social, dedication, maitrise)
+- Systeme de streaks (quotidien, hebdomadaire)
+- Jalons de progression
+- Notification dediee a chaque deblocage
 
 ---
 
-## 🎨 Thèmes Disponibles
+## Systeme visuel
 
-- **Dark** (défaut) : Élégant et sobre, parfait pour sessions longues
-- **Light** : Lumineux et aéré, idéal en journée
-- **Purple Dream** : Mystique et enchanteur
-- **Forest** : Apaisant et naturel
-- **Ocean** : Profond et serein
-- **Amber** : Chaleureux et accueillant
-- **Custom** : Créez votre propre palette !
+### Notifications (3 niveaux)
+- **Toast classique** : slide-in depuis la droite, barre de timer, pause au survol
+- **Banniere de celebration** : banniere doree centree avec etoiles pulsantes (quand une recrue rejoint la guilde)
+- **Toast de succes** : theme violet avec icone (deblocage de succes)
 
----
+### Particules
+- Confettis dores (45 particules) + anneau d'etincelles + flash ecran + starburst a chaque recrue
+- Effet scan : balayage vert avec barre lumineuse
+- Effets hover et clic sur les boutons
+- Effet starburst violet/or pour les succes
+- Pool de 60+ textures reutilisables
 
-## 📊 Comprendre les Statistiques
-
-### Taux de Conversion
-- **Contacté → Invité** : % de contacts qui reçoivent une invitation après message
-- **Invité → Rejoint** : % d'invités qui rejoignent effectivement
-- **Contacté → Rejoint** : Taux de conversion global
-
-### Meilleurs Horaires
-- Basé sur votre activité passée
-- Identifie les heures où vous recrutez le plus
-- Utile pour planifier auto-recrutement
-
-### Performance Templates
-- Compare l'efficacité de vos différents templates
-- Taux de succès = recrues rejointes / template utilisé
-- Optimisez vos messages selon les résultats
+### Animations
+- Shimmer diagonal, glow pulse, compteur anime, remplissage barre
+- Fade transition, bounce-in elastique, slide reveal, texte typewriter
+- Ouverture/fermeture de la fenetre avec scale + fade
+- Indicateur d'onglet glissant avec glow
+- Badges pulsants sur changement de valeur
 
 ---
 
-## 🛠️ Configuration Avancée
+## Configuration recommandee
 
-### Anti-Spam Optimal
+**Anti-spam** :
+- Cooldown invitation : 300s, cooldown message : 180s
+- Max 8 actions/min, 10 invitations/h, 20 messages/h
+- Respect AFK/DND active, blocage en instance active
+
+**Scanner** :
+- Niveau 10-80, tranche de 5, delai /who 6s
+- Cross-realm active, guildes exclues
+
+**Auto-recrutement** :
+- Delai 15s, max 50/session, 100 contacts/jour
+- Restriction horaire 18h-23h recommandee
+
+---
+
+## Themes
+
+6 themes inclus : Dark (defaut), Light, Purple Dream, Forest, Ocean, Amber.
+Plus un editeur de theme personnalise avec generateur de palette.
+
+---
+
+## Dependances
+
+- Ace3 (inclus) : AceAddon-3.0, AceEvent-3.0, AceDB-3.0
+- World of Warcraft Retail 11.0+
+
+---
+
+## Structure des fichiers
+
 ```
-Cooldown Invitation: 300s (5 min)
-Cooldown Message: 180s (3 min)
-Max Actions/Minute: 8
-Max Invitations/Heure: 10
-Max Messages/Heure: 20
-Respect AFK/DND: ✓ (900s hold)
-Bloquer en Instance: ✓
-```
-
-### Scanner Efficace
-```
-Niveau Min: 10
-Niveau Max: 80
-Tranche de Niveaux: 5
-Délai /who: 6s
-Timeout /who: 8s
-Inclure Guildés: ✗
-Inclure Cross-Realm: ✓
-```
-
-### Auto-Recrutement Sûr
-```
-Mode: Recruter (message + invite)
-Délai entre Actions: 15s
-Max par Session: 50
-Max Contacts/Jour: 100
-Max Invitations/Jour: 50
-Restrictions Horaires: 18:00-23:00
+Core.lua              Point d'entree, detection des recrues (3 methodes)
+DB.lua                Base de donnees (contacts, blacklist, logs)
+Scanner.lua           Scanner /who automatise
+Queue.lua             File d'attente et actions de recrutement
+Inbox.lua             Detection whispers entrants
+Templates.lua         Gestion des templates de messages
+AntiSpam.lua          Rate limiting et cooldowns
+Filters.lua           Filtres avances avec presets
+Statistics.lua        Collecte de statistiques
+Reputation.lua        Score de reputation des contacts
+ABTesting.lua         A/B testing de templates (Thompson Sampling)
+Campaigns.lua         Gestion de campagnes de recrutement
+Goals.lua             25 succes et streaks
+SmartSuggestions.lua  Suggestions intelligentes
+ImportExport.lua      Import/export et backup auto
+AutoRecruiter.lua     Recrutement automatique
+Keybinds.lua          Raccourcis clavier
+Themes.lua            Systeme de themes
+Discord.lua           Integration Discord webhook
+BulkOperations.lua    Operations en masse
+Minimap.lua           Bouton minimap
+ParticleSystem.lua    Effets visuels (confettis, starburst, etc.)
+AnimationSystem.lua   Animations (shimmer, glow, bounce, etc.)
+Notifications.lua     Toasts, bannieres, succes
+Charts.lua            Graphiques pour analytics
+DashboardWidgets.lua  Widgets du dashboard
+UI_Widgets.lua        Composants UI de base
+UI_Scanner.lua        Onglet Scanner
+UI_Queue.lua          Onglet File d'attente
+UI_Inbox.lua          Onglet Boite de reception
+UI_Analytics.lua      Onglet Analytics
+UI_Settings.lua       Onglet Reglages
+UI_Logs.lua           Onglet Journaux
+UI_Help.lua           Onglet Aide
+UI.lua                Frame principal, tabs, barre de statut
 ```
 
 ---
 
-## 🔧 Dépendances
+## Changelog
 
-- **Ace3** (inclus) : AceAddon-3.0, AceEvent-3.0, AceDB-3.0
-- **World of Warcraft Retail** (11.0+)
+### v3.3.0
+- Systeme de particules complet (confettis, starburst, scan sweep, hover/clic)
+- Notifications 3 niveaux (toast, celebration doree, succes violet)
+- Animations avancees (shimmer, glow pulse, bounce, typewriter, etc.)
+- UI : animations d'ouverture/fermeture, indicateur d'onglet glissant, badges animes
+- Integration : succes utilisent le toast violet, recrues utilisent la banniere doree
+- Correctifs de robustesse sur 11 fichiers (nil-safety, pcall, iteration safe)
 
----
+### v3.2.0
+- A/B Testing de templates avec Thompson Sampling
+- Campagnes de recrutement avec objectifs
+- Suggestions intelligentes (meilleur moment, template, contacts a recontacter)
+- 25 succes deblocables et systeme de streaks
+- File d'attente avec score de reputation et tri
+- Boite de reception avec reponse rapide et indicateurs hot
 
-## 💡 Astuces & Bonnes Pratiques
+### v3.1.0
+- Correction analytics (comptage reel depuis la base de contacts)
+- Detection recrues 3 methodes (CHAT_MSG_SYSTEM, CLUB_MEMBER_ADDED, roster check)
+- Matching strict Name-Realm (plus de faux positifs cross-realm)
+- Re-verification des recrues contre le roster guilde
 
-1. **Scannez régulièrement** mais respectez le cooldown (6s recommandé)
-2. **Personnalisez vos templates** pour votre guilde spécifique
-3. **Utilisez les tags** pour organiser vos contacts (ex: "tank", "dps", "heal")
-4. **Activez l'opt-in** si vous voulez respecter la volonté des joueurs
-5. **Exportez vos données** régulièrement (backup auto quotidien activé)
-6. **Consultez les statistiques** pour optimiser votre recrutement
-7. **Utilisez l'auto-recrutement** pendant vos sessions farm/craft
-8. **Configurez les raccourcis clavier** pour efficacité maximale
-9. **Testez différents templates** et comparez les performances
-10. **Respectez toujours** les règles Blizzard et la communauté
-
----
-
-## 🐛 Signaler un Bug
-
-- [GitHub Issues](https://github.com/votre-repo/issues) *(à mettre à jour)*
-- [Discord](https://discord.gg/7FbBTkrH)
-
----
-
-## 🗺️ Roadmap v3.1+
-
-- [ ] Intégration WeakAuras
-- [ ] API publique pour autres addons
-- [ ] Graphiques visuels des statistiques
-- [ ] Machine learning pour prédire meilleurs moments
-- [ ] A/B testing automatique des templates
-- [ ] Système de réputation des contacts
-- [ ] Intégration Discord webhook
-- [ ] Mode campagne de recrutement
-- [ ] Suggestions de joueurs basées sur l'activité
+### v3.0.0
+- Auto-recrutement intelligent
+- 6 themes visuels + editeur
+- Statistiques et analytics avancees
+- Notifications toast
+- Filtres avances avec presets
+- Import/export et backup auto
+- Raccourcis clavier
 
 ---
 
-## 👤 Auteur
-
-**Plume** - Développeur passionné de WoW
-[Discord](https://discord.gg/7FbBTkrH) | Retail EU
-
----
-
-## 📜 Licence
-
-Tous droits réservés © 2025 Plume
-
----
-
-## 🙏 Remerciements
-
-Merci à tous les utilisateurs qui testent et donnent du feedback !
-Merci à la communauté Ace3 pour les excellentes librairies.
-
----
-
-## 📝 Changelog v3.0.0
-
-### Ajouts Majeurs
-- ✨ Système d'auto-recrutement intelligent
-- 🎨 6 thèmes visuels + éditeur personnalisé
-- 📊 Statistiques et analytics avancées
-- 🔔 Notifications toast élégantes
-- 🎯 Filtres avancés avec presets
-- 💾 Import/export & backup automatique
-- ⌨️ Raccourcis clavier globaux
-- 🏷️ Système de tags pour contacts
-
-### Améliorations
-- ⚡ Performances optimisées (smooth scrolling, debouncing)
-- 🎭 Animations fluides (fade, slide, bounce, scale)
-- 🖱️ Transitions entre tabs
-- 💫 Badges pulsants
-- 🎨 Interface modernisée
-- 📈 Tracking de conversion
-- 🔄 UI refresh optimisé
-
-### Corrections
-- 🐛 Corrections diverses de stabilité
-- 🔧 Amélioration gestion mémoire
-- 🛡️ Renforcement anti-spam
-
----
-
-**CelestialRecruiter v3.0.0 - L'addon qui transforme votre guilde ! 🌟**
+Fait par **plume.pao** avec amour.
