@@ -19,6 +19,7 @@ Filters.active = {
     optedIn = nil,       -- nil = all, true = only opted in, false = not opted in
     crossRealm = nil,    -- nil = all, true = only cross-realm, false = same realm
     tags = {},           -- {tag1=true, tag2=true, ...}
+    races = {},          -- {Human=true, Orc=true, ...}
     recentDays = nil,    -- Only contacts seen in last N days
 }
 
@@ -59,6 +60,7 @@ function Filters:Reset()
         optedIn = nil,
         crossRealm = nil,
         tags = {},
+        races = {},
         recentDays = nil,
     }
 end
@@ -88,6 +90,14 @@ function Filters:ToggleTag(tag)
         self.active.tags[tag] = nil
     else
         self.active.tags[tag] = true
+    end
+end
+
+function Filters:ToggleRace(race)
+    if self.active.races[race] then
+        self.active.races[race] = nil
+    else
+        self.active.races[race] = true
     end
 end
 
@@ -186,6 +196,16 @@ function Filters:Matches(contact, scanData)
         end
     end
 
+    -- Race filter
+    local hasRaceFilter = false
+    for _ in pairs(self.active.races) do hasRaceFilter = true; break end
+    if hasRaceFilter then
+        local race = (scanData and scanData.race) or contact.race or ""
+        if not self.active.races[race] then
+            return false
+        end
+    end
+
     -- Recent days filter
     if self.active.recentDays then
         local cutoff = ns.Util_Now() - (self.active.recentDays * 24 * 3600)
@@ -208,6 +228,7 @@ function Filters:IsActive()
     if self.active.optedIn ~= nil then return true end
     if self.active.crossRealm ~= nil then return true end
     for _ in pairs(self.active.tags) do return true end
+    for _ in pairs(self.active.races) do return true end
     if self.active.recentDays then return true end
     return false
 end
@@ -223,6 +244,7 @@ function Filters:CountActive()
     if self.active.optedIn ~= nil then count = count + 1 end
     if self.active.crossRealm ~= nil then count = count + 1 end
     for _ in pairs(self.active.tags) do count = count + 1 end
+    for _ in pairs(self.active.races) do count = count + 1 end
     if self.active.recentDays then count = count + 1 end
     return count
 end
@@ -242,12 +264,14 @@ function Filters:SavePreset(name)
         optedIn = self.active.optedIn,
         crossRealm = self.active.crossRealm,
         tags = {},
+        races = {},
         recentDays = self.active.recentDays,
     }
 
     for k, v in pairs(self.active.status) do preset.status[k] = v end
     for k, v in pairs(self.active.classes) do preset.classes[k] = v end
     for k, v in pairs(self.active.tags) do preset.tags[k] = v end
+    for k, v in pairs(self.active.races) do preset.races[k] = v end
 
     self.presets[name] = preset
 
@@ -272,6 +296,7 @@ function Filters:LoadPreset(name)
     self.active.status = {}
     self.active.classes = {}
     self.active.tags = {}
+    self.active.races = {}
     self.active.levelMin = preset.levelMin
     self.active.levelMax = preset.levelMax
     self.active.source = preset.source
@@ -282,6 +307,7 @@ function Filters:LoadPreset(name)
     for k, v in pairs(preset.status or {}) do self.active.status[k] = v end
     for k, v in pairs(preset.classes or {}) do self.active.classes[k] = v end
     for k, v in pairs(preset.tags or {}) do self.active.tags[k] = v end
+    for k, v in pairs(preset.races or {}) do self.active.races[k] = v end
 
     return true
 end
@@ -320,4 +346,20 @@ function Filters:GetAvailableTags()
     end
     table.sort(tags)
     return tags
+end
+
+-- Get all unique races from contacts
+function Filters:GetAvailableRaces()
+    local races = {}
+    local seen = {}
+    for _, contact in pairs(ns.db.global.contacts or {}) do
+        if contact and contact.race and contact.race ~= "" then
+            if not seen[contact.race] then
+                seen[contact.race] = true
+                races[#races + 1] = contact.race
+            end
+        end
+    end
+    table.sort(races)
+    return races
 end

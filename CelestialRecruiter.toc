@@ -4,7 +4,7 @@
 ## Author: Plume
 ## Version: 3.4.0
 ## X-Category: Guild
-## X-Website: https://discord.gg/7FbBTkrH
+## X-Website: https://discord.gg/3HwyEBaAQB
 ## X-Curse-Project-ID:
 ## X-Localizations: frFR
 ## SavedVariables: CelestialRecruiterDB
@@ -15,42 +15,46 @@ Libs\AceAddon-3.0\AceAddon-3.0.xml
 Libs\AceEvent-3.0\AceEvent-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 
-Util.lua
-DB.lua
-AntiSpam.lua
-Templates.lua
-Inbox.lua
-Queue.lua
-Scanner.lua
-Minimap.lua
-Filters.lua
-Statistics.lua
-Reputation.lua
-ImportExport.lua
-AutoRecruiter.lua
-Keybinds.lua
-Themes.lua
-ABTesting.lua
-Campaigns.lua
-Goals.lua
-Leaderboard.lua
-SmartSuggestions.lua
+Core\Util.lua
+Core\DB.lua
 
-UI_Widgets.lua
+Modules\AntiSpam.lua
+Modules\Templates.lua
+Modules\Inbox.lua
+Modules\Queue.lua
+Modules\Scanner.lua
+Modules\Minimap.lua
+Modules\Filters.lua
+Modules\Statistics.lua
+Modules\Reputation.lua
+Modules\ImportExport.lua
+Modules\AutoRecruiter.lua
+Modules\Keybinds.lua
+Modules\ABTesting.lua
+Modules\Campaigns.lua
+Modules\Goals.lua
+Modules\Leaderboard.lua
+Modules\SmartSuggestions.lua
+Modules\Discord.lua
+Modules\BulkOperations.lua
 
-DashboardWidgets.lua
-Discord.lua
-BulkOperations.lua
-ParticleSystem.lua
-AnimationSystem.lua
-Charts.lua
-Notifications.lua
-UI_Scanner.lua
-UI_Queue.lua
-UI_Inbox.lua
-UI_Analytics.lua
-UI_Settings.lua
-UI_Logs.lua
-UI_Help.lua
-UI.lua
-Core.lua
+UI\Widgets.lua
+
+FX\Themes.lua
+FX\AnimationSystem.lua
+FX\ParticleSystem.lua
+FX\Charts.lua
+FX\Notifications.lua
+
+UI\DashboardWidgets.lua
+UI\FilterBar.lua
+UI\Scanner.lua
+UI\Queue.lua
+UI\Inbox.lua
+UI\Analytics.lua
+UI\Settings.lua
+UI\Logs.lua
+UI\Help.lua
+UI\Main.lua
+
+Core\Core.lua

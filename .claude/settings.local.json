@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Read(//c/Program Files/GitHub CLI//**)",
-      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status)"
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status)",
+      "Bash(luac:*)",
+      "Bash(xargs:*)",
+      "Bash(done)",
+      "Bash(tr:*)",
+      "Bash(awk:*)",
+      "Bash(grep:*)",
+      "Bash(for file in Charts.lua UI_Settings.lua Templates.lua ImportExport.lua ParticleSystem.lua AnimationSystem.lua)",
+      "Bash(do wc -l \"$file\")"
     ]
   }
 }

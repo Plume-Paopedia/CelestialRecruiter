@@ -221,6 +221,9 @@ local function batchRecruitAll()
     local keys = ns.DB_QueueList()
     local search = ns._ui_search or ""
 
+    -- Sync search text into Filters
+    ns.Filters:SetText(search)
+
     -- Build filtered list matching current view
     local targets = {}
     for _, key in ipairs(keys) do
@@ -229,8 +232,7 @@ local function batchRecruitAll()
             local st = c.status
             if st ~= "invited" and st ~= "joined" and st ~= "ignored"
                 and (c.lastInviteAt or 0) <= 0
-                and W.matchSearch(search, key, st or "", c.notes or "",
-                    c.optedIn and "optin" or "", c.source or "") then
+                and ns.Filters:Matches(c) then
                 targets[#targets + 1] = key
             end
         end
@@ -349,6 +351,32 @@ function ns.UI_BuildQueue(parent)
     end)
     qd.recruitAllBtn:SetPoint("LEFT", qd.bestFirstBtn, "RIGHT", 6, 0)
 
+    -- "Filtres" button + active filter badge
+    qd.filterBtn = W.MakeBtn(controls, "Filtres", 70, "n", function()
+        if qd.filterBar then
+            qd.filterBar:Toggle()
+            local h = qd.filterBar:GetEffectiveHeight()
+            qd.scroll.frame:SetPoint("TOPLEFT", 8, -(44 + h))
+            -- Update badge
+            local cnt = ns.Filters:CountActive()
+            qd.filterBadge:SetText(cnt > 0 and format("[%d]", cnt) or "")
+        end
+    end)
+    qd.filterBtn:SetPoint("LEFT", qd.recruitAllBtn, "RIGHT", 6, 0)
+
+    qd.filterBadge = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    qd.filterBadge:SetPoint("LEFT", qd.filterBtn, "RIGHT", 3, 0)
+    qd.filterBadge:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+    qd.filterBadge:SetText("")
+
+    -- Filter bar (animated panel)
+    qd.filterBar = W.MakeFilterBar(parent, "queue", function(h, isFilterChange)
+        qd.scroll.frame:SetPoint("TOPLEFT", 8, -(44 + h))
+        if isFilterChange then
+            ns.UI_RefreshQueue()
+        end
+    end)
+
     -- Preview bar
     local prevBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     prevBar:SetHeight(30)
@@ -398,6 +426,9 @@ function ns.UI_RefreshQueue()
     local search = ns._ui_search or ""
     local tplId = ns._ui_tpl or "default"
 
+    -- Sync search text into Filters
+    ns.Filters:SetText(search)
+
     local keys = ns.DB_QueueList()
     local filtered = {}
     for _, key in ipairs(keys) do
@@ -408,10 +439,7 @@ function ns.UI_RefreshQueue()
                 -- skip already processed
             elseif (c.lastInviteAt or 0) > 0 then
                 -- skip: already invited at some point
-            elseif W.matchSearch(search,
-                key, st or "", c.notes or "",
-                c.optedIn and "optin" or "", c.source or ""
-            ) then
+            elseif ns.Filters:Matches(c) then
                 local score = getScore(c)
                 filtered[#filtered + 1] = {key = key, contact = c, score = score}
             end
@@ -466,6 +494,17 @@ function ns.UI_RefreshQueue()
     -- Disable batch button when running or empty
     if qd.recruitAllBtn then
         qd.recruitAllBtn:SetOff(batchRunning or #filtered == 0)
+    end
+
+    -- Update filter badge
+    if qd.filterBadge then
+        local cnt = ns.Filters:CountActive()
+        qd.filterBadge:SetText(cnt > 0 and format("[%d]", cnt) or "")
+    end
+
+    -- Sync filter bar visuals
+    if qd.filterBar and qd.filterBar.expanded then
+        qd.filterBar:SyncFromFilters()
     end
 
     local scroll = qd.scroll

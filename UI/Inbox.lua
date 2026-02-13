@@ -339,6 +339,35 @@ function ns.UI_BuildInbox(parent)
     end)
     ib.hotCheck:SetPoint("LEFT", ib.sortDD, "RIGHT", 14, 0)
 
+    -- "Filtres" button + active filter badge
+    ib.filterBtn = W.MakeBtn(bar, "Filtres", 70, "n", function()
+        if ib.filterBar then
+            ib.filterBar:Toggle()
+            local h = ib.filterBar:GetEffectiveHeight()
+            ib.scroll.frame:SetPoint("TOPLEFT", 8, -(40 + h))
+            local cnt = ns.Filters:CountActive()
+            ib.filterBadge:SetText(cnt > 0 and string.format("[%d]", cnt) or "")
+        end
+    end)
+    ib.filterBtn:SetPoint("LEFT", ib.hotCheck.label, "RIGHT", 14, 0)
+
+    ib.filterBadge = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ib.filterBadge:SetPoint("LEFT", ib.filterBtn, "RIGHT", 3, 0)
+    ib.filterBadge:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+    ib.filterBadge:SetText("")
+
+    -- Filter bar (animated panel)
+    ib.filterBar = W.MakeFilterBar(parent, "inbox", function(h, isFilterChange)
+        ib.scroll.frame:SetPoint("TOPLEFT", 8, -(40 + h))
+        if isFilterChange then
+            ns.UI_RefreshInbox()
+        end
+    end)
+    -- Anchor filter bar below the inbox control bar
+    ib.filterBar.container:ClearAllPoints()
+    ib.filterBar.container:SetPoint("TOPLEFT", 8, -40)
+    ib.filterBar.container:SetPoint("TOPRIGHT", -8, -40)
+
     -----------------------------------------------------------------------
     -- Scroll area (below control bar)
     -----------------------------------------------------------------------
@@ -563,6 +592,9 @@ function ns.UI_RefreshInbox()
     local search = ns._ui_search or ""
     local now    = ns.Util_Now()
 
+    -- Sync search text into Filters
+    ns.Filters:SetText(search)
+
     -----------------------------------------------------------------------
     -- 1.  Gather & filter contacts
     -----------------------------------------------------------------------
@@ -573,10 +605,7 @@ function ns.UI_RefreshInbox()
         local c = ns.DB_GetContact(key)
         if c and not ns.DB_IsBlacklisted(key)
            and (c.lastWhisperIn or 0) > 0
-           and W.matchSearch(search,
-                key, c.status or "", c.notes or "",
-                c.optedIn and "optin" or "", c.source or ""
-           )
+           and ns.Filters:Matches(c)
         then
             local score = getRep() and getRep():CalculateScore(c) or 0
 
@@ -595,6 +624,17 @@ function ns.UI_RefreshInbox()
     -- 2.  Sort
     -----------------------------------------------------------------------
     sortFiltered(filtered)
+
+    -- Update filter badge
+    if ib.filterBadge then
+        local cnt = ns.Filters:CountActive()
+        ib.filterBadge:SetText(cnt > 0 and string.format("[%d]", cnt) or "")
+    end
+
+    -- Sync filter bar visuals
+    if ib.filterBar and ib.filterBar.expanded then
+        ib.filterBar:SyncFromFilters()
+    end
 
     -----------------------------------------------------------------------
     -- 3.  Template items (for future dropdown per-row if needed)

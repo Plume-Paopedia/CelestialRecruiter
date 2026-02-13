@@ -18,6 +18,11 @@ local Scanner = {
   totalQueries = 0,
   _dirty = true,
   _cachedRows = nil,
+
+  autoScanTimer = nil,
+  autoScanCycles = 0,
+  autoReady = false,
+  autoHooked = false,
 }
 
 ns.Scanner = Scanner
@@ -53,6 +58,18 @@ local function cooldownRemaining()
   end
   return remain
 end
+
+local function autoScanDelay()
+  return ns.Util_ToNumber(ns.db.profile.scanAutoDelayMinutes, 5, 1, 60) * 60
+end
+
+local function isAutoScanEnabled()
+  return ns.db and ns.db.profile and ns.db.profile.scanAutoEnabled
+end
+
+-- Forward declarations (filled after sendNextQuery is defined)
+local scheduleAutoReady
+local scheduleAutoScanCycleRestart
 
 local function buildClassFilters()
   local out = {}
@@ -213,17 +230,18 @@ local function buildPlayerRecord(info)
   end
 
   local guild = ns.Util_Trim(info.fullGuildName or info.guildName or "")
+  local skipReason = nil
   if guild ~= "" and not ns.db.profile.scanIncludeGuilded then
-    return nil
+    skipReason = "guild"
   end
 
-  if ns.DB_IsBlacklisted(inviteName) then
-    return nil
+  if not skipReason and ns.DB_IsBlacklisted(inviteName) then
+    skipReason = "blacklist"
   end
 
   local isCrossRealm = not ns.Util_IsSameRealmPlayer(inviteName)
-  if isCrossRealm and not ns.db.profile.scanIncludeCrossRealm then
-    return nil
+  if not skipReason and isCrossRealm and not ns.db.profile.scanIncludeCrossRealm then
+    skipReason = "crossrealm"
   end
 
   local now = ns.Util_Now()
@@ -238,6 +256,7 @@ local function buildPlayerRecord(info)
     zone = info.area or "",
     guild = guild,
     crossRealm = isCrossRealm,
+    skipReason = skipReason,
     firstSeen = now,
     lastSeen = now,
   }
@@ -258,6 +277,7 @@ local function mergeRecord(record)
   existing.zone = record.zone or existing.zone
   existing.guild = record.guild or existing.guild
   existing.crossRealm = record.crossRealm and true or false
+  existing.skipReason = record.skipReason
   existing.lastSeen = record.lastSeen or existing.lastSeen
   return false, existing
 end
@@ -303,7 +323,7 @@ local function processWhoResults(completedQuery)
       local rec = buildPlayerRecord(info)
       if rec then
         local isNew, current = mergeRecord(rec)
-        if isNew then
+        if isNew and not rec.skipReason then
           addedPlayers = addedPlayers + 1
           if queueIfUnguilded(current) then
             addedQueue = addedQueue + 1
@@ -338,6 +358,7 @@ local function finishScan(logLine)
   Scanner.awaiting = false
   Scanner.currentQuery = nil
   Scanner.timeoutTimer = cancelTimer(Scanner.timeoutTimer)
+  Scanner.autoScanTimer = cancelTimer(Scanner.autoScanTimer)
   if logLine then
     ns.DB_Log("SCAN", logLine)
   end
@@ -377,7 +398,6 @@ local function sendNextQuery()
     return false, "who api unavailable"
   end
 
-  setWhoToUiEnabled(false)
   local ok = sendWhoQuery(query)
   if not ok then
     Scanner.awaiting = false
@@ -399,6 +419,9 @@ local function sendNextQuery()
       Scanner.awaiting = false
       Scanner.currentQuery = nil
       ns.DB_Log("SCAN", "Timeout WHO: " .. query)
+      if isAutoScanEnabled() and Scanner.active then
+        scheduleAutoReady()
+      end
       ns.UI_Refresh()
     end
   end)
@@ -407,9 +430,131 @@ local function sendNextQuery()
   return true
 end
 
+---------------------------------------------------------------------------
+-- Auto-Scan: WorldFrame mouse-hook approach
+-- C_FriendList.SendWho requires a hardware event (physical click/keypress).
+-- We hook WorldFrame:OnMouseDown so every game-world click triggers the
+-- next queued WHO query (after cooldown).
+---------------------------------------------------------------------------
+
+-- Schedule autoReady = true after the WHO cooldown expires.
+-- Uses C_Timer only to flip a boolean flag — the actual SendWho call
+-- happens in the WorldFrame OnMouseDown handler (hardware event).
+scheduleAutoReady = function()
+  Scanner.autoScanTimer = cancelTimer(Scanner.autoScanTimer)
+  Scanner.autoReady = false
+
+  local remain = cooldownRemaining()
+  local delay = math.max(remain + 0.1, 0.5)
+
+  Scanner.autoScanTimer = C_Timer.NewTimer(delay, function()
+    Scanner.autoScanTimer = nil
+    if not isAutoScanEnabled() then return end
+    Scanner.autoReady = true
+    ns.UI_Refresh()
+  end)
+end
+
+scheduleAutoScanCycleRestart = function()
+  Scanner.autoScanTimer = cancelTimer(Scanner.autoScanTimer)
+  Scanner.autoReady = false
+  Scanner.autoScanCycles = Scanner.autoScanCycles + 1
+
+  local delaySeconds = autoScanDelay()
+  ns.DB_Log("SCAN", ("Cycle %d termine (%d joueurs). Prochain cycle dans %d min"):format(
+    Scanner.autoScanCycles, countMapKeys(Scanner.results), math.floor(delaySeconds / 60)
+  ))
+
+  Scanner.active = false
+  Scanner.awaiting = false
+  Scanner.currentQuery = nil
+  Scanner.timeoutTimer = cancelTimer(Scanner.timeoutTimer)
+
+  -- After inter-cycle delay, prepare for new cycle on next click
+  Scanner.autoScanTimer = C_Timer.NewTimer(delaySeconds, function()
+    Scanner.autoScanTimer = nil
+    if not isAutoScanEnabled() then
+      ns.DB_Log("SCAN", "Auto-scan desactive pendant l'attente inter-cycle")
+      ns.UI_Refresh()
+      return
+    end
+    -- Don't call Scanner_ScanStep here (timer context = no hardware event).
+    -- Just set autoReady; the next WorldFrame click will start the new cycle.
+    Scanner.autoReady = true
+    ns.DB_Log("SCAN", "Pret pour le prochain cycle — cliquez dans le jeu")
+    ns.UI_Refresh()
+  end)
+  ns.UI_Refresh()
+end
+
+-- Shared trigger: fires the next WHO query.
+-- Must ONLY be called from a hardware event context (OnMouseDown / OnKeyDown).
+local function autoScanTrigger()
+  if not isAutoScanEnabled() then return end
+  if not Scanner.autoReady then return end
+  if Scanner.awaiting then return end
+
+  Scanner.autoReady = false
+
+  if not Scanner.active then
+    -- Start a new scan cycle (ScanStep builds queries + fires first query,
+    -- all within this hardware event context)
+    ns.Scanner_ScanStep(false)
+  else
+    sendNextQuery()
+  end
+
+  -- Schedule autoReady for the next query after cooldown
+  if Scanner.active then
+    scheduleAutoReady()
+  end
+  ns.UI_Refresh()
+end
+
+-- 1) WorldFrame OnMouseDown: game-world clicks trigger WHO queries
+local function installWorldFrameHook()
+  if Scanner.autoHooked then return end
+  Scanner.autoHooked = true
+  WorldFrame:HookScript("OnMouseDown", function() autoScanTrigger() end)
+end
+
+-- 2) Keyboard listener: any key press (WASD, abilities, etc.) triggers WHO.
+--    Uses EnableKeyboard + SetPropagateKeyboardInput(true) so all keys
+--    still reach the game normally. The frame is invisible (1×1, no texture).
+local autoScanKeyFrame = nil
+
+local function showKeyboardListener()
+  if not autoScanKeyFrame then
+    local kf = CreateFrame("Frame", "CelestialRecruiterAutoScanKeys", UIParent)
+    kf:SetSize(1, 1)
+    kf:SetPoint("TOPLEFT")
+    kf:EnableKeyboard(true)
+    kf:SetPropagateKeyboardInput(true)
+    kf:SetFrameStrata("TOOLTIP")
+    kf:SetScript("OnKeyDown", function() autoScanTrigger() end)
+    autoScanKeyFrame = kf
+  end
+  autoScanKeyFrame:Show()
+end
+
+local function hideKeyboardListener()
+  if autoScanKeyFrame then
+    autoScanKeyFrame:Hide()
+  end
+end
+
 function ns.Scanner_Init()
   if Scanner.initialized then return end
   Scanner.initialized = true
+
+  -- Suppress default WHO panel once at init (safe context, no taint)
+  setWhoToUiEnabled(false)
+
+  -- Pre-install the WorldFrame hook if auto-scan was previously enabled
+  -- (the setting persists across sessions, but auto-scan won't auto-start)
+  if isAutoScanEnabled() then
+    installWorldFrameHook()
+  end
 
   ns.CR:RegisterEvent("WHO_LIST_UPDATE", function()
     if not Scanner.awaiting then return end
@@ -421,8 +566,16 @@ function ns.Scanner_Init()
     processWhoResults(completedQuery)
 
     if Scanner.active and #Scanner.queries == 0 then
-      finishScan(("Scan termine: %d joueurs uniques"):format(countMapKeys(Scanner.results)))
+      if isAutoScanEnabled() then
+        scheduleAutoScanCycleRestart()
+      else
+        finishScan(("Scan termine: %d joueurs uniques"):format(countMapKeys(Scanner.results)))
+      end
       return
+    end
+
+    if isAutoScanEnabled() and Scanner.active then
+      scheduleAutoReady()
     end
 
     ns.UI_Refresh()
@@ -456,6 +609,11 @@ function ns.Scanner_GetStats()
     cappedQueries = Scanner.cappedQueries,
     lastResultAt = Scanner.lastResultAt,
     cooldownRemaining = cooldownRemaining(),
+    autoScanEnabled = isAutoScanEnabled(),
+    autoScanCycles = Scanner.autoScanCycles,
+    autoScanReady = Scanner.autoReady,
+    autoScanWaiting = Scanner.autoScanTimer ~= nil and not Scanner.active,
+    autoScanDelayMinutes = ns.Util_ToNumber(ns.db.profile.scanAutoDelayMinutes, 5, 1, 60),
   }
 end
 
@@ -523,9 +681,13 @@ function ns.Scanner_ScanStep(clearCurrentList)
 end
 
 function ns.Scanner_Stop()
-  if not Scanner.active and not Scanner.awaiting then
+  if not Scanner.active and not Scanner.awaiting and not Scanner.autoScanTimer and not Scanner.autoReady then
     return
   end
+  Scanner.autoScanTimer = cancelTimer(Scanner.autoScanTimer)
+  Scanner.autoScanCycles = 0
+  Scanner.autoReady = false
+  hideKeyboardListener()
   finishScan("Scan stoppe manuellement")
 end
 
@@ -539,12 +701,41 @@ function ns.Scanner_Clear()
   Scanner.currentQuery = nil
   Scanner.queries = {}
   Scanner.timeoutTimer = cancelTimer(Scanner.timeoutTimer)
+  Scanner.autoScanTimer = cancelTimer(Scanner.autoScanTimer)
+  Scanner.autoScanCycles = 0
+  Scanner.autoReady = false
   Scanner.results = {}
   Scanner._dirty = true
   Scanner._cachedRows = nil
   Scanner.totalQueries = 0
   Scanner.totalWhoRows = 0
   Scanner.lastResultAt = 0
+  ns.UI_Refresh()
+end
+
+function ns.Scanner_AutoScanToggle(enabled)
+  ns.db.profile.scanAutoEnabled = enabled and true or false
+
+  if enabled then
+    installWorldFrameHook()
+    showKeyboardListener()
+    if Scanner.active and not Scanner.awaiting then
+      -- Scan already running: schedule readiness for next query
+      scheduleAutoReady()
+    elseif not Scanner.active then
+      -- No scan running: set ready so next click/keypress starts a cycle
+      Scanner.autoScanCycles = 0
+      Scanner.autoReady = true
+    end
+    ns.DB_Log("SCAN", "Auto-scan active — cliquez ou bougez pour scanner")
+  else
+    Scanner.autoScanTimer = cancelTimer(Scanner.autoScanTimer)
+    Scanner.autoScanCycles = 0
+    Scanner.autoReady = false
+    hideKeyboardListener()
+    ns.DB_Log("SCAN", "Auto-scan desactive")
+  end
+
   ns.UI_Refresh()
 end
 
@@ -565,7 +756,7 @@ function ns.Scanner_ImportCurrentWho()
       local rec = buildPlayerRecord(info)
       if rec then
         local isNew, current = mergeRecord(rec)
-        if isNew then
+        if isNew and not rec.skipReason then
           addedPlayers = addedPlayers + 1
           if queueIfUnguilded(current) then
             addedQueue = addedQueue + 1

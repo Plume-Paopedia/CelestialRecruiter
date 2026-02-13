@@ -916,7 +916,7 @@ function ns.UI_Init()
 
         if not UI.mainFrame or not UI.mainFrame:IsShown() then return end
         if UI.active ~= "Scanner" then return end
-        if st.awaiting or ((st.cooldownRemaining or 0) > 0) or st.scanning then
+        if st.awaiting or ((st.cooldownRemaining or 0) > 0) or st.scanning or st.autoScanWaiting or st.autoScanReady then
             local stateKey = (st.scanning and "1" or "0")
                 .. (st.awaiting and "1" or "0")
                 .. tostring(math.floor((st.cooldownRemaining or 0) + 0.5))
