@@ -27,6 +27,8 @@ Notifications.lua
 Filters.lua
 Statistics.lua
 ImportExport.lua
+AutoRecruiter.lua
+Keybinds.lua
 UI_Widgets.lua
 UI_Scanner.lua
 UI_Queue.lua

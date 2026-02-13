@@ -639,3 +639,9 @@ function ns.UI_Refresh()
     if not UI.mainFrame or not UI.mainFrame:IsShown() then return end
     RefreshCurrent()
 end
+
+-- Public API for tab switching (for keybinds)
+function ns.UI_SwitchTab(tabKey)
+    if not UI.mainFrame then return end
+    SwitchTab(tabKey)
+end

@@ -12,6 +12,9 @@ function CR:OnInitialize()
   if ns.Statistics and ns.Statistics.Init then
     ns.Statistics:Init()
   end
+  if ns.AutoRecruiter and ns.AutoRecruiter.Init then
+    ns.AutoRecruiter:Init()
+  end
 end
 
 function CR:OnEnable()
