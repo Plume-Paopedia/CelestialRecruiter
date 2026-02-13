@@ -92,6 +92,9 @@ local function CreateToast()
     fadeIn:SetToAlpha(1)
     fadeIn:SetDuration(0.25)
     fadeIn:SetSmoothing("OUT")
+    f._slideIn:SetScript("OnFinished", function()
+        f:SetAlpha(1)
+    end)
 
     -- Fade-out animation
     f._fadeOut = f:CreateAnimationGroup()
@@ -101,6 +104,7 @@ local function CreateToast()
     fadeOut:SetDuration(0.2)
     fadeOut:SetSmoothing("IN")
     f._fadeOut:SetScript("OnFinished", function()
+        f:SetAlpha(0)
         f:Hide()
         -- Remove from active toasts and reposition others
         for i = #toasts, 1, -1 do
