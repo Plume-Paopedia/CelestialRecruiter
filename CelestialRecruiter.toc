@@ -37,6 +37,7 @@ Notifications.lua
 UI_Scanner.lua
 UI_Queue.lua
 UI_Inbox.lua
+UI_Analytics.lua
 UI_Settings.lua
 UI_Logs.lua
 UI_Help.lua

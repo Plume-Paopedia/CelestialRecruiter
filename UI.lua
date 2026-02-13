@@ -23,12 +23,13 @@ UI.active = "Scanner"
 -- Tab definitions
 ---------------------------------------------------------------------------
 local TABS = {
-    {key = "Scanner",  label = "|cff00aaff\226\151\137|r Scanner",    badge = ns.UI_ScannerBadge},
-    {key = "Queue",    label = "|cffFFD700\226\151\143|r File d'attente", badge = ns.UI_QueueBadge},
-    {key = "Inbox",    label = "|cff33e07a\226\151\136|r Boite",       badge = ns.UI_InboxBadge},
-    {key = "Settings", label = "|cff888888\226\154\153|r Reglages"},
-    {key = "Logs",     label = "|cff888888\226\150\164|r Journaux"},
-    {key = "Help",     label = "|cff888888\226\151\136|r Aide"},
+    {key = "Scanner",   label = "|cff00aaff\226\151\137|r Scanner",    badge = ns.UI_ScannerBadge},
+    {key = "Queue",     label = "|cffFFD700\226\151\143|r File d'attente", badge = ns.UI_QueueBadge},
+    {key = "Inbox",     label = "|cff33e07a\226\151\136|r Boite",       badge = ns.UI_InboxBadge},
+    {key = "Analytics", label = "|cffFF69B4\226\150\136|r Analytics",   badge = ns.UI_AnalyticsBadge},
+    {key = "Settings",  label = "|cff888888\226\154\153|r Reglages"},
+    {key = "Logs",      label = "|cff888888\226\150\164|r Journaux"},
+    {key = "Help",      label = "|cff888888\226\151\136|r Aide"},
 }
 
 local tabBtns    = {}
@@ -408,6 +409,7 @@ local function CreateContent(parent)
     ns.UI_BuildScanner(tabPanels.Scanner)
     ns.UI_BuildQueue(tabPanels.Queue)
     ns.UI_BuildInbox(tabPanels.Inbox)
+    ns.UI_BuildAnalytics(tabPanels.Analytics)
     ns.UI_BuildSettings(tabPanels.Settings)
     ns.UI_BuildLogs(tabPanels.Logs)
     ns.UI_BuildHelp(tabPanels.Help)
@@ -527,12 +529,13 @@ end
 -- Refresh Helpers
 ---------------------------------------------------------------------------
 local refreshFuncs = {
-    Scanner  = function() ns.UI_RefreshScanner()  end,
-    Queue    = function() ns.UI_RefreshQueue()    end,
-    Inbox    = function() ns.UI_RefreshInbox()    end,
-    Settings = function() ns.UI_RefreshSettings() end,
-    Logs     = function() ns.UI_RefreshLogs()     end,
-    Help     = function() ns.UI_RefreshHelp()     end,
+    Scanner   = function() ns.UI_RefreshScanner()   end,
+    Queue     = function() ns.UI_RefreshQueue()     end,
+    Inbox     = function() ns.UI_RefreshInbox()     end,
+    Analytics = function() ns.UI_RefreshAnalytics() end,
+    Settings  = function() ns.UI_RefreshSettings()  end,
+    Logs      = function() ns.UI_RefreshLogs()      end,
+    Help      = function() ns.UI_RefreshHelp()      end,
 }
 
 UpdateStatusBar = function()
