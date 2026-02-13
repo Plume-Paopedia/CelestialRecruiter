@@ -25,6 +25,7 @@ Scanner.lua
 Minimap.lua
 Filters.lua
 Statistics.lua
+Reputation.lua
 ImportExport.lua
 AutoRecruiter.lua
 BulkOperations.lua
