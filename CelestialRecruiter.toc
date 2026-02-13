@@ -29,6 +29,7 @@ Statistics.lua
 ImportExport.lua
 AutoRecruiter.lua
 Keybinds.lua
+Themes.lua
 UI_Widgets.lua
 UI_Scanner.lua
 UI_Queue.lua

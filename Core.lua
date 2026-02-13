@@ -6,6 +6,9 @@ function CR:OnInitialize()
   ns.DB_Init()
   ns.Templates_Init()
   ns.Queue_Init()
+  if ns.Themes and ns.Themes.Init then
+    ns.Themes:Init()
+  end
   if ns.Filters and ns.Filters.Init then
     ns.Filters:Init()
   end
