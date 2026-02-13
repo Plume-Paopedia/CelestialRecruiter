@@ -45,7 +45,7 @@ end
 
 local function hotBadgeText()
     local hex = string.format("%02x%02x%02x", C.orange[1] * 255, C.orange[2] * 255, C.orange[3] * 255)
-    return string.format("|cff%sHOT|r", hex)
+    return string.format("|cff%sTOP|r", hex)
 end
 
 local function statusDot(status)
@@ -120,8 +120,8 @@ local function ShowInboxTooltip(anchor, key)
     GameTooltip:AddLine(" ")
     local score = Rep:CalculateScore(c)
     local _, scoreLabel, scoreCol = Rep:GetScoreClass(score)
-    GameTooltip:AddDoubleLine("Score reputation:", tostring(score) .. " / 100", C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
-    GameTooltip:AddDoubleLine("Classement:", scoreLabel, C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
+    GameTooltip:AddDoubleLine("Score reputation :", tostring(score) .. " / 100", C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
+    GameTooltip:AddDoubleLine("Classement :", scoreLabel, C.dim[1], C.dim[2], C.dim[3], scoreCol[1], scoreCol[2], scoreCol[3])
 
     -- Score breakdown hints
     GameTooltip:AddLine(" ")
@@ -319,7 +319,7 @@ function ns.UI_BuildInbox(parent)
     local sortItems = {
         { value = "recent", label = "Recent" },
         { value = "score",  label = "Score" },
-        { value = "hot",    label = "Hot d'abord" },
+        { value = "hot",    label = "Prioritaires d'abord" },
     }
     ib.sortDD = W.MakeDropdown(bar, 130, sortItems, ib.sortMode, function(v)
         ib.sortMode = v
@@ -328,7 +328,7 @@ function ns.UI_BuildInbox(parent)
     ib.sortDD:SetPoint("LEFT", 0, 0)
 
     -- "Hot leads" toggle checkbox
-    ib.hotCheck = W.MakeCheck(bar, "Hot leads only", function() return ib.hotOnly end, function(v)
+    ib.hotCheck = W.MakeCheck(bar, "Prioritaires uniquement", function() return ib.hotOnly end, function(v)
         ib.hotOnly = v
         ns.UI_RefreshInbox()
     end)
@@ -413,7 +413,7 @@ local function BindRow(row, key, c, score, now, tplItems)
 
     -- Time ago
     if (c.lastWhisperIn or 0) > 0 then
-        row.ago:SetText("il y a " .. agoFr(c.lastWhisperIn))
+        row.ago:SetText(agoFr(c.lastWhisperIn))
     else
         row.ago:SetText("")
     end
@@ -426,7 +426,7 @@ local function BindRow(row, key, c, score, now, tplItems)
     if c.source and c.source ~= "" then previewParts[#previewParts + 1] = c.source end
     if ignored then previewParts[#previewParts + 1] = "|cffffb347[ignore]|r" end
     if (c.lastWhisperOut or 0) > 0 then
-        previewParts[#previewParts + 1] = "msg envoye: " .. agoFr(c.lastWhisperOut)
+        previewParts[#previewParts + 1] = "envoye: " .. agoFr(c.lastWhisperOut)
     end
     if c.lastTemplate and c.lastTemplate ~= "" then
         previewParts[#previewParts + 1] = "(tpl: " .. tostring(c.lastTemplate) .. ")"
@@ -437,7 +437,7 @@ local function BindRow(row, key, c, score, now, tplItems)
     -----------------------------------------------------------------------
     -- Button labels
     -----------------------------------------------------------------------
-    row.ignBtn:SetLabel(ignored and "Retirer ign." or "Ignorer 7j")
+    row.ignBtn:SetLabel(ignored and "Restaurer" or "Ignorer 7j")
 
     -----------------------------------------------------------------------
     -- Wire buttons (only if key changed to avoid redundant closures)
@@ -448,7 +448,7 @@ local function BindRow(row, key, c, score, now, tplItems)
         -- + Liste
         row.addBtn:SetScript("OnClick", function()
             if ns.DB_QueueAdd(key) then
-                ns.DB_Log("QUEUE", "Ajout liste: " .. key)
+                ns.DB_Log("QUEUE", "Ajout file: " .. key)
             end
             ns.UI_Refresh()
         end)
@@ -603,7 +603,7 @@ function ns.UI_RefreshInbox()
     local rows   = scroll.rows
 
     if #filtered == 0 then
-        scroll:ShowEmpty("\240\159\147\172", "Aucun message recu. Les reponses a tes messages apparaitront ici.")
+        scroll:ShowEmpty("|cffFFD700*|r", "Aucun message recu. Les reponses a tes messages apparaitront ici.")
         for _, r in ipairs(rows) do
             r:Hide()
             if r.replyFrame then r.replyFrame:Hide() end

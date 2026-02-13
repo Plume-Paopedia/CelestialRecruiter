@@ -24,7 +24,7 @@ function ns.UI_BuildAnalytics(panel)
     -- Header
     local header = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     header:SetPoint("TOPLEFT", 16, yOffset)
-    header:SetText("|cffFFD700* Analytics & Insights|r")
+    header:SetText("|cffFFD700*|r Analytiques et apercu")
     header:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
     yOffset = yOffset - 40
 
@@ -33,7 +33,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local summaryLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     summaryLabel:SetPoint("TOPLEFT", 16, yOffset)
-    summaryLabel:SetText("|cff00aaff>|r Resume de session")
+    summaryLabel:SetText("|cff00aaff>|r Resume global")
     summaryLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
@@ -44,10 +44,10 @@ function ns.UI_BuildAnalytics(panel)
     ad.cards = {}
 
     local cardDefs = {
-        {key = "contacted", label = "Contactes", icon = "|cff00aaffO|r", color = C.accent},
-        {key = "invited",   label = "Invites",   icon = "|cff33e07a+|r", color = C.green},
-        {key = "joined",    label = "Recrues",   icon = "|cffFFD700*|r", color = C.gold},
-        {key = "conversion",label = "Conversion", icon = "|cffFF69B4%|r", color = {1, 0.41, 0.71}},
+        {key = "contacted", label = "Contactes",  icon = "|cff00aaffO|r", color = C.accent},
+        {key = "invited",   label = "Invites",    icon = "|cff33e07a+|r", color = C.green},
+        {key = "joined",    label = "Recrues",    icon = "|cffFFD700*|r", color = C.gold},
+        {key = "conversion",label = "Conversion", icon = "|cffFF69B4%%|r", color = {1, 0.41, 0.71}},
     }
 
     for i, def in ipairs(cardDefs) do
@@ -96,7 +96,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local funnelLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     funnelLabel:SetPoint("TOPLEFT", 16, yOffset)
-    funnelLabel:SetText("|cff00aaff>|r Funnel de conversion")
+    funnelLabel:SetText("|cff00aaff>|r Entonnoir de conversion")
     funnelLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 25
 
@@ -105,7 +105,7 @@ function ns.UI_BuildAnalytics(panel)
     local funnelDefs = {
         {key = "contacted", label = "Contactes",  color = C.accent},
         {key = "invited",   label = "Invites",    color = C.orange},
-        {key = "joined",    label = "Rejoints",   color = C.green},
+        {key = "joined",    label = "Recrues",    color = C.green},
     }
 
     for i, def in ipairs(funnelDefs) do
@@ -277,7 +277,7 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local trendsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     trendsLabel:SetPoint("TOPLEFT", 16, yOffset)
-    trendsLabel:SetText("|cff00aaff>|r Tendances (semaine actuelle vs precedente)")
+    trendsLabel:SetText("|cff00aaff>|r Tendances (cette semaine vs la precedente)")
     trendsLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
@@ -320,7 +320,180 @@ function ns.UI_BuildAnalytics(panel)
     yOffset = yOffset - 70
 
     -- ═══════════════════════════════════════════════════
-    -- Section 7: Dashboard Widgets
+    -- Section 7: Succes et Progression
+    -- ═══════════════════════════════════════════════════
+    local goalsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    goalsLabel:SetPoint("TOPLEFT", 16, yOffset)
+    goalsLabel:SetText("|cffFFD700>|r Succes et Progression")
+    goalsLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
+    yOffset = yOffset - 30
+
+    -- Achievement progress: "X / 25 succes debloques" with progress bar
+    local achProgressFrame = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    achProgressFrame:SetSize(chartWidth - 40, 50)
+    achProgressFrame:SetPoint("TOPLEFT", 20, yOffset)
+    achProgressFrame:SetBackdrop({
+        bgFile = W.SOLID, edgeFile = W.EDGE,
+        edgeSize = 8, insets = {left = 2, right = 2, top = 2, bottom = 2},
+    })
+    achProgressFrame:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.7)
+    achProgressFrame:SetBackdropBorderColor(C.gold[1], C.gold[2], C.gold[3], 0.3)
+
+    -- Left accent bar
+    local achAccent = achProgressFrame:CreateTexture(nil, "OVERLAY")
+    achAccent:SetTexture(W.SOLID)
+    achAccent:SetWidth(3)
+    achAccent:SetPoint("TOPLEFT", 3, -3)
+    achAccent:SetPoint("BOTTOMLEFT", 3, 3)
+    achAccent:SetVertexColor(C.gold[1], C.gold[2], C.gold[3], 0.8)
+
+    ad.achProgressText = achProgressFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    ad.achProgressText:SetPoint("TOPLEFT", 14, -8)
+    ad.achProgressText:SetText("|cffFFD700T|r 0 / 25 succes debloques")
+    ad.achProgressText:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+    ad.achProgressPct = achProgressFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.achProgressPct:SetPoint("TOPRIGHT", -12, -8)
+    ad.achProgressPct:SetText("0%")
+    ad.achProgressPct:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+    -- Full-width progress bar
+    local achBarBg = CreateFrame("Frame", nil, achProgressFrame, "BackdropTemplate")
+    achBarBg:SetSize(chartWidth - 80, 8)
+    achBarBg:SetPoint("BOTTOMLEFT", 14, 8)
+    achBarBg:SetBackdrop({bgFile = W.SOLID})
+    achBarBg:SetBackdropColor(1, 1, 1, 0.06)
+
+    ad.achBarFill = achBarBg:CreateTexture(nil, "OVERLAY")
+    ad.achBarFill:SetTexture(W.SOLID)
+    ad.achBarFill:SetPoint("TOPLEFT")
+    ad.achBarFill:SetPoint("BOTTOMLEFT")
+    ad.achBarFill:SetWidth(1)
+    ad.achBarFill:SetVertexColor(C.gold[1], C.gold[2], C.gold[3], 0.8)
+    ad._achBarBg = achBarBg
+
+    yOffset = yOffset - 60
+
+    -- Streak display: 3 small cards showing daily login, daily recruit, weekly goal
+    ad.streakCards = {}
+    local streakDefs = {
+        {key = "dailyLogin",   label = "Connexion",   icon = "|cff00aaff>|r"},
+        {key = "dailyRecruit", label = "Recrutement", icon = "|cff33e07a+|r"},
+        {key = "weeklyGoal",   label = "Semaine",     icon = "|cffFFD700*|r"},
+    }
+    local streakCardW = math.floor((chartWidth - 60) / 3)
+    local streakCardH = 55
+
+    for i, def in ipairs(streakDefs) do
+        local sCard = CreateFrame("Frame", nil, content, "BackdropTemplate")
+        sCard:SetSize(streakCardW, streakCardH)
+        sCard:SetPoint("TOPLEFT", 20 + (i - 1) * (streakCardW + 10), yOffset)
+        sCard:SetBackdrop({
+            bgFile = W.SOLID, edgeFile = W.EDGE,
+            edgeSize = 8, insets = {left = 2, right = 2, top = 2, bottom = 2},
+        })
+        sCard:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.6)
+        sCard:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.3)
+
+        local sIcon = sCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        sIcon:SetPoint("TOPLEFT", 8, -6)
+        sIcon:SetText(def.icon .. " " .. def.label)
+        sIcon:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        local sCurrent = sCard:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        sCurrent:SetPoint("BOTTOMLEFT", 10, 8)
+        sCurrent:SetText("0j")
+        sCurrent:SetTextColor(C.green[1], C.green[2], C.green[3])
+
+        local sBest = sCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        sBest:SetPoint("BOTTOMRIGHT", -8, 10)
+        sBest:SetText("max: 0")
+        sBest:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+
+        ad.streakCards[def.key] = {frame = sCard, current = sCurrent, best = sBest}
+    end
+
+    yOffset = yOffset - streakCardH - 15
+
+    -- Next milestone: name + progress bar + "X remaining"
+    local milestoneFrame = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    milestoneFrame:SetSize(chartWidth - 40, 42)
+    milestoneFrame:SetPoint("TOPLEFT", 20, yOffset)
+    milestoneFrame:SetBackdrop({
+        bgFile = W.SOLID, edgeFile = W.EDGE,
+        edgeSize = 8, insets = {left = 2, right = 2, top = 2, bottom = 2},
+    })
+    milestoneFrame:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.5)
+    milestoneFrame:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.25)
+
+    ad.milestoneTitle = milestoneFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.milestoneTitle:SetPoint("TOPLEFT", 10, -6)
+    ad.milestoneTitle:SetText("Prochain objectif : -")
+    ad.milestoneTitle:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+
+    ad.milestoneRemaining = milestoneFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ad.milestoneRemaining:SetPoint("TOPRIGHT", -10, -6)
+    ad.milestoneRemaining:SetText("")
+    ad.milestoneRemaining:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+    -- Milestone progress bar
+    local msBarBg = CreateFrame("Frame", nil, milestoneFrame, "BackdropTemplate")
+    msBarBg:SetSize(chartWidth - 80, 6)
+    msBarBg:SetPoint("BOTTOMLEFT", 10, 8)
+    msBarBg:SetBackdrop({bgFile = W.SOLID})
+    msBarBg:SetBackdropColor(1, 1, 1, 0.06)
+
+    ad.msBarFill = msBarBg:CreateTexture(nil, "OVERLAY")
+    ad.msBarFill:SetTexture(W.SOLID)
+    ad.msBarFill:SetPoint("TOPLEFT")
+    ad.msBarFill:SetPoint("BOTTOMLEFT")
+    ad.msBarFill:SetWidth(1)
+    ad.msBarFill:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.8)
+    ad._msBarBg = msBarBg
+
+    yOffset = yOffset - 52
+
+    -- Recent achievements: last 5 unlocked with name, icon, and unlock date
+    local recentAchLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    recentAchLabel:SetPoint("TOPLEFT", 20, yOffset)
+    recentAchLabel:SetText("Succes recents:")
+    recentAchLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    yOffset = yOffset - 18
+
+    ad.recentAchRows = {}
+    local achRowH = 24
+    for i = 1, 5 do
+        local row = CreateFrame("Frame", nil, content, "BackdropTemplate")
+        row:SetSize(chartWidth - 40, achRowH)
+        row:SetPoint("TOPLEFT", 20, yOffset)
+        row:SetBackdrop({bgFile = W.SOLID})
+        row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], (i % 2 == 0) and 0.2 or 0.35)
+
+        local achIcon = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        achIcon:SetPoint("LEFT", 8, 0)
+        achIcon:SetText("")
+        achIcon:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+        local achName = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        achName:SetPoint("LEFT", 30, 0)
+        achName:SetText("")
+        achName:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+        local achDate = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        achDate:SetPoint("RIGHT", -8, 0)
+        achDate:SetText("")
+        achDate:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+
+        ad.recentAchRows[i] = {row = row, icon = achIcon, name = achName, date = achDate}
+        row:Hide()
+
+        yOffset = yOffset - achRowH - 2
+    end
+
+    yOffset = yOffset - 15
+
+    -- ═══════════════════════════════════════════════════
+    -- Section 8: Dashboard Widgets
     -- ═══════════════════════════════════════════════════
     local widgetsLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     widgetsLabel:SetPoint("TOPLEFT", 16, yOffset)
@@ -342,7 +515,7 @@ function ns.UI_BuildAnalytics(panel)
     end
 
     -- ═══════════════════════════════════════════════════
-    -- Section 8: A/B Test Results
+    -- Section 9: A/B Test Results
     -- ═══════════════════════════════════════════════════
     local abLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     abLabel:SetPoint("TOPLEFT", 16, yOffset)
@@ -358,7 +531,7 @@ function ns.UI_BuildAnalytics(panel)
     ad.abTestInfo = ad.abContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ad.abTestInfo:SetPoint("TOPLEFT", 0, 0)
     ad.abTestInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
-    ad.abTestInfo:SetText("Aucun test A/B configure")
+    ad.abTestInfo:SetText("Aucun test A/B configure.")
 
     ad.abVariantRows = {}
     for i = 1, 5 do
@@ -403,7 +576,7 @@ function ns.UI_BuildAnalytics(panel)
     yOffset = yOffset - 200
 
     -- ═══════════════════════════════════════════════════
-    -- Section 9: Campaign Overview
+    -- Section 10: Campaign Overview
     -- ═══════════════════════════════════════════════════
     local campLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     campLabel:SetPoint("TOPLEFT", 16, yOffset)
@@ -418,7 +591,7 @@ function ns.UI_BuildAnalytics(panel)
     ad.campInfo = ad.campContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ad.campInfo:SetPoint("TOPLEFT", 0, 0)
     ad.campInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
-    ad.campInfo:SetText("Aucune campagne configuree")
+    ad.campInfo:SetText("Aucune campagne configuree.")
 
     ad.campRows = {}
     for i = 1, 5 do
@@ -521,13 +694,18 @@ function ns.UI_RefreshAnalytics()
             invited = funnelInvited,
             joined = funnelJoined,
         }
+        local funnelLabels = {
+            contacted = "Contactes",
+            invited = "Invites",
+            joined = "Recrues",
+        }
         for _, def in ipairs({"contacted", "invited", "joined"}) do
             local bar = ad.funnelBars[def]
             if bar then
                 local val = funnelVals[def] or 0
                 local pct = maxVal > 0 and (val / maxVal) or 0
                 bar.fill:SetWidth(math.max(1, maxWidth * pct))
-                bar.label:SetText(def:sub(1,1):upper() .. def:sub(2) .. ": " .. tostring(val))
+                bar.label:SetText((funnelLabels[def] or def) .. ": " .. tostring(val))
                 bar.pct:SetText(string.format("%.0f%%", pct * 100))
             end
         end
@@ -614,18 +792,98 @@ function ns.UI_RefreshAnalytics()
         end
     end
 
-    -- 6. Dashboard Widgets
+    -- 6. Succes et Progression
+    if ns.Goals and ns.Goals.GetProgress then
+        local gOk, goalsProgress = pcall(ns.Goals.GetProgress, ns.Goals)
+        if gOk and goalsProgress then
+            -- Achievement progress bar and text
+            if ad.achProgressText then
+                ad.achProgressText:SetText(
+                    "|cffFFD700T|r " .. tostring(goalsProgress.unlocked) .. " / " .. tostring(goalsProgress.total) .. " succes debloques"
+                )
+            end
+            if ad.achProgressPct then
+                ad.achProgressPct:SetText(tostring(goalsProgress.percentage) .. "%")
+            end
+            if ad.achBarFill and ad._achBarBg then
+                local achPct = goalsProgress.total > 0 and (goalsProgress.unlocked / goalsProgress.total) or 0
+                ad.achBarFill:SetWidth(math.max(1, ad._achBarBg:GetWidth() * achPct))
+            end
+
+            -- Recent achievements
+            if ad.recentAchRows then
+                local unlocks = goalsProgress.recentUnlocks or {}
+                for i = 1, 5 do
+                    local row = ad.recentAchRows[i]
+                    if row then
+                        if i <= #unlocks then
+                            local u = unlocks[i]
+                            row.icon:SetText(u.icon or "|cffFFD700*|r")
+                            row.name:SetText(u.name or "?")
+                            if u.unlockedAt and u.unlockedAt > 0 then
+                                row.date:SetText(date("%d/%m/%Y %H:%M", u.unlockedAt))
+                            else
+                                row.date:SetText("")
+                            end
+                            row.row:Show()
+                        else
+                            row.row:Hide()
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- Streak cards
+    if ad.streakCards and ns.Goals and ns.Goals.GetStreaks then
+        local sOk, streaks = pcall(ns.Goals.GetStreaks, ns.Goals)
+        if sOk and streaks then
+            for _, sKey in ipairs({"dailyLogin", "dailyRecruit", "weeklyGoal"}) do
+                local sCard = ad.streakCards[sKey]
+                local sData = streaks[sKey]
+                if sCard and sData then
+                    local suffix = (sKey == "weeklyGoal") and "s" or "j"
+                    sCard.current:SetText(tostring(sData.current) .. suffix)
+                    sCard.best:SetText("max: " .. tostring(sData.best))
+                end
+            end
+        end
+    end
+
+    -- Next milestone
+    if ad.milestoneTitle and ns.Goals and ns.Goals.GetNextMilestone then
+        local mOk, milestone = pcall(ns.Goals.GetNextMilestone, ns.Goals)
+        if mOk and milestone then
+            ad.milestoneTitle:SetText("Prochain objectif : " .. (milestone.name or "?"))
+            ad.milestoneRemaining:SetText(tostring(milestone.remaining) .. " restants")
+            if ad.msBarFill and ad._msBarBg then
+                local msPct = milestone.target > 0 and (milestone.current / milestone.target) or 0
+                msPct = math.max(0, math.min(1, msPct))
+                ad.msBarFill:SetWidth(math.max(1, ad._msBarBg:GetWidth() * msPct))
+            end
+        else
+            ad.milestoneTitle:SetText("Prochain objectif : Tous debloques !")
+            ad.milestoneTitle:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+            ad.milestoneRemaining:SetText("")
+            if ad.msBarFill and ad._msBarBg then
+                ad.msBarFill:SetWidth(ad._msBarBg:GetWidth())
+            end
+        end
+    end
+
+    -- 7. Dashboard Widgets
     if ns.DashboardWidgets and ns.DashboardWidgets.Refresh then
         ns.DashboardWidgets:Refresh()
     end
 
-    -- 7. A/B Test Results
+    -- 8. A/B Test Results
     if ad.abVariantRows and ns.ABTesting and ns.ABTesting.GetAllTests then
         local ok, tests = pcall(ns.ABTesting.GetAllTests, ns.ABTesting)
         if not ok then tests = {} end
         if tests and #tests > 0 then
             local latestTest = tests[1]
-            ad.abTestInfo:SetText(("Test: %s  |  Status: %s  |  Min. echantillons: %d"):format(
+            ad.abTestInfo:SetText(("Test: %s  |  Statut: %s  |  Min. echantillons: %d"):format(
                 latestTest.name or "?",
                 latestTest.status or "?",
                 latestTest.minSamples or 0
@@ -643,9 +901,9 @@ function ns.UI_RefreshAnalytics()
                 if i <= #results then
                     local r = results[i]
                     row.name:SetText((r.templateId or "?") .. (r.isWinner and " |cffFFD700*|r" or ""))
-                    row.sent:SetText(("Env: %d"):format(r.sent or 0))
-                    row.replies:SetText(("Rep: %d"):format(r.replies or 0))
-                    row.joined:SetText(("Rec: %d"):format(r.joined or 0))
+                    row.sent:SetText(("Envoyes: %d"):format(r.sent or 0))
+                    row.replies:SetText(("Reponses: %d"):format(r.replies or 0))
+                    row.joined:SetText(("Recrues: %d"):format(r.joined or 0))
                     row.rate:SetText(("Score: %.1f%%"):format((r.score or 0) * 100))
                     row.fill:SetWidth(math.max(1, 200 * ((r.sent or 0) / maxSent)))
 
@@ -660,14 +918,14 @@ function ns.UI_RefreshAnalytics()
                 end
             end
         else
-            ad.abTestInfo:SetText("Aucun test A/B configure. Creez-en un dans les reglages.")
+            ad.abTestInfo:SetText("Aucun test A/B configure. Cree-en un dans les reglages.")
             for _, row in ipairs(ad.abVariantRows) do
                 row.row:Hide()
             end
         end
     end
 
-    -- 8. Campaign Overview
+    -- 9. Campaign Overview
     if ad.campRows and ns.Campaigns and ns.Campaigns.GetAll then
         local cOk, campaigns = pcall(ns.Campaigns.GetAll, ns.Campaigns)
         if not cOk then campaigns = {} end
@@ -714,7 +972,7 @@ function ns.UI_RefreshAnalytics()
                 end
             end
         else
-            ad.campInfo:SetText("Aucune campagne configuree. Creez-en une via /cr.")
+            ad.campInfo:SetText("Aucune campagne configuree. Cree-en une via les reglages.")
             for _, row in ipairs(ad.campRows) do
                 row.row:Hide()
             end

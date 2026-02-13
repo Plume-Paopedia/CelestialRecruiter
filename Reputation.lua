@@ -103,15 +103,15 @@ end
 ---------------------------------------------------------------------------
 function Rep:GetScoreClass(score)
     if score >= 80 then
-        return "hot", "🔥 Hot Lead", {1.0, 0.4, 0.0}  -- Orange/Red
+        return "hot", "Prioritaire", {1.0, 0.4, 0.0}  -- Orange/Red
     elseif score >= 60 then
-        return "promising", "⭐ Promising", {0.2, 0.88, 0.48}  -- Green
+        return "promising", "Prometteur", {0.2, 0.88, 0.48}  -- Green
     elseif score >= 40 then
-        return "neutral", "▪️ Neutral", {0.55, 0.58, 0.66}  -- Gray
+        return "neutral", "Neutre", {0.55, 0.58, 0.66}  -- Gray
     elseif score >= 20 then
-        return "cold", "❄️ Cold", {0.4, 0.6, 0.9}  -- Blue
+        return "cold", "Froid", {0.4, 0.6, 0.9}  -- Blue
     else
-        return "ignore", "🚫 Ignore", {1.0, 0.4, 0.4}  -- Red
+        return "ignore", "A ignorer", {1.0, 0.4, 0.4}  -- Red
     end
 end
 
@@ -280,7 +280,7 @@ function Rep:AutoTagAll()
     end
 
     if ns.Notifications_Success then
-        ns.Notifications_Success("Auto-Tag", string.format("%d contacts evalues et tagues", count))
+        ns.Notifications_Success("Auto-Tag", string.format("%d contacts evalues et etiquetes", count))
     end
     if ns.UI_Refresh then
         ns.UI_Refresh()

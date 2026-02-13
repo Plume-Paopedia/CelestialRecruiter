@@ -87,6 +87,12 @@ function ns.Queue_Whisper(key, tplId)
     ns.Goals:RecordActivity("contact")
   end
 
+  -- Record Leaderboard whisper + contact
+  if ns.Leaderboard and ns.Leaderboard.RecordDaily then
+    ns.Leaderboard:RecordDaily("whisper")
+    ns.Leaderboard:RecordDaily("contact")
+  end
+
   -- Show success notification (unless silenced by Queue_Recruit)
   if not ns._silentNotifications and ns.Notifications_Success then
     ns.Notifications_Success("Message envoyé", key)
@@ -170,6 +176,11 @@ function ns.Queue_Invite(key)
   -- Record Goals activity
   if ns.Goals and ns.Goals.RecordActivity then
     ns.Goals:RecordActivity("invite")
+  end
+
+  -- Record Leaderboard invite
+  if ns.Leaderboard and ns.Leaderboard.RecordDaily then
+    ns.Leaderboard:RecordDaily("invite")
   end
 
   -- Show success notification (unless silenced by Queue_Recruit)

@@ -30,6 +30,9 @@ function CR:OnInitialize()
   if ns.Goals and ns.Goals.Init then
     ns.Goals:Init()
   end
+  if ns.Leaderboard and ns.Leaderboard.Init then
+    ns.Leaderboard:Init()
+  end
   if ns.SmartSuggestions and ns.SmartSuggestions.Init then
     ns.SmartSuggestions:Init()
   end
@@ -66,7 +69,7 @@ function CR:OnEnable()
     if now - lastBackup > dayInSeconds then
       ns.ImportExport:CreateAutoBackup()
       ns.db.global.lastAutoBackup = now
-      ns.Util_Print("Sauvegarde automatique effectuée")
+      ns.Util_Print("Sauvegarde automatique effectuee.")
     end
   end
 
@@ -125,6 +128,21 @@ function CR:OnEnable()
     -- Record Goals activity
     if ns.Goals and ns.Goals.RecordActivity then
       ns.Goals:RecordActivity("join")
+    end
+
+    -- Record Leaderboard join
+    if ns.Leaderboard and ns.Leaderboard.RecordDaily then
+      ns.Leaderboard:RecordDaily("join")
+
+      -- Calculer le temps le plus rapide contact -> join
+      if c.lastWhisperOut and c.lastWhisperOut > 0 then
+        local joinTime = time()
+        local contactTime = c.lastWhisperOut
+        local diffMinutes = math.floor((joinTime - contactTime) / 60)
+        if diffMinutes > 0 then
+          ns.Leaderboard:RecordFastestJoin(diffMinutes)
+        end
+      end
     end
 
     ns.UI_Refresh()
@@ -222,7 +240,7 @@ function CR:OnEnable()
       end
     end
   end)
-  ns.Util_Print("Addon chargé. Utilise |cff00d1ff/cr|r pour ouvrir l'interface, bon recrutement ! Fait par plume.pao avec amour <3")
+  ns.Util_Print("Addon charge. Utilise |cff00d1ff/cr|r pour ouvrir l'interface, bon recrutement ! Fait par plume.pao avec amour <3")
 end
 
 SLASH_CELESTIALRECRUITER1 = "/cr"
@@ -234,13 +252,13 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
     ns.DB_Reset()
     ns.Templates_Init()
     ns.UI_Refresh()
-    ns.Util_Print("Reset effectué.")
+    ns.Util_Print("Reset effectue.")
     return
   end
 
   if msg == "help" then
     ns.Util_Print("Commandes: /cr, /cr reset, /cr help")
-    ns.Util_Print("Scanner: bouton Scan (avec cooldown), import /who, joueurs sans guilde ajoutés en liste.")
+    ns.Util_Print("Scanner: bouton Scan (avec cooldown), import /who, joueurs sans guilde ajoutes en file.")
     return
   end
 

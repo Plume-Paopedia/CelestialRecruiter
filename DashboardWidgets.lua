@@ -126,7 +126,7 @@ end
 ---------------------------------------------------------------------------
 -- Widget: Session Overview
 ---------------------------------------------------------------------------
-registerWidget("session_overview", "Session en cours", "|cff00aaff⏱|r",
+registerWidget("session_overview", "Session en cours", "|cff00aaffO|r",
     function(card)
         local c = card._content
         card._statWhispers = CreateStatValue(c, "0", "Messages", C.accent, 0, 0)
@@ -156,7 +156,7 @@ registerWidget("session_overview", "Session en cours", "|cff00aaff⏱|r",
 ---------------------------------------------------------------------------
 -- Widget: Conversion Funnel
 ---------------------------------------------------------------------------
-registerWidget("conversion_funnel", "Entonnoir de conversion", "|cff33e07a▼|r",
+registerWidget("conversion_funnel", "Entonnoir de conversion", "|cff33e07av|r",
     function(card)
         local c = card._content
         local colors = {C.accent, C.orange, C.green, C.gold}
@@ -199,7 +199,7 @@ registerWidget("conversion_funnel", "Entonnoir de conversion", "|cff33e07a▼|r"
 ---------------------------------------------------------------------------
 -- Widget: Template Performance (A/B Testing)
 ---------------------------------------------------------------------------
-registerWidget("template_perf", "Performance templates", "|cffFF69B4★|r",
+registerWidget("template_perf", "Performance des modeles", "|cffFF69B4*|r",
     function(card)
         local c = card._content
         card._tplRows = {}
@@ -225,7 +225,7 @@ registerWidget("template_perf", "Performance templates", "|cffFF69B4★|r",
 
         card._emptyText = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         card._emptyText:SetPoint("CENTER")
-        card._emptyText:SetText("Pas encore de donnees")
+        card._emptyText:SetText("Pas encore de donnees.")
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
@@ -271,7 +271,7 @@ registerWidget("template_perf", "Performance templates", "|cffFF69B4★|r",
 ---------------------------------------------------------------------------
 -- Widget: Best Hours Heatmap
 ---------------------------------------------------------------------------
-registerWidget("best_hours", "Meilleures heures", "|cffFFD700☀|r",
+registerWidget("best_hours", "Meilleures heures", "|cffFFD700*|r",
     function(card)
         local c = card._content
         card._hourBlocks = {}
@@ -332,7 +332,7 @@ registerWidget("best_hours", "Meilleures heures", "|cffFFD700☀|r",
 ---------------------------------------------------------------------------
 -- Widget: Active Campaigns
 ---------------------------------------------------------------------------
-registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00⚔|r",
+registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00>|r",
     function(card)
         local c = card._content
         card._campRows = {}
@@ -358,7 +358,7 @@ registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00⚔|r",
 
         card._emptyText = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         card._emptyText:SetPoint("CENTER")
-        card._emptyText:SetText("Aucune campagne active")
+        card._emptyText:SetText("Aucune campagne active.")
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
@@ -409,7 +409,7 @@ registerWidget("active_campaigns", "Campagnes actives", "|cffFF8C00⚔|r",
 ---------------------------------------------------------------------------
 -- Widget: A/B Test Status
 ---------------------------------------------------------------------------
-registerWidget("ab_test_status", "A/B Test actif", "|cff9370DB⚗|r",
+registerWidget("ab_test_status", "Test A/B actif", "|cff9370DB?|r",
     function(card)
         local c = card._content
         card._abTestName = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -438,7 +438,7 @@ registerWidget("ab_test_status", "A/B Test actif", "|cff9370DB⚗|r",
 
         card._emptyText = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         card._emptyText:SetPoint("CENTER")
-        card._emptyText:SetText("Aucun test A/B actif")
+        card._emptyText:SetText("Aucun test A/B actif.")
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
@@ -473,7 +473,7 @@ registerWidget("ab_test_status", "A/B Test actif", "|cff9370DB⚗|r",
             row.name:Show()
             row.bar:SetProgress((r.sent or 0) / maxSent)
             row.bar:Show()
-            row.stat:SetText(("%d env. %.0f%% rep."):format(r.sent or 0, (r.replyRate or 0) * 100))
+            row.stat:SetText(("%d envoyes, %.0f%% reponses"):format(r.sent or 0, (r.replyRate or 0) * 100))
             row.stat:Show()
 
             if r.isWinner then
@@ -494,7 +494,7 @@ registerWidget("ab_test_status", "A/B Test actif", "|cff9370DB⚗|r",
 ---------------------------------------------------------------------------
 -- Widget: Reputation Leaderboard
 ---------------------------------------------------------------------------
-registerWidget("reputation_board", "Top contacts", "|cff00d1ff♛|r",
+registerWidget("reputation_board", "Classement contacts", "|cff00d1ff#|r",
     function(card)
         local c = card._content
         card._repRows = {}
@@ -522,7 +522,7 @@ registerWidget("reputation_board", "Top contacts", "|cff00d1ff♛|r",
 
         card._emptyText = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         card._emptyText:SetPoint("CENTER")
-        card._emptyText:SetText("Pas de contacts scores")
+        card._emptyText:SetText("Aucun contact avec score.")
         card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     end,
     function(card)
@@ -565,7 +565,7 @@ registerWidget("reputation_board", "Top contacts", "|cff00d1ff♛|r",
 ---------------------------------------------------------------------------
 -- Widget: Weekly Trends
 ---------------------------------------------------------------------------
-registerWidget("weekly_trends", "Tendances semaine", "|cff66ff99📈|r",
+registerWidget("weekly_trends", "Tendances semaine", "|cff66ff99+|r",
     function(card)
         local c = card._content
         card._trendItems = {}
@@ -617,12 +617,358 @@ registerWidget("weekly_trends", "Tendances semaine", "|cff66ff99📈|r",
 )
 
 ---------------------------------------------------------------------------
+-- Widget: Goals & Achievements Progress
+---------------------------------------------------------------------------
+registerWidget("goals_progress", "Succes et Objectifs", "|cffFFD700T|r",
+    function(card)
+        local c = card._content
+
+        -- Achievement progress: X/25 line
+        card._goalsCount = c:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        card._goalsCount:SetPoint("TOPLEFT", 0, 0)
+        card._goalsCount:SetText("0/25")
+        card._goalsCount:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+        card._goalsLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._goalsLabel:SetPoint("LEFT", card._goalsCount, "RIGHT", 6, 0)
+        card._goalsLabel:SetText("succes debloques")
+        card._goalsLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        -- Achievement progress bar
+        card._goalsBar = CreateProgressBar(c, 340, 6, C.gold)
+        card._goalsBar:SetPoint("TOPLEFT", 0, -22)
+
+        -- Streaks: daily login + daily recruit
+        card._streakLoginLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._streakLoginLabel:SetPoint("TOPLEFT", 0, -36)
+        card._streakLoginLabel:SetText("Connexion:")
+        card._streakLoginLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._streakLoginVal = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._streakLoginVal:SetPoint("LEFT", card._streakLoginLabel, "RIGHT", 4, 0)
+        card._streakLoginVal:SetText("0j")
+        card._streakLoginVal:SetTextColor(C.green[1], C.green[2], C.green[3])
+
+        card._streakRecruitLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._streakRecruitLabel:SetPoint("TOPLEFT", 140, -36)
+        card._streakRecruitLabel:SetText("Recrutement:")
+        card._streakRecruitLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._streakRecruitVal = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._streakRecruitVal:SetPoint("LEFT", card._streakRecruitLabel, "RIGHT", 4, 0)
+        card._streakRecruitVal:SetText("0j")
+        card._streakRecruitVal:SetTextColor(C.green[1], C.green[2], C.green[3])
+
+        -- Next milestone
+        card._milestoneLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._milestoneLabel:SetPoint("TOPLEFT", 0, -54)
+        card._milestoneLabel:SetText("Prochain:")
+        card._milestoneLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._milestoneName = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._milestoneName:SetPoint("LEFT", card._milestoneLabel, "RIGHT", 4, 0)
+        card._milestoneName:SetText("-")
+        card._milestoneName:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+
+        card._milestoneBar = CreateProgressBar(c, 200, 5, C.accent)
+        card._milestoneBar:SetPoint("TOPLEFT", 0, -68)
+
+        card._milestoneInfo = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._milestoneInfo:SetPoint("LEFT", card._milestoneBar, "RIGHT", 6, 0)
+        card._milestoneInfo:SetText("")
+        card._milestoneInfo:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        -- Recent unlocks (up to 3)
+        card._recentUnlocks = {}
+        for i = 1, 3 do
+            local y = -82 - (i - 1) * 14
+            local txt = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            txt:SetPoint("TOPLEFT", 0, y)
+            txt:SetText("")
+            txt:SetTextColor(C.text[1], C.text[2], C.text[3])
+            card._recentUnlocks[i] = txt
+        end
+    end,
+    function(card)
+        -- Goals progress
+        if not ns.Goals or not ns.Goals.GetProgress then return end
+        local ok, progress = pcall(ns.Goals.GetProgress, ns.Goals)
+        if not ok or not progress then return end
+
+        card._goalsCount:SetText(progress.unlocked .. "/" .. progress.total)
+        local pct = progress.total > 0 and (progress.unlocked / progress.total) or 0
+        card._goalsBar:SetProgress(pct)
+
+        -- Streaks
+        if ns.Goals.GetStreaks then
+            local sok, streaks = pcall(ns.Goals.GetStreaks, ns.Goals)
+            if sok and streaks then
+                card._streakLoginVal:SetText(tostring(streaks.dailyLogin.current) .. "j")
+                card._streakRecruitVal:SetText(tostring(streaks.dailyRecruit.current) .. "j")
+            end
+        end
+
+        -- Next milestone
+        if ns.Goals.GetNextMilestone then
+            local mok, milestone = pcall(ns.Goals.GetNextMilestone, ns.Goals)
+            if mok and milestone then
+                card._milestoneName:SetText(milestone.name)
+                card._milestoneBar:SetProgress(milestone.target > 0 and (milestone.current / milestone.target) or 0)
+                card._milestoneInfo:SetText(tostring(milestone.remaining) .. " restants")
+            else
+                card._milestoneName:SetText("Tous debloques !")
+                card._milestoneName:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+                card._milestoneBar:SetProgress(1)
+                card._milestoneInfo:SetText("")
+            end
+        end
+
+        -- Recent unlocks
+        local unlocks = progress.recentUnlocks or {}
+        for i = 1, 3 do
+            local txt = card._recentUnlocks[i]
+            if i <= #unlocks then
+                local u = unlocks[i]
+                txt:SetText("|cffFFD700*|r " .. (u.name or "?"))
+                txt:Show()
+            else
+                txt:SetText("")
+                txt:Hide()
+            end
+        end
+    end
+)
+
+---------------------------------------------------------------------------
+-- Widget: Smart Suggestions
+---------------------------------------------------------------------------
+registerWidget("smart_suggestions", "Suggestions", "|cff00d1ff?|r",
+    function(card)
+        local c = card._content
+
+        -- Suggestion count badge
+        card._sugCount = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._sugCount:SetPoint("TOPRIGHT", 0, 0)
+        card._sugCount:SetText("")
+        card._sugCount:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+
+        -- Suggestion rows (top 3)
+        card._sugRows = {}
+        for i = 1, 3 do
+            local y = -(i - 1) * 30
+            local title = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            title:SetPoint("TOPLEFT", 0, y)
+            title:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+            local desc = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            desc:SetPoint("TOPLEFT", 0, y - 14)
+            desc:SetPoint("RIGHT", c, "RIGHT", 0, 0)
+            desc:SetJustifyH("LEFT")
+            desc:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+            card._sugRows[i] = {title = title, desc = desc}
+            title:Hide()
+            desc:Hide()
+        end
+
+        card._emptyText = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._emptyText:SetPoint("CENTER")
+        card._emptyText:SetText("Aucune suggestion disponible")
+        card._emptyText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+    end,
+    function(card)
+        if not ns.SmartSuggestions or not ns.SmartSuggestions.GetAllSuggestions then return end
+        local ok, suggestions = pcall(ns.SmartSuggestions.GetAllSuggestions, ns.SmartSuggestions)
+        if not ok then suggestions = {} end
+
+        -- Badge
+        card._sugCount:SetText(#suggestions > 0 and (tostring(#suggestions) .. " suggestions") or "")
+
+        if #suggestions == 0 then
+            card._emptyText:Show()
+            for _, row in ipairs(card._sugRows) do
+                row.title:Hide()
+                row.desc:Hide()
+            end
+            return
+        end
+
+        card._emptyText:Hide()
+
+        -- Priority color mapping
+        local prioColors = {
+            [5] = C.red,
+            [4] = C.orange,
+            [3] = C.gold,
+            [2] = C.accent,
+            [1] = C.dim,
+        }
+
+        for i = 1, math.min(3, #suggestions) do
+            local row = card._sugRows[i]
+            local sug = suggestions[i]
+            local pColor = prioColors[sug.priority] or C.dim
+
+            row.title:SetText("|cff" .. string.format("%02x%02x%02x",
+                math.floor(pColor[1] * 255),
+                math.floor(pColor[2] * 255),
+                math.floor(pColor[3] * 255)) .. "●|r " .. (sug.title or ""))
+            row.title:Show()
+
+            -- Truncate description to fit in the card
+            local descText = sug.description or ""
+            if #descText > 80 then
+                descText = descText:sub(1, 77) .. "..."
+            end
+            row.desc:SetText(descText)
+            row.desc:Show()
+        end
+
+        for i = #suggestions + 1, 3 do
+            card._sugRows[i].title:Hide()
+            card._sugRows[i].desc:Hide()
+        end
+    end
+)
+
+---------------------------------------------------------------------------
+-- Widget: Classement Personnel (Leaderboard)
+---------------------------------------------------------------------------
+registerWidget("personal_leaderboard", "Classement personnel", "|cffFFD700\226\152\133|r",
+    function(card)
+        local c = card._content
+
+        -- Ligne 1 : Badge du palier + nom du palier
+        card._lbTierBadge = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        card._lbTierBadge:SetPoint("TOPLEFT", 0, 0)
+
+        card._lbTierLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbTierLabel:SetPoint("LEFT", card._lbTierBadge, "RIGHT", 6, 0)
+        card._lbTierLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        -- Ligne 2 : Stats du jour vs record
+        card._lbTodayLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbTodayLabel:SetPoint("TOPLEFT", 0, -22)
+        card._lbTodayLabel:SetText("Aujourd'hui")
+        card._lbTodayLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._lbTodayStats = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbTodayStats:SetPoint("TOPLEFT", 80, -22)
+        card._lbTodayStats:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+        card._lbBestLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbBestLabel:SetPoint("TOPLEFT", 200, -22)
+        card._lbBestLabel:SetText("Record")
+        card._lbBestLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._lbBestStats = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbBestStats:SetPoint("TOPLEFT", 250, -22)
+        card._lbBestStats:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+        -- Ligne 3 : Semaine en cours
+        card._lbWeekLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbWeekLabel:SetPoint("TOPLEFT", 0, -40)
+        card._lbWeekLabel:SetText("Semaine")
+        card._lbWeekLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._lbWeekStats = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbWeekStats:SetPoint("TOPLEFT", 80, -40)
+        card._lbWeekStats:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+        -- Ligne 4 : Barre de progression vers le prochain palier
+        card._lbNextLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbNextLabel:SetPoint("TOPLEFT", 0, -60)
+        card._lbNextLabel:SetText("Prochain palier")
+        card._lbNextLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+        card._lbNextBar = CreateProgressBar(c, 200, 8, C.gold)
+        card._lbNextBar:SetPoint("TOPLEFT", 100, -62)
+
+        card._lbNextPct = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbNextPct:SetPoint("LEFT", card._lbNextBar, "RIGHT", 6, 0)
+        card._lbNextPct:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+
+        -- Texte vide si le module n'est pas disponible
+        card._lbEmpty = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        card._lbEmpty:SetPoint("CENTER")
+        card._lbEmpty:SetText("Classement non disponible")
+        card._lbEmpty:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+        card._lbEmpty:Hide()
+    end,
+    function(card)
+        if not ns.Leaderboard or not ns.Leaderboard.GetRankInfo then
+            card._lbEmpty:Show()
+            card._lbTierBadge:SetText("")
+            card._lbTierLabel:SetText("")
+            card._lbTodayStats:SetText("")
+            card._lbBestStats:SetText("")
+            card._lbWeekStats:SetText("")
+            card._lbNextBar:SetProgress(0)
+            card._lbNextPct:SetText("")
+            return
+        end
+
+        card._lbEmpty:Hide()
+
+        -- Palier actuel
+        local ok, rankInfo = pcall(ns.Leaderboard.GetRankInfo, ns.Leaderboard)
+        if not ok or not rankInfo then return end
+
+        local tierColor = rankInfo.tierColor or {0.55, 0.58, 0.66}
+        local tierHex = ("|cff%02x%02x%02x"):format(
+            math.floor(tierColor[1] * 255),
+            math.floor(tierColor[2] * 255),
+            math.floor(tierColor[3] * 255)
+        )
+        card._lbTierBadge:SetText(tierHex .. rankInfo.tierName .. "|r")
+        card._lbTierBadge:SetTextColor(tierColor[1], tierColor[2], tierColor[3])
+        card._lbTierLabel:SetText(("%d recrues au total"):format(rankInfo.totalRecruits or 0))
+
+        -- Stats du jour
+        local ok2, today = pcall(ns.Leaderboard.GetToday, ns.Leaderboard)
+        if ok2 and today then
+            card._lbTodayStats:SetText(("%d msg, %d inv, %d rec"):format(
+                today.whispers or 0, today.invited or 0, today.joined or 0))
+        end
+
+        -- Record personnel
+        local ok3, bests = pcall(ns.Leaderboard.GetPersonalBests, ns.Leaderboard)
+        if ok3 and bests then
+            card._lbBestStats:SetText(("%d rec/jour"):format(bests.bestDayRecruits or 0))
+        end
+
+        -- Semaine en cours
+        local ok4, week = pcall(ns.Leaderboard.GetThisWeek, ns.Leaderboard)
+        if ok4 and week then
+            card._lbWeekStats:SetText(("%d contacts, %d invites, %d recrues"):format(
+                week.contacted or 0, week.invited or 0, week.joined or 0))
+        end
+
+        -- Barre progression vers prochain palier
+        card._lbNextBar:SetProgress(rankInfo.progress or 0)
+        local pctDisplay = math.floor((rankInfo.progress or 0) * 100)
+        if rankInfo.progress >= 1 then
+            card._lbNextPct:SetText("Max !")
+            card._lbNextPct:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+            card._lbNextLabel:SetText("Palier maximum")
+        else
+            card._lbNextPct:SetText(("%d%% (%d/%d)"):format(
+                pctDisplay, rankInfo.totalRecruits, rankInfo.nextTierAt or 0))
+            card._lbNextPct:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+        end
+    end
+)
+
+---------------------------------------------------------------------------
 -- Default Layout
 ---------------------------------------------------------------------------
 local DEFAULT_LAYOUT = {
     "session_overview",
     "conversion_funnel",
     "weekly_trends",
+    "personal_leaderboard",
+    "goals_progress",
+    "smart_suggestions",
     "template_perf",
     "best_hours",
     "active_campaigns",

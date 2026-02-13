@@ -43,36 +43,36 @@ local function addReputationTooltip(contact, score)
 
     local class, label, color = Rep:GetScoreClass(score)
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("-- Reputation --", C.gold[1], C.gold[2], C.gold[3])
-    GameTooltip:AddDoubleLine("Score:", format("%d / 100", score),
+    GameTooltip:AddLine("-- Score de reputation --", C.gold[1], C.gold[2], C.gold[3])
+    GameTooltip:AddDoubleLine("Score :", format("%d / 100", score),
         C.dim[1], C.dim[2], C.dim[3], color[1], color[2], color[3])
-    GameTooltip:AddDoubleLine("Classe:", label,
+    GameTooltip:AddDoubleLine("Classement :", label,
         C.dim[1], C.dim[2], C.dim[3], color[1], color[2], color[3])
 
     -- Breakdown hints
     if contact.optedIn then
-        GameTooltip:AddDoubleLine("  Opt-in:", "+30",
+        GameTooltip:AddDoubleLine("  Opt-in :", "+30",
             C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
     end
     local level = contact.level or 0
     if level >= 70 then
-        GameTooltip:AddDoubleLine("  Niv max:", "+15",
+        GameTooltip:AddDoubleLine("  Niv max :", "+15",
             C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
     elseif level >= 60 then
-        GameTooltip:AddDoubleLine("  Niv 60+:", "+10",
+        GameTooltip:AddDoubleLine("  Niv 60+ :", "+10",
             C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
     end
     if contact.source == "inbox" then
-        GameTooltip:AddDoubleLine("  Source inbox:", "+20",
+        GameTooltip:AddDoubleLine("  Source boite :", "+20",
             C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
     end
     if contact.lastWhisperIn and contact.lastWhisperOut
         and contact.lastWhisperIn > contact.lastWhisperOut then
-        GameTooltip:AddDoubleLine("  A repondu:", "+25",
+        GameTooltip:AddDoubleLine("  A repondu :", "+25",
             C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
     end
     if contact.crossRealm then
-        GameTooltip:AddDoubleLine("  Cross-realm:", "-10",
+        GameTooltip:AddDoubleLine("  Cross-realm :", "-10",
             C.dim[1], C.dim[2], C.dim[3], C.red[1], C.red[2], C.red[3])
     end
 
@@ -88,7 +88,7 @@ local function addReputationTooltip(contact, score)
         else
             probColor = {C.red[1], C.red[2], C.red[3]}
         end
-        GameTooltip:AddDoubleLine("Prob. conversion:", format("%d%%", pct),
+        GameTooltip:AddDoubleLine("Prob. conversion :", format("%d%%", pct),
             C.dim[1], C.dim[2], C.dim[3], probColor[1], probColor[2], probColor[3])
     end
 end
@@ -237,7 +237,7 @@ local function batchRecruitAll()
     end
 
     if #targets == 0 then
-        ns.Util_Print("Aucun joueur a recruter dans la file.")
+        ns.Util_Print("Aucun joueur disponible dans la file.")
         return
     end
 
@@ -263,7 +263,7 @@ local function batchRecruitAll()
         if idx > total then
             batchRunning = false
             ns.Util_Print(format(
-                "Recrutement termine: %d/%d envoyes, %d bloques.",
+                "Recrutement termine: %d/%d envoyes, %d en echec.",
                 successCount, total, failCount))
             ns.UI_Refresh()
             return
@@ -461,7 +461,7 @@ function ns.UI_RefreshQueue()
         for _, item in ipairs(filtered) do total = total + item.score end
         avgScore = math.floor(total / #filtered + 0.5)
     end
-    qd.countText:SetText(format("%d joueur(s)  |cff888888moy: %d|r", #filtered, avgScore))
+    qd.countText:SetText(format("%d joueur(s)  |cff888888score moy: %d|r", #filtered, avgScore))
 
     -- Disable batch button when running or empty
     if qd.recruitAllBtn then
@@ -535,7 +535,7 @@ function ns.UI_RefreshQueue()
         if c.optedIn then
             parts[#parts + 1] = "|cff33e07aopt-in|r"
         end
-        parts[#parts + 1] = "src:" .. (c.source or "boite")
+        parts[#parts + 1] = "src:" .. (c.source or "scan")
         row.info:SetText(table.concat(parts, "  "))
 
         -- Last seen / last interaction (dim text)
@@ -565,7 +565,7 @@ function ns.UI_RefreshQueue()
             end)
             row.removeBtn:SetScript("OnClick", function()
                 ns.DB_QueueRemove(key)
-                ns.DB_Log("QUEUE", "Retrait liste: " .. key)
+                ns.DB_Log("QUEUE", "Retrait file: " .. key)
                 ns.UI_Refresh()
             end)
         end

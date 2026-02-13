@@ -115,11 +115,11 @@ local ACHIEVEMENTS = {
     {
         id = "guild_builder",
         name = "Batisseur de guilde",
-        description = "Plus de 50 recrues ont rejoint la guilde.",
+        description = "100 joueurs contactes ont rejoint la guilde.",
         icon = "|TInterface\\Icons\\Achievement_GuildPerk_Reinforce:16|t",
         category = "recrutement",
         condition = function(data)
-            return (data.milestones.totalJoined or 0) > 50
+            return (data.milestones.totalJoined or 0) >= 100
         end,
     },
 
@@ -188,7 +188,7 @@ local ACHIEVEMENTS = {
     },
     {
         id = "streak_7",
-        name = "Dedicace",
+        name = "Dedie",
         description = "Recruter 7 jours d'affilee.",
         icon = "|TInterface\\Icons\\Spell_Holy_DivineIllumination:16|t",
         category = "dedication",
@@ -264,7 +264,7 @@ local ACHIEVEMENTS = {
     },
     {
         id = "speed_demon",
-        name = "Speed demon",
+        name = "Ultra-rapide",
         description = "Contacter 10 personnes en moins d'une heure.",
         icon = "|TInterface\\Icons\\Ability_Rogue_Sprint:16|t",
         category = "mastery",
@@ -274,8 +274,8 @@ local ACHIEVEMENTS = {
     },
     {
         id = "template_master",
-        name = "Maitre des templates",
-        description = "Utiliser les 3 templates integres au moins une fois.",
+        name = "Maitre des modeles",
+        description = "Utiliser les 3 modeles integres au moins une fois.",
         icon = "|TInterface\\Icons\\INV_Inscription_Scroll:16|t",
         category = "mastery",
         condition = function(data)

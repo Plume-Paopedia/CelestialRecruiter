@@ -1,4 +1,4 @@
-# CelestialRecruiter v3.3.0
+# CelestialRecruiter v3.4.0
 
 Assistant de recrutement de guilde complet pour World of Warcraft Retail.
 Scanner, file d'attente, templates, anti-spam, analytics, et bien plus.
@@ -97,6 +97,13 @@ Les raccourcis clavier se configurent dans **ESC > Raccourcis > CelestialRecruit
 - Jalons de progression
 - Notification dediee a chaque deblocage
 
+### Classement personnel
+- Statistiques quotidiennes, hebdomadaires, mensuelles
+- Records personnels (meilleur jour, meilleure semaine, recrue la plus rapide)
+- Paliers : Debutant, Bronze, Argent, Or, Diamant
+- Heatmap d'activite par jour de la semaine
+- Widget integre au tableau de bord Analytics
+
 ---
 
 ## Systeme visuel
@@ -169,6 +176,7 @@ Reputation.lua        Score de reputation des contacts
 ABTesting.lua         A/B testing de templates (Thompson Sampling)
 Campaigns.lua         Gestion de campagnes de recrutement
 Goals.lua             25 succes et streaks
+Leaderboard.lua       Classement personnel et records
 SmartSuggestions.lua  Suggestions intelligentes
 ImportExport.lua      Import/export et backup auto
 AutoRecruiter.lua     Recrutement automatique
@@ -196,6 +204,14 @@ UI.lua                Frame principal, tabs, barre de statut
 ---
 
 ## Changelog
+
+### v3.4.0
+- Classement personnel avec paliers (Bronze, Argent, Or, Diamant), records et heatmap
+- Tutoriel complet (18 sections) avec guide "Comment bien recruter"
+- Section Succes et Progression dans Analytics (barre, streaks, jalons, recents)
+- Widgets dashboard : succes, suggestions, classement personnel
+- Textes francais uniformises (labels, tooltips, descriptions)
+- Scores de reputation en francais (Prioritaire, Prometteur, Neutre, Froid)
 
 ### v3.3.0
 - Systeme de particules complet (confettis, starburst, scan sweep, hover/clic)

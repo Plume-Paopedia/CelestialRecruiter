@@ -2,7 +2,7 @@
 ## Title: CelestialRecruiter
 ## Notes: Assistant de recrutement de guilde complet avec scanner /who, file d'attente, templates et anti-spam.
 ## Author: Plume
-## Version: 3.3.0
+## Version: 3.4.0
 ## X-Category: Guild
 ## X-Website: https://discord.gg/7FbBTkrH
 ## X-Curse-Project-ID:
@@ -33,6 +33,7 @@ Themes.lua
 ABTesting.lua
 Campaigns.lua
 Goals.lua
+Leaderboard.lua
 SmartSuggestions.lua
 
 UI_Widgets.lua

@@ -63,7 +63,7 @@ function ns.UI_BuildSettings(parent)
         function(v) p.goal = ns.Util_Trim(v) end)
     goal:SetPoint("TOPLEFT", 4, row(46))
 
-    local invKw = W.MakeInput(ch, "Mot cle invite", 200,
+    local invKw = W.MakeInput(ch, "Mot cle opt-in", 200,
         function() return p.inviteKeyword end,
         function(v) p.inviteKeyword = ns.Util_Trim(v) end)
     invKw:SetPoint("LEFT", goal, "RIGHT", 12, 0)
@@ -185,7 +185,7 @@ function ns.UI_BuildSettings(parent)
         function(v) p.scanLevelMax = v end, 80, 1, 80)
     lvlMax:SetPoint("LEFT", lvlMin, "RIGHT", 12, 0)
 
-    local lvlSlice = W.MakeNumInput(ch, "Tranche niv", 120,
+    local lvlSlice = W.MakeNumInput(ch, "Tranche niveau", 120,
         function() return p.scanLevelSlice end,
         function(v) p.scanLevelSlice = v end, 10, 1, 40)
     lvlSlice:SetPoint("LEFT", lvlMax, "RIGHT", 12, 0)
@@ -209,10 +209,10 @@ function ns.UI_BuildSettings(parent)
     y = y - 8
 
     local checks = {
-        {"Exiger opt-in mot cle",
+        {"Exiger opt-in par mot cle",
             function() return p.inviteKeywordOnly end,
             function(v) p.inviteKeywordOnly = v end},
-        {"Invites scanner sans opt-in",
+        {"Inviter depuis scanner sans opt-in",
             function() return p.scannerBypassOptIn end,
             function(v) p.scannerBypassOptIn = v end},
         {"Respecter AFK",
@@ -224,13 +224,13 @@ function ns.UI_BuildSettings(parent)
         {"Bloquer en instance",
             function() return p.blockInInstance end,
             function(v) p.blockInInstance = v end},
-        {"Scanner inclut joueurs guildes",
+        {"Scanner inclut joueurs en guilde",
             function() return p.scanIncludeGuilded end,
             function(v) p.scanIncludeGuilded = v end},
         {"Scanner inclut cross-realm",
             function() return p.scanIncludeCrossRealm end,
             function(v) p.scanIncludeCrossRealm = v end},
-        {"Scanner filtre classes (lent)",
+        {"Scanner par classe (plus lent)",
             function() return p.scanUseClassFilters end,
             function(v) p.scanUseClassFilters = v end},
         {"Bouton minimap",
@@ -275,7 +275,7 @@ function ns.UI_BuildSettings(parent)
 
     local abHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     abHint:SetPoint("TOPLEFT", 8, row(16))
-    abHint:SetText("Comparez deux modeles de message pour trouver le plus efficace. Le systeme repartit automatiquement les envois.")
+    abHint:SetText("Compare deux modeles de message pour trouver le plus efficace. Le systeme repartit automatiquement les envois.")
     abHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
     y = y - 6
 
@@ -304,7 +304,7 @@ function ns.UI_BuildSettings(parent)
         function() end, 30, 5, 500)
     sd.abMinSamples:SetPoint("TOPLEFT", 4, row(46))
 
-    sd.abCreateBtn = W.MakeBtn(ch, "Creer test", 100, "p", function()
+    sd.abCreateBtn = W.MakeBtn(ch, "Creer le test", 100, "p", function()
         local name = sd.abName.eb:GetText()
         if name == "" then name = "Test " .. date("%d/%m %H:%M") end
         local tplA = sd.abTplA:GetVal()
@@ -364,7 +364,7 @@ function ns.UI_BuildSettings(parent)
     sd._campSep:SetVertexColor(C.gold[1], C.gold[2], C.gold[3], 0.3)
 
     sd._campHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    sd._campHint:SetText("Creez des campagnes de recrutement avec objectifs et suivez leur progression.")
+    sd._campHint:SetText("Cree des campagnes de recrutement avec objectifs et suis leur progression.")
     sd._campHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
     sd.campName = W.MakeInput(ch, "Nom campagne", 200,
@@ -463,7 +463,7 @@ function ns.UI_RefreshSettings()
         -- Stats line per variant
         local parts = {}
         for _, v in ipairs(test.variants or {}) do
-            parts[#parts + 1] = (v.templateId or "?") .. ": " .. v.sent .. " env, " .. v.replies .. " rep, " .. v.joined .. " join"
+            parts[#parts + 1] = (v.templateId or "?") .. ": " .. v.sent .. " envoyes, " .. v.replies .. " reponses, " .. v.joined .. " recrues"
         end
         r._stats:SetText(table.concat(parts, "  |  "))
 

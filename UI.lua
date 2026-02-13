@@ -27,7 +27,7 @@ local TABS = {
     {key = "Scanner",   label = "|cff00aaff\226\151\137|r Scanner",    badge = ns.UI_ScannerBadge},
     {key = "Queue",     label = "|cffFFD700\226\151\143|r File d'attente", badge = ns.UI_QueueBadge},
     {key = "Inbox",     label = "|cff33e07a\226\151\136|r Boite",       badge = ns.UI_InboxBadge},
-    {key = "Analytics", label = "|cffFF69B4\226\150\136|r Analytics",   badge = ns.UI_AnalyticsBadge},
+    {key = "Analytics", label = "|cffFF69B4\226\150\136|r Analytiques",  badge = ns.UI_AnalyticsBadge},
     {key = "Settings",  label = "|cff888888\226\154\153|r Reglages"},
     {key = "Logs",      label = "|cff888888\226\150\164|r Journaux"},
     {key = "Help",      label = "|cff888888\226\151\136|r Aide"},
@@ -240,7 +240,7 @@ local function CreateMainFrame()
     -- Version
     local ver = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ver:SetPoint("LEFT", title, "RIGHT", 8, 0)
-    ver:SetText("v3.3.0")
+    ver:SetText("v3.4.0")
     ver:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
     -- Close button with hover background
@@ -686,22 +686,22 @@ local function CreateStatusBar(parent)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine("Statistiques de session")
         GameTooltip:AddLine(" ")
-        GameTooltip:AddDoubleLine("Session demarree:", ns.Util_FormatAgo(ss.startedAt), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
-        GameTooltip:AddDoubleLine("Scans lances:", tostring(ss.scansStarted), C.dim[1], C.dim[2], C.dim[3], C.accent[1], C.accent[2], C.accent[3])
-        GameTooltip:AddDoubleLine("Joueurs trouves:", tostring(ss.playersFound), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
-        GameTooltip:AddDoubleLine("Ajoutes en file:", tostring(ss.queueAdded), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
-        GameTooltip:AddDoubleLine("Invitations envoyees:", tostring(ss.invitesSent), C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
-        GameTooltip:AddDoubleLine("Messages envoyes:", tostring(ss.whispersSent), C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
-        GameTooltip:AddDoubleLine("Recrues rejointes:", tostring(ss.recruitsJoined), C.dim[1], C.dim[2], C.dim[3], C.gold[1], C.gold[2], C.gold[3])
+        GameTooltip:AddDoubleLine("Session demarree :", ns.Util_FormatAgo(ss.startedAt), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+        GameTooltip:AddDoubleLine("Scans lances :", tostring(ss.scansStarted), C.dim[1], C.dim[2], C.dim[3], C.accent[1], C.accent[2], C.accent[3])
+        GameTooltip:AddDoubleLine("Joueurs trouves :", tostring(ss.playersFound), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+        GameTooltip:AddDoubleLine("Ajoutes en file :", tostring(ss.queueAdded), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+        GameTooltip:AddDoubleLine("Invitations envoyees :", tostring(ss.invitesSent), C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
+        GameTooltip:AddDoubleLine("Messages envoyes :", tostring(ss.whispersSent), C.dim[1], C.dim[2], C.dim[3], C.green[1], C.green[2], C.green[3])
+        GameTooltip:AddDoubleLine("Nouvelles recrues :", tostring(ss.recruitsJoined), C.dim[1], C.dim[2], C.dim[3], C.gold[1], C.gold[2], C.gold[3])
         GameTooltip:AddLine(" ")
         -- Total recruits (all time, from contacts with status "joined")
         local totalJoined = 0
         for _, c in pairs(ns.db.global.contacts) do
             if c and c.status == "joined" then totalJoined = totalJoined + 1 end
         end
-        GameTooltip:AddLine("Contacts: " .. W.countKeys(ns.db.global.contacts), C.dim[1], C.dim[2], C.dim[3])
-        GameTooltip:AddDoubleLine("Recrues (total):", tostring(totalJoined), C.dim[1], C.dim[2], C.dim[3], C.gold[1], C.gold[2], C.gold[3])
-        GameTooltip:AddLine("Blacklist: " .. W.countKeys(ns.db.global.blacklist), C.dim[1], C.dim[2], C.dim[3])
+        GameTooltip:AddLine("Contacts : " .. W.countKeys(ns.db.global.contacts), C.dim[1], C.dim[2], C.dim[3])
+        GameTooltip:AddDoubleLine("Recrues (total) :", tostring(totalJoined), C.dim[1], C.dim[2], C.dim[3], C.gold[1], C.gold[2], C.gold[3])
+        GameTooltip:AddLine("Blacklist : " .. W.countKeys(ns.db.global.blacklist), C.dim[1], C.dim[2], C.dim[3])
         GameTooltip:Show()
     end)
     bar:SetScript("OnLeave", function() GameTooltip:Hide() end)
