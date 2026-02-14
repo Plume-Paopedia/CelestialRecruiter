@@ -69,26 +69,28 @@ class DiscordRateLimiter:
 
     def wait_if_needed(self):
         """Block if rate limit would be exceeded"""
-        now = time.time()
+        for _ in range(10):  # Max 10 retries instead of unbounded recursion
+            now = time.time()
 
-        # Remove old requests outside the window
-        while self.request_times and self.request_times[0] < now - self.window_seconds:
-            self.request_times.popleft()
+            # Remove old requests outside the window
+            while self.request_times and self.request_times[0] < now - self.window_seconds:
+                self.request_times.popleft()
 
-        # If at limit, wait until oldest request expires
-        if len(self.request_times) >= self.max_requests:
-            sleep_time = self.window_seconds - (now - self.request_times[0]) + 0.1
-            if sleep_time > 0:
-                logger.warning(f"Rate limit reached, waiting {sleep_time:.1f}s")
-                time.sleep(sleep_time)
-                self.wait_if_needed()  # Recursive check after sleep
+            # If at limit, wait until oldest request expires
+            if len(self.request_times) >= self.max_requests:
+                sleep_time = self.window_seconds - (now - self.request_times[0]) + 0.1
+                if sleep_time > 0:
+                    logger.warning(f"Rate limit reached, waiting {sleep_time:.1f}s")
+                    time.sleep(sleep_time)
+                    continue  # Re-check after sleep
+            break
 
         # Record this request
         self.request_times.append(time.time())
 
 
 class LuaParser:
-    """Simple Lua table parser for SavedVariables"""
+    """Lua table parser for SavedVariables — with targeted queue extraction"""
 
     @staticmethod
     def parse_value(content: str, pos: int) -> tuple:
@@ -114,7 +116,6 @@ class LuaParser:
             value = []
             while pos < len(content) and content[pos] != quote:
                 if content[pos] == '\\' and pos + 1 < len(content):
-                    # Handle escape sequences
                     next_char = content[pos + 1]
                     if next_char == 'n':
                         value.append('\n')
@@ -167,7 +168,6 @@ class LuaParser:
         table = {}
         array = []
         is_array = True
-        array_index = 1
 
         while pos < len(content):
             # Skip whitespace and comments
@@ -212,7 +212,6 @@ class LuaParser:
                 # Array element
                 value, pos = LuaParser.parse_value(content, pos)
                 array.append(value)
-                array_index += 1
 
             # Skip comma
             while pos < len(content) and content[pos] in (',', ';', '\n', ' ', '\t'):
@@ -221,8 +220,32 @@ class LuaParser:
         return (array if is_array and not table else table), pos
 
     @staticmethod
+    def extract_discord_queue(content: str) -> list:
+        """Fast extraction: find discordQueue section and parse only that.
+        Avoids parsing the entire multi-MB SavedVariables file."""
+        # Find the discordQueue key
+        pattern = re.compile(r'\["discordQueue"\]\s*=\s*\{')
+        match = pattern.search(content)
+        if not match:
+            return []
+
+        # Position of the opening '{' for the queue table
+        brace_start = match.end() - 1
+        try:
+            result, _ = LuaParser.parse_table(content, brace_start)
+            if isinstance(result, list):
+                return result
+            elif isinstance(result, dict):
+                # Shouldn't happen for an array, but handle gracefully
+                return list(result.values())
+            return []
+        except Exception as e:
+            logger.error(f"Failed to parse discordQueue: {e}")
+            return []
+
+    @staticmethod
     def parse_savedvariables(content: str) -> Dict[str, Any]:
-        """Parse WoW SavedVariables file"""
+        """Parse WoW SavedVariables file (full parse — use extract_discord_queue for speed)"""
         result = {}
 
         # Find all top-level variable assignments
@@ -576,6 +599,7 @@ class DiscordWebhookBot:
         )
         self.last_processed_timestamp = 0
         self.savedvariables_path = Path(self.config['savedvariables_path'])
+        self._last_mtime = 0  # Track file modification time to avoid re-parsing unchanged files
 
         # Load last processed timestamp from state file
         self.state_file = Path('discord_webhook_state.json')
@@ -627,61 +651,80 @@ class DiscordWebhookBot:
         except Exception as e:
             logger.error(f"Failed to save state file: {e}")
 
-    def parse_savedvariables(self) -> Optional[Dict[str, Any]]:
-        """Parse SavedVariables file"""
+    def extract_queue(self) -> Optional[list]:
+        """Extract only the discordQueue from SavedVariables (fast, targeted parse)"""
         try:
             if not self.savedvariables_path.exists():
                 logger.warning(f"SavedVariables file not found: {self.savedvariables_path}")
                 return None
 
+            # Check file modification time — skip if unchanged
+            try:
+                mtime = self.savedvariables_path.stat().st_mtime
+            except OSError:
+                mtime = 0
+
+            if mtime == self._last_mtime:
+                return None  # File unchanged, skip
+            self._last_mtime = mtime
+
             with open(self.savedvariables_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            data = LuaParser.parse_savedvariables(content)
-            return data.get('CelestialRecruiterDB', {})
+            queue = LuaParser.extract_discord_queue(content)
+            return queue
 
+        except PermissionError:
+            logger.debug("SavedVariables file locked (WoW writing), will retry")
+            return None
         except Exception as e:
-            logger.error(f"Error parsing SavedVariables: {e}")
+            logger.error(f"Error reading SavedVariables: {e}")
             return None
 
     def process_queue(self):
         """Process Discord event queue"""
-        db = self.parse_savedvariables()
-        if not db:
-            return
+        try:
+            queue = self.extract_queue()
+            if not queue:
+                return
 
-        queue = db.get('global', {}).get('discordQueue', [])
-        if not queue:
-            return
+            # Filter events newer than last processed
+            pending_events = [
+                event for event in queue
+                if isinstance(event, dict) and event.get('timestamp', 0) > self.last_processed_timestamp
+            ]
 
-        # Filter events newer than last processed
-        pending_events = [
-            event for event in queue
-            if event.get('timestamp', 0) > self.last_processed_timestamp
-        ]
+            if not pending_events:
+                return
 
-        if not pending_events:
-            return
+            # Sort by timestamp to process in order
+            pending_events.sort(key=lambda e: e.get('timestamp', 0))
 
-        logger.info(f"Processing {len(pending_events)} pending events")
+            logger.info(f"Processing {len(pending_events)} pending events")
 
-        # Send events
-        for event in pending_events:
-            success = self.sender.send_event(event)
+            # Send events
+            for event in pending_events:
+                try:
+                    success = self.sender.send_event(event)
+                except Exception as e:
+                    logger.error(f"Exception sending event {event.get('eventType', '?')}: {e}")
+                    success = False
 
-            if success:
-                # Update last processed timestamp
-                event_ts = event.get('timestamp', 0)
-                if event_ts > self.last_processed_timestamp:
-                    self.last_processed_timestamp = event_ts
+                if success:
+                    # Update last processed timestamp
+                    event_ts = event.get('timestamp', 0)
+                    if event_ts > self.last_processed_timestamp:
+                        self.last_processed_timestamp = event_ts
                     self.save_state()
 
-                # Add delay between webhooks
-                time.sleep(self.config['rate_limit_delay'])
-            else:
-                # Stop processing on failure (will retry on next check)
-                logger.warning("Stopping queue processing due to send failure")
-                break
+                    # Add delay between webhooks
+                    time.sleep(self.config['rate_limit_delay'])
+                else:
+                    # Stop processing on failure (will retry on next check)
+                    logger.warning("Stopping queue processing due to send failure, will retry")
+                    break
+        except Exception as e:
+            logger.error(f"Unexpected error in process_queue: {e}")
 
     def run_polling(self):
         """Run in polling mode (check file periodically)"""
@@ -689,22 +732,28 @@ class DiscordWebhookBot:
         logger.info(f"Watching: {self.savedvariables_path}")
         logger.info(f"Webhook: {self.config['webhook_url'][:50]}...")
         logger.info(f"Check interval: {self.config['check_interval']}s")
+        logger.info(f"Last processed timestamp: {self.last_processed_timestamp}")
 
+        consecutive_errors = 0
         while True:
             try:
                 self.process_queue()
+                consecutive_errors = 0
                 time.sleep(self.config['check_interval'])
             except KeyboardInterrupt:
                 logger.info("Shutting down...")
                 break
             except Exception as e:
-                logger.error(f"Error in polling loop: {e}")
-                time.sleep(self.config['check_interval'])
+                consecutive_errors += 1
+                logger.error(f"Error in polling loop ({consecutive_errors}): {e}")
+                # Back off on repeated errors to avoid spinning
+                backoff = min(self.config['check_interval'] * consecutive_errors, 60)
+                time.sleep(backoff)
 
     def run_watching(self):
         """Run in file watching mode (requires watchdog)"""
         if not WATCHDOG_AVAILABLE:
-            logger.error("Watchdog not available, falling back to polling mode")
+            logger.warning("Watchdog not available, falling back to polling mode")
             return self.run_polling()
 
         logger.info("Starting file watching mode")
@@ -712,10 +761,15 @@ class DiscordWebhookBot:
         logger.info(f"Webhook: {self.config['webhook_url'][:50]}...")
 
         # Process existing queue on startup
+        self._last_mtime = 0  # Force parse on startup
         self.process_queue()
 
         # Watch for file changes
-        event_handler = SavedVariablesWatcher(self.process_queue)
+        def on_change():
+            self._last_mtime = 0  # Reset mtime so extract_queue re-reads
+            self.process_queue()
+
+        event_handler = SavedVariablesWatcher(on_change)
         observer = Observer()
         observer.schedule(
             event_handler,
@@ -734,6 +788,7 @@ class DiscordWebhookBot:
 
     def run(self):
         """Run the bot (polling mode - most compatible)"""
+        self._last_mtime = 0  # Force parse on first poll
         self.run_polling()
 
 

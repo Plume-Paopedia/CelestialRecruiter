@@ -2,6 +2,9 @@
 REM CelestialRecruiter Discord Webhook Bot Launcher
 REM This script starts the Discord webhook companion
 
+REM Change to the script's own directory (fixes double-click from Explorer)
+cd /d "%~dp0"
+
 echo ========================================
 echo CelestialRecruiter Discord Bot
 echo ========================================
