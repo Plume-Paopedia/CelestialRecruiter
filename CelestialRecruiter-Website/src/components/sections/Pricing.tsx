@@ -259,7 +259,7 @@ export function PricingSection() {
         ))}
       </motion.div>
 
-      {/* Guild Master VIP Tier */}
+      {/* Le Légendaire — Lifetime Tier */}
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -269,23 +269,40 @@ export function PricingSection() {
           textAlign: 'center',
           marginTop: '3.5rem',
           padding: '2rem',
-          border: '1px solid #352c20',
+          border: '1px solid rgba(163, 53, 238, 0.25)',
           borderRadius: '6px',
           maxWidth: '580px',
           margin: '3.5rem auto 0',
-          background: '#1a1814',
+          background: 'linear-gradient(135deg, #1a1814 0%, #1f1a24 100%)',
+          boxShadow: '0 0 30px rgba(163, 53, 238, 0.06)',
         }}
       >
+        <div
+          style={{
+            display: 'inline-block',
+            background: 'rgba(163, 53, 238, 0.12)',
+            color: '#a335ee',
+            padding: '0.2rem 0.7rem',
+            borderRadius: '3px',
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            fontFamily: "'Cinzel', serif",
+            marginBottom: '0.75rem',
+          }}
+        >
+          ONE-TIME PAYMENT
+        </div>
         <h3
           style={{
             fontFamily: "'Cinzel', serif",
             fontSize: '1.15rem',
             fontWeight: 700,
-            color: '#C9AA71',
-            marginBottom: '0.75rem',
+            color: '#a335ee',
+            marginBottom: '0.5rem',
           }}
         >
-          Guild Master &mdash; 12&euro;/month
+          Le L&eacute;gendaire &mdash; 20&euro;
         </h3>
         <p
           style={{
@@ -295,8 +312,11 @@ export function PricingSection() {
             lineHeight: 1.6,
           }}
         >
-          Web dashboard &bull; Priority support &bull; Custom feature requests
-          &bull; Direct contact with the developer
+          All Pro features, forever. One payment, lifetime access.
+          <br />
+          <span style={{ color: '#4a3f32', fontSize: '0.8rem' }}>
+            No subscription &bull; No expiration &bull; Priority support
+          </span>
         </p>
         <a
           href={LINKS.patreon}

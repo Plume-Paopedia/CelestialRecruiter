@@ -58,6 +58,11 @@ end
 
 -- Bulk Whisper
 function BulkOps:BulkWhisper(keys, templateId, callback)
+    -- Tier gate: Bulk whisper requires Pro tier
+    if ns.Tier and not ns.Tier:CanUse("bulk_whisper_invite") then
+        ns.Tier:ShowUpgrade("bulk_whisper_invite")
+        return
+    end
     if not keys or #keys == 0 then
         ns.Notifications_Warning("Aucune sélection", "Sélectionnez au moins un contact")
         return
@@ -115,6 +120,11 @@ end
 
 -- Bulk Invite
 function BulkOps:BulkInvite(keys, callback)
+    -- Tier gate: Bulk invite requires Pro tier
+    if ns.Tier and not ns.Tier:CanUse("bulk_whisper_invite") then
+        ns.Tier:ShowUpgrade("bulk_whisper_invite")
+        return
+    end
     if not keys or #keys == 0 then
         ns.Notifications_Warning("Aucune sélection", "Sélectionnez au moins un contact")
         return
@@ -159,6 +169,11 @@ end
 
 -- Bulk Tag Add
 function BulkOps:BulkAddTag(keys, tag, callback)
+    -- Tier gate: Bulk tag/status requires Recruteur tier
+    if ns.Tier and not ns.Tier:CanUse("bulk_tag_status") then
+        ns.Tier:ShowUpgrade("bulk_tag_status")
+        return
+    end
     if not keys or #keys == 0 then
         ns.Notifications_Warning("Aucune sélection", "Sélectionnez au moins un contact")
         return
@@ -211,6 +226,11 @@ end
 
 -- Bulk Status Change
 function BulkOps:BulkSetStatus(keys, status, callback)
+    -- Tier gate: Bulk tag/status requires Recruteur tier
+    if ns.Tier and not ns.Tier:CanUse("bulk_tag_status") then
+        ns.Tier:ShowUpgrade("bulk_tag_status")
+        return
+    end
     if not keys or #keys == 0 then
         ns.Notifications_Warning("Aucune sélection", "Sélectionnez au moins un contact")
         return

@@ -82,7 +82,7 @@ export const PRICING_TIERS = [
       'Contact Queue',
       '3 Built-in Templates',
       'Basic Filters',
-      '6 Themes',
+      '2 Themes',
     ],
     limitations: [
       '✗ No Auto-Scan',
@@ -103,11 +103,12 @@ export const PRICING_TIERS = [
     features: [
       '✓ Auto-Scan Enabled',
       '✓ Advanced Analytics',
-      '✓ Unlimited Templates',
+      '✓ 3 Custom Templates',
       '✓ Advanced Filters',
-      '✓ 4 Themes',
-      '✓ Unlimited Queue',
-      '✓ Achievements',
+      '✓ All 6 Themes',
+      '✓ 500 Contacts / 100 Queue',
+      '✓ Discord (5 events)',
+      '✓ All Achievements',
       '✓ Import/Export',
     ],
     savings: 'Automate your recruitment',
@@ -125,12 +126,12 @@ export const PRICING_TIERS = [
     features: [
       'Everything in Recruteur +',
       '✓ Auto-Recruiter (AI)',
-      '✓ Discord Integration',
+      '✓ Full Discord (30+ events)',
       '✓ A/B Testing',
-      '✓ Campaigns',
-      '✓ Bulk Operations',
-      '✓ AI Suggestions',
-      '✓ Early Access',
+      '✓ Campaigns (3 active)',
+      '✓ Bulk Whisper/Invite',
+      '✓ Unlimited Everything',
+      '✓ Custom Theme Creator',
       '✓ Priority Support',
     ],
     savings: 'Full automation suite',
@@ -267,6 +268,7 @@ export const TIER_LEVELS: Record<string, number> = {
   free: 0,
   recruteur: 1,
   pro: 2,
+  lifetime: 2,
 };
 
 // ============================================

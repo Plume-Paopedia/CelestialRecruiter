@@ -359,6 +359,12 @@ end
 function AR:Start()
     if self.active then return end
 
+    -- Tier gate: Auto-Recruiter requires Pro tier
+    if ns.Tier and not ns.Tier:CanUse("auto_recruiter") then
+        ns.Tier:ShowUpgrade("auto_recruiter")
+        return
+    end
+
     self.active = true
     self.paused = false
     self.currentIndex = 1

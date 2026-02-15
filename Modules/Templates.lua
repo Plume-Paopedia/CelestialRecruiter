@@ -71,6 +71,23 @@ function ns.Templates_SetText(id, text)
   if not ns.db.profile.customTemplates then
     ns.db.profile.customTemplates = {}
   end
+
+  -- Tier gate: check custom template count for new (non-builtin) templates
+  if not BUILTIN[id] and not (ns.db.profile.customTemplates[id]) then
+    -- This is a new custom template, check the limit
+    if ns.Tier then
+      local max = ns.Tier:GetLimit("custom_templates_max")
+      local count = 0
+      for k, v in pairs(ns.db.profile.customTemplates) do
+        if not BUILTIN[k] and v ~= "" then count = count + 1 end
+      end
+      if count >= max then
+        ns.Tier:ShowUpgrade("custom_templates_max")
+        return
+      end
+    end
+  end
+
   ns.db.profile.customTemplates[id] = text
   if templates[id] then
     templates[id].text = text
@@ -92,16 +109,21 @@ function ns.Templates_Render(key, tplId)
   local p = ns.db.profile
   local tpl = templates[tplId] or templates.default
 
+  -- Base variables (available to all tiers)
   local map = {
     ["{name}"] = clean(c.name or key),
     ["{class}"] = clean(c.classLabel or c.classFile or "aventurier"),
     ["{level}"] = clean(tostring(c.level or "")),
     ["{guild}"] = clean(p.guildName ~= "" and p.guildName or "notre guilde"),
-    ["{discord}"] = clean(p.discord ~= "" and p.discord or "a definir"),
-    ["{raidDays}"] = clean(p.raidDays ~= "" and p.raidDays or "a definir"),
-    ["{goal}"] = clean(p.goal ~= "" and p.goal or "a definir"),
     ["{inviteKeyword}"] = clean(p.inviteKeyword ~= "" and p.inviteKeyword or "!invite"),
   }
+
+  -- Tier-gated variables: {discord}, {raidDays}, {goal} require Recruteur+
+  if not ns.Tier or ns.Tier:CanUse("template_vars_all") then
+    map["{discord}"] = clean(p.discord ~= "" and p.discord or "a definir")
+    map["{raidDays}"] = clean(p.raidDays ~= "" and p.raidDays or "a definir")
+    map["{goal}"] = clean(p.goal ~= "" and p.goal or "a definir")
+  end
 
   local out = tpl.text
   for token, value in pairs(map) do

@@ -33,6 +33,11 @@ end
 ---------------------------------------------------------------------------
 
 function AB:CreateTest(name, templateIds, minSamples)
+    -- Tier gate: A/B Testing requires Pro tier
+    if ns.Tier and not ns.Tier:CanUse("ab_testing") then
+        ns.Tier:ShowUpgrade("ab_testing")
+        return nil
+    end
     self:Init()
 
     local id = "test_" .. time() .. "_" .. math.random(1000, 9999)

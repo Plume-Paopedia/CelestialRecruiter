@@ -452,9 +452,14 @@ function SS:GetAllSuggestions()
         return a.type < b.type
     end)
 
-    -- Cap at 8 suggestions
+    -- Tier gate: cap suggestions based on tier
+    local maxSuggestions = 8
+    if ns.Tier then
+        maxSuggestions = ns.Tier:GetLimit("suggestions_max")
+    end
+
     local capped = {}
-    for i = 1, math.min(8, #suggestions) do
+    for i = 1, math.min(maxSuggestions, #suggestions) do
         capped[i] = suggestions[i]
     end
 

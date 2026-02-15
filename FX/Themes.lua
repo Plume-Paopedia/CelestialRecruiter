@@ -173,9 +173,26 @@ function Themes:GetColors()
     return theme.colors
 end
 
+-- Theme availability by tier: Free gets 2 (dark, light), Recruteur gets all 6, Pro gets 6 + custom
+local FREE_THEMES = { dark = true, light = true }
+
 function Themes:Apply(themeId)
     if not self.presets[themeId] then
         themeId = "dark"
+    end
+
+    -- Tier gate: check theme availability
+    if ns.Tier then
+        if themeId == "custom" and not ns.Tier:CanUse("theme_custom") then
+            ns.Tier:ShowUpgrade("theme_custom")
+            themeId = "dark"
+        elseif not FREE_THEMES[themeId] and themeId ~= "custom" then
+            local max = ns.Tier:GetLimit("themes_preset_max")
+            if max <= 2 and not FREE_THEMES[themeId] then
+                ns.Tier:ShowUpgrade("themes_preset_max")
+                themeId = "dark"
+            end
+        end
     end
 
     self.current = themeId
@@ -225,6 +242,11 @@ function Themes:GetPresetList()
 end
 
 function Themes:SaveCustom(colors)
+    -- Tier gate: custom theme creator requires Pro tier
+    if ns.Tier and not ns.Tier:CanUse("theme_custom") then
+        ns.Tier:ShowUpgrade("theme_custom")
+        return
+    end
     self.presets.custom = {
         name = "Custom",
         colors = colors,

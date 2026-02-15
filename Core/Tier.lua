@@ -1,0 +1,342 @@
+local _, ns = ...
+
+-- ═══════════════════════════════════════════════════════════════════
+-- CelestialRecruiter  —  Tier Gating System
+-- Central module: all other modules query ns.Tier for access checks
+-- ═══════════════════════════════════════════════════════════════════
+
+ns.Tier = {}
+local T = ns.Tier
+
+-- ───────────────────────────── Tier Levels ─────────────────────────────
+local TIER_LEVELS = {
+    free      = 0,
+    recruteur = 1,
+    pro       = 2,
+    lifetime  = 2, -- same power as Pro, never expires
+}
+
+-- ───────────────────────────── Feature Limits ─────────────────────────────
+-- { minTier, limitFree, limitRecruteur, limitPro }
+-- For boolean features: false = locked, true = unlocked
+-- For numeric features: the cap value (99999 = unlimited)
+local LIMITS = {
+    -- Scanner
+    who_delay_min         = { "free",      10,     6,     3 },
+    scan_query_cap        = { "free",      30, 99999, 99999 },
+    auto_scan             = { "recruteur", false,  true,  true },
+    auto_scan_continuous  = { "pro",       false, false,  true },
+
+    -- Queue & Contacts
+    contacts_max          = { "free",     100,   500, 99999 },
+    queue_max             = { "free",      25,   100, 99999 },
+    log_limit             = { "free",     100,   300,   500 },
+
+    -- Templates
+    custom_templates_max  = { "free",       1,     3, 99999 },
+    template_vars_all     = { "recruteur", false, true,  true },
+
+    -- Auto-Recruiter
+    auto_recruiter        = { "pro",       false, false, true },
+
+    -- Statistics
+    stats_history_days    = { "free",       7,    30,    90 },
+    stats_advanced        = { "recruteur", false, true,  true },
+
+    -- A/B Testing
+    ab_testing            = { "pro",       false, false, true },
+
+    -- Campaigns
+    campaigns_active_max  = { "free",       0,     1,     3 },
+    campaigns_scheduling  = { "pro",       false, false, true },
+
+    -- Discord
+    discord_webhook       = { "recruteur", false, true,  true },
+    discord_all_events    = { "pro",       false, false, true },
+
+    -- Filters
+    filter_dimensions     = { "free",       4,     8,    10 },
+    filter_presets_max    = { "free",       0,     2, 99999 },
+
+    -- Bulk Operations
+    bulk_tag_status       = { "recruteur", false, true,  true },
+    bulk_whisper_invite   = { "pro",       false, false, true },
+
+    -- Themes
+    themes_preset_max     = { "free",       2,     6,     6 },
+    theme_custom          = { "pro",       false, false, true },
+
+    -- Goals & Achievements
+    achievements_full     = { "recruteur", false, true,  true },
+
+    -- Leaderboard
+    leaderboard_full      = { "recruteur", false, true,  true },
+
+    -- Smart Suggestions
+    suggestions_max       = { "free",       2,     5,     8 },
+
+    -- Reputation
+    reputation_full       = { "recruteur", false, true,  true },
+
+    -- Welcome DM
+    welcome_dm            = { "recruteur", false, true,  true },
+
+    -- Import/Export
+    auto_backup           = { "recruteur", false, true,  true },
+    web_export            = { "recruteur", false, true,  true },
+}
+
+-- ───────────────────────────── License Key Crypto ─────────────────────────────
+local SALT = "CelestialRecruiter2026PlumePao"
+
+local function djb2(str)
+    local hash = 5381
+    for i = 1, #str do
+        hash = ((hash * 33) + str:byte(i)) % 4294967296
+    end
+    return string.format("%08x", hash)
+end
+
+local function computeChecksum(tierCode, dateStr)
+    return djb2(tierCode .. dateStr .. SALT)
+end
+
+-- Map short tier codes in license keys to internal tier names
+local TIER_CODES = {
+    REC  = "recruteur",
+    PRO  = "pro",
+    LIFE = "lifetime",
+}
+
+-- ───────────────────────────── Core State ─────────────────────────────
+T.currentTier = "free"
+
+-- ───────────────────────────── Init ─────────────────────────────
+function T:Init()
+    local license = ns.db and ns.db.profile and ns.db.profile.license
+    if license and license.tier then
+        self.currentTier = self:_Validate(license)
+    else
+        self.currentTier = "free"
+    end
+
+    -- Apply log limit based on tier
+    if ns.db and ns.db.profile then
+        ns.db.profile.logLimit = self:GetLimit("log_limit")
+    end
+end
+
+-- ───────────────────────────── Validation ─────────────────────────────
+function T:_Validate(license)
+    if not license or not license.tier or not license.expiry then
+        return "free"
+    end
+
+    -- Check expiry (YYYYMMDD format as number)
+    local now = tonumber(os.date("%Y%m%d"))
+    if license.expiry < now then
+        -- Expired
+        if ns.Notifications_Info then
+            ns.Notifications_Info("Licence expiree",
+                "Votre licence " .. (license.tier or "") .. " a expire. Renouvelez sur Patreon.")
+        end
+        return "free"
+    end
+
+    -- Verify the tier is valid
+    if TIER_LEVELS[license.tier] then
+        return license.tier
+    end
+
+    return "free"
+end
+
+-- ───────────────────────────── Public API ─────────────────────────────
+
+function T:GetTier()
+    return self.currentTier or "free"
+end
+
+function T:GetTierLevel()
+    return TIER_LEVELS[self.currentTier] or 0
+end
+
+function T:HasAccess(requiredTier)
+    local current = TIER_LEVELS[self.currentTier] or 0
+    local required = TIER_LEVELS[requiredTier] or 0
+    return current >= required
+end
+
+function T:GetLimit(featureId)
+    local def = LIMITS[featureId]
+    if not def then return 99999 end
+
+    local level = self:GetTierLevel()
+    -- def = { minTier, limitFree, limitRecruteur, limitPro }
+    if level >= 2 then
+        return def[4]
+    elseif level >= 1 then
+        return def[3]
+    else
+        return def[2]
+    end
+end
+
+function T:CanUse(featureId)
+    local val = self:GetLimit(featureId)
+    if type(val) == "boolean" then
+        return val
+    end
+    -- Numeric limits: usable if > 0
+    return val > 0
+end
+
+-- ───────────────────────────── Upgrade Prompts ─────────────────────────────
+
+local TIER_NAMES = {
+    free      = "Le Scout",
+    recruteur = "Le Recruteur (3\226\130\172/mois)",
+    pro       = "L'Elite (7\226\130\172/mois)",
+    lifetime  = "Le Legendaire (20\226\130\172)",
+}
+
+local UPGRADE_HINTS = {
+    auto_scan            = "Auto-Scan scanne en arriere-plan pendant que vous jouez.",
+    auto_scan_continuous = "Cycles de scan illimites en continu.",
+    auto_recruiter       = "Recrutement automatique pendant que vous jouez.",
+    contacts_max         = "Sauvegardez plus de contacts pour ne rien perdre.",
+    queue_max            = "File d'attente elargie pour traiter plus de recrues.",
+    custom_templates_max = "Creez plus de modeles personnalises.",
+    template_vars_all    = "Utilisez {discord}, {raidDays}, {goal} dans vos messages.",
+    stats_advanced       = "Decouvrez vos meilleures heures et templates.",
+    ab_testing           = "Trouvez automatiquement le meilleur modele.",
+    campaigns_active_max = "Gerez plusieurs campagnes simultanees.",
+    campaigns_scheduling = "Planifiez vos campagnes par jour et heure.",
+    discord_webhook      = "Recevez des notifications Discord en temps reel.",
+    discord_all_events   = "Tous les 30+ types d'evenements Discord.",
+    bulk_tag_status      = "Operations en masse : tag et statut.",
+    bulk_whisper_invite  = "Whisper et invite en masse.",
+    themes_preset_max    = "Debloquez tous les themes visuels.",
+    theme_custom         = "Creez votre propre theme personnalise.",
+    achievements_full    = "Debloquez les 29 succes et categories.",
+    leaderboard_full     = "Classement complet et participation guilde.",
+    suggestions_max      = "Toutes les suggestions intelligentes.",
+    reputation_full      = "Score de reputation detaille (0-100).",
+    welcome_dm           = "Message de bienvenue automatique aux nouvelles recrues.",
+    auto_backup          = "Sauvegarde automatique quotidienne.",
+    web_export           = "Exportez vers le dashboard web.",
+    filter_presets_max   = "Sauvegardez vos filtres preferes.",
+    scan_query_cap       = "Scan complet du serveur sans limite de requetes.",
+}
+
+-- Throttle: don't spam the same upgrade prompt
+local lastPromptTime = {}
+local PROMPT_COOLDOWN = 300 -- 5 minutes between same prompts
+
+function T:ShowUpgrade(featureId)
+    local now = GetTime and GetTime() or 0
+    if lastPromptTime[featureId] and (now - lastPromptTime[featureId]) < PROMPT_COOLDOWN then
+        return
+    end
+    lastPromptTime[featureId] = now
+
+    local def = LIMITS[featureId]
+    if not def then return end
+
+    local requiredTier = def[1]
+    local tierName = TIER_NAMES[requiredTier] or requiredTier
+    local hint = UPGRADE_HINTS[featureId] or ""
+
+    if ns.Notifications_Info then
+        ns.Notifications_Info("Fonctionnalite reservee",
+            hint .. " Disponible avec " .. tierName .. ".")
+    else
+        ns.Util_Print("|cffC9AA71[Tier]|r " .. hint .. " Disponible avec " .. tierName .. ".")
+    end
+end
+
+-- ───────────────────────────── License Activation ─────────────────────────────
+
+function T:Activate(keyStr)
+    if not keyStr or keyStr == "" then
+        return false, "Cle vide. Format: CR-TIER-DATE-CHECKSUM"
+    end
+
+    -- Parse: CR-{TIER}-{YYYYMMDD}-{8hex}
+    local tierCode, dateStr, checksum = keyStr:match("^CR%-(%u+)%-(%d%d%d%d%d%d%d%d)%-(%x%x%x%x%x%x%x%x)$")
+    if not tierCode then
+        return false, "Format invalide. Attendu: CR-TIER-YYYYMMDD-CHECKSUM"
+    end
+
+    -- Validate tier code
+    local tier = TIER_CODES[tierCode]
+    if not tier then
+        return false, "Tier inconnu: " .. tierCode
+    end
+
+    -- Validate checksum
+    local expected = computeChecksum(tierCode, dateStr)
+    if checksum ~= expected then
+        return false, "Cle invalide (checksum incorrect)."
+    end
+
+    -- Store license
+    local expiry = tonumber(dateStr)
+    ns.db.profile.license = {
+        key = keyStr,
+        tier = tier,
+        expiry = expiry,
+        activatedAt = time(),
+    }
+
+    self.currentTier = tier
+
+    -- Apply log limit
+    ns.db.profile.logLimit = self:GetLimit("log_limit")
+
+    -- Celebration!
+    local tierName = TIER_NAMES[tier] or tier
+    if ns.Notifications_Celebrate then
+        ns.Notifications_Celebrate("Licence activee !", tierName .. " debloque. Merci pour votre soutien !")
+    else
+        ns.Util_Print("|cff00ff00Licence activee !|r " .. tierName .. " debloque. Merci !")
+    end
+
+    -- Play effects
+    if ns.ParticleSystem and ns.ParticleSystem.PlayRecruitJoinedEffect and ns.UI and ns.UI.mainFrame then
+        ns.ParticleSystem:PlayRecruitJoinedEffect(ns.UI.mainFrame)
+    end
+
+    -- Refresh UI
+    if ns.UI_Refresh then
+        ns.UI_Refresh()
+    end
+
+    return true
+end
+
+-- ───────────────────────────── Utility: Generate Key (for dev/testing) ─────────────────────────────
+
+function T:GenerateKey(tierCode, dateStr)
+    local checksum = computeChecksum(tierCode, dateStr)
+    return "CR-" .. tierCode .. "-" .. dateStr .. "-" .. checksum
+end
+
+-- ───────────────────────────── Contact Count Helper ─────────────────────────────
+
+function T:GetContactCount()
+    if not ns.db or not ns.db.global or not ns.db.global.contacts then return 0 end
+    local n = 0
+    for _ in pairs(ns.db.global.contacts) do n = n + 1 end
+    return n
+end
+
+function T:CanAddContact()
+    local max = self:GetLimit("contacts_max")
+    return self:GetContactCount() < max
+end
+
+function T:CanAddToQueue()
+    local max = self:GetLimit("queue_max")
+    return ns.DB_QueueCount() < max
+end

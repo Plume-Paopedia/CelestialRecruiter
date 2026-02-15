@@ -67,8 +67,22 @@ local EVENT_TYPES = {
 ---------------------------------------------------------------------------
 -- Initialize Discord Settings
 ---------------------------------------------------------------------------
+-- Events available at Recruteur tier (5 events)
+local RECRUTEUR_EVENTS = {
+    guild_join = true,
+    guild_leave = true,
+    daily_summary = true,
+    session_summary = true,
+    limit_reached = true,
+}
+
 function DQ:Init()
     if not ns.db then return end
+
+    -- Tier gate: Discord webhook requires Recruteur+
+    if ns.Tier and not ns.Tier:CanUse("discord_webhook") then
+        return
+    end
 
     -- Initialize profile settings
     if not ns.db.profile.discordNotify then
@@ -195,6 +209,13 @@ function DQ:QueueEvent(eventType, data)
     if not ns.db or not ns.db.global.discordQueue then return false end
     if not ns.db.profile.discordNotify or not ns.db.profile.discordNotify.enabled then return false end
     if not ns.db.profile.discordNotify.events[eventType] then return false end
+
+    -- Tier gate: Recruteur gets only 5 events, Pro gets all
+    if ns.Tier and not ns.Tier:CanUse("discord_all_events") then
+        if not RECRUTEUR_EVENTS[eventType] then
+            return false
+        end
+    end
 
     local eventMeta = EVENT_TYPES[eventType]
     if not eventMeta then return false end

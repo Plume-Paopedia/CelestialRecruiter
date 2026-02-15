@@ -34,6 +34,16 @@ end
 function Camp:Create(name, description)
     self:Init()
 
+    -- Tier gate: check active campaigns limit
+    if ns.Tier then
+        local max = ns.Tier:GetLimit("campaigns_active_max")
+        local active = self:GetActiveCampaigns()
+        if #active >= max then
+            ns.Tier:ShowUpgrade("campaigns_active_max")
+            return nil
+        end
+    end
+
     local id = "camp_" .. time() .. "_" .. math.random(1000, 9999)
 
     local campaign = {
@@ -228,6 +238,11 @@ function Camp:CheckSchedule(campId)
     self:Init()
     local camp = ns.db.global.campaigns[campId]
     if not camp or not camp.schedule.enabled then return true end
+
+    -- Tier gate: scheduling requires Pro tier
+    if ns.Tier and not ns.Tier:CanUse("campaigns_scheduling") then
+        return true -- ignore schedule if not Pro (always allow)
+    end
 
     local hour = tonumber(date("%H"))
     local wday = tonumber(date("%w")) -- 0=Sun, 1=Mon, ..., 6=Sat

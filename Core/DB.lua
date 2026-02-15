@@ -41,6 +41,7 @@ local DEFAULTS = {
     welcomeEnabled = false,
     welcomeMessage = "Bienvenue dans {guild}, {name} ! N'h\195\169site pas \195\160 rejoindre notre Discord : {discord}",
     welcomeDelay = 5,
+    license = nil, -- { key, tier, expiry, activatedAt }
   },
   char = {
     leaderboard = {
@@ -226,6 +227,14 @@ function ns.DB_UpsertContact(key, patch)
 
   local c = ns.db.global.contacts[key]
   if not c then
+    -- Tier gate: check contacts_max before creating new contact
+    if ns.Tier and not ns.Tier:CanAddContact() then
+      local max = ns.Tier:GetLimit("contacts_max")
+      ns.Tier:ShowUpgrade("contacts_max")
+      ns.DB_Log("TIER", ("Contact non sauvegarde -- base pleine (%d/%d)"):format(
+        ns.Tier:GetContactCount(), max))
+      return nil
+    end
     c = normalizeContact({}, key)
     ns.db.global.contacts[key] = c
   else
@@ -290,6 +299,11 @@ function ns.DB_QueueAdd(key)
     end
   end
   if queueSet[key] then return false end
+  -- Tier gate: check queue_max before adding
+  if ns.Tier and not ns.Tier:CanAddToQueue() then
+    ns.Tier:ShowUpgrade("queue_max")
+    return false
+  end
   table.insert(ns.db.global.queue, key)
   queueSet[key] = true
   if ns.sessionStats then ns.sessionStats.queueAdded = ns.sessionStats.queueAdded + 1 end

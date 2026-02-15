@@ -732,18 +732,23 @@ end
 function G:GetAllAchievements()
     local achievements = (ns.db and ns.db.global and ns.db.global.goals and ns.db.global.goals.achievements) or {}
 
+    -- Tier gate: Free users only see "recrutement" category
+    local showAll = not ns.Tier or ns.Tier:CanUse("achievements_full")
+
     local result = {}
     for _, def in ipairs(ACHIEVEMENTS) do
-        local unlockData = achievements[def.id]
-        table.insert(result, {
-            id          = def.id,
-            name        = def.name,
-            description = def.description,
-            icon        = def.icon,
-            category    = def.category,
-            unlocked    = unlockData ~= nil,
-            unlockedAt  = unlockData and unlockData.unlockedAt or nil,
-        })
+        if showAll or def.category == "recrutement" then
+            local unlockData = achievements[def.id]
+            table.insert(result, {
+                id          = def.id,
+                name        = def.name,
+                description = def.description,
+                icon        = def.icon,
+                category    = def.category,
+                unlocked    = unlockData ~= nil,
+                unlockedAt  = unlockData and unlockData.unlockedAt or nil,
+            })
+        end
     end
 
     -- Sort: by category order, then unlocked first within each category

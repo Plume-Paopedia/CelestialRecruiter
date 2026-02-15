@@ -4,6 +4,9 @@ ns.CR = CR
 
 function CR:OnInitialize()
   ns.DB_Init()
+  if ns.Tier and ns.Tier.Init then
+    ns.Tier:Init()
+  end
   ns.Templates_Init()
   ns.Queue_Init()
   if ns.Themes and ns.Themes.Init then
@@ -66,8 +69,8 @@ function CR:OnEnable()
   ns.UI_Init()
   ns.Inbox_Init()
 
-  -- Auto-backup once per day
-  if ns.ImportExport then
+  -- Auto-backup once per day (requires Recruteur tier)
+  if ns.ImportExport and (not ns.Tier or ns.Tier:CanUse("auto_backup")) then
     local lastBackup = ns.db.global.lastAutoBackup or 0
     local now = time()
     local dayInSeconds = 24 * 3600
@@ -219,8 +222,9 @@ function CR:OnEnable()
           ns.DiscordQueue:ScheduleAutoFlush()
         end
       end
-      -- Welcome DM on guild join
-      if key and ns.db.profile.welcomeEnabled and ns.db.profile.welcomeMessage ~= "" then
+      -- Welcome DM on guild join (requires Recruteur tier)
+      if key and ns.db.profile.welcomeEnabled and ns.db.profile.welcomeMessage ~= ""
+         and (not ns.Tier or ns.Tier:CanUse("welcome_dm")) then
         local playerName = joined
         local welcomeMsg = ns.db.profile.welcomeMessage
         welcomeMsg = welcomeMsg:gsub("{name}", playerName or "")
@@ -442,12 +446,38 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
     return
   end
 
+  -- License activation: /cr activate CR-TIER-YYYYMMDD-CHECKSUM
+  if msg:sub(1, 9) == "activate " then
+    local keyStr = ns.Util_Trim(msg:sub(10))
+    if ns.Tier and ns.Tier.Activate then
+      local ok, err = ns.Tier:Activate(keyStr)
+      if not ok then
+        ns.Util_Print("|cffff0000Erreur:|r " .. (err or "Cle invalide"))
+      end
+    else
+      ns.Util_Print("|cffff0000Erreur:|r Module Tier non charge.")
+    end
+    return
+  end
+
+  -- Show current tier: /cr tier
+  if msg == "tier" then
+    if ns.Tier then
+      local tier = ns.Tier:GetTier()
+      local names = { free = "Le Scout (Gratuit)", recruteur = "Le Recruteur", pro = "L'Elite", lifetime = "Le Legendaire" }
+      ns.Util_Print("Tier actuel : |cffC9AA71" .. (names[tier] or tier) .. "|r")
+    end
+    return
+  end
+
   if msg == "help" then
-    ns.Util_Print("Commandes: /cr, /cr reset, /cr softreset, /cr flush, /cr webexport, /cr webimport, /cr help")
+    ns.Util_Print("Commandes: /cr, /cr reset, /cr softreset, /cr flush, /cr webexport, /cr webimport, /cr activate, /cr tier, /cr help")
     ns.Util_Print("/cr softreset : R\195\169initialise contacts/file/stats mais conserve r\195\169glages et mod\195\168les")
     ns.Util_Print("/cr flush : Envoie les notifications Discord en attente (reload)")
     ns.Util_Print("/cr webexport : Exporte les donn\195\169es pour le dashboard web")
     ns.Util_Print("/cr webimport : Importe les modifications du dashboard web")
+    ns.Util_Print("/cr activate <cle> : Activer une licence (ex: CR-PRO-20260315-a8f3b2c1)")
+    ns.Util_Print("/cr tier : Afficher votre tier actuel")
     ns.Util_Print("Scanner: bouton Scan (avec cooldown), import /who, joueurs sans guilde ajout\195\169s en file.")
     return
   end

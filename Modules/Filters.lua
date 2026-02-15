@@ -255,6 +255,20 @@ end
 function Filters:SavePreset(name)
     if not name or name == "" then return false end
 
+    -- Tier gate: check filter presets limit
+    if ns.Tier then
+        local max = ns.Tier:GetLimit("filter_presets_max")
+        -- Only check if this is a new preset (not overwriting existing)
+        if not self.presets[name] then
+            local count = 0
+            for _ in pairs(self.presets) do count = count + 1 end
+            if count >= max then
+                ns.Tier:ShowUpgrade("filter_presets_max")
+                return false
+            end
+        end
+    end
+
     -- Deep copy current filters
     local preset = {
         text = self.active.text,

@@ -41,7 +41,13 @@ local function cancelTimer(t)
 end
 
 local function whoDelay()
-  return ns.Util_ToNumber(ns.db.profile.scanWhoDelaySeconds, 6, 3, 30)
+  local base = ns.Util_ToNumber(ns.db.profile.scanWhoDelaySeconds, 6, 3, 30)
+  -- Tier gate: enforce minimum delay based on tier
+  if ns.Tier then
+    local floor = ns.Tier:GetLimit("who_delay_min")
+    if base < floor then base = floor end
+  end
+  return base
 end
 
 local function cooldownRemaining()
@@ -62,7 +68,10 @@ local function autoScanDelay()
 end
 
 local function isAutoScanEnabled()
-  return ns.db and ns.db.profile and ns.db.profile.scanAutoEnabled
+  if not (ns.db and ns.db.profile and ns.db.profile.scanAutoEnabled) then return false end
+  -- Tier gate: auto-scan requires Recruteur tier
+  if ns.Tier and not ns.Tier:CanUse("auto_scan") then return false end
+  return true
 end
 
 -- Forward declarations (filled after sendNextQuery is defined)
@@ -486,6 +495,20 @@ scheduleAutoScanCycleRestart = function()
   Scanner.autoReady = false
   Scanner.autoScanCycles = Scanner.autoScanCycles + 1
 
+  -- Tier gate: continuous auto-scan requires Pro tier
+  -- Recruteur gets 1 cycle, then must restart manually
+  if ns.Tier and not ns.Tier:CanUse("auto_scan_continuous") then
+    ns.DB_Log("SCAN", ("Cycle %d termine (%d joueurs). Cycles continus reserves a L'Elite."):format(
+      Scanner.autoScanCycles, Scanner.resultCount))
+    ns.Tier:ShowUpgrade("auto_scan_continuous")
+    Scanner.active = false
+    Scanner.awaiting = false
+    Scanner.currentQuery = nil
+    Scanner.timeoutTimer = cancelTimer(Scanner.timeoutTimer)
+    ns.UI_Refresh()
+    return
+  end
+
   local delaySeconds = autoScanDelay()
   ns.DB_Log("SCAN", ("Cycle %d termine (%d joueurs). Prochain cycle dans %d min"):format(
     Scanner.autoScanCycles, Scanner.resultCount, math.floor(delaySeconds / 60)
@@ -666,6 +689,16 @@ function ns.Scanner_ScanStep(clearCurrentList)
       return false, "no query generated"
     end
 
+    -- Tier gate: truncate queries to scan_query_cap
+    if ns.Tier then
+      local cap = ns.Tier:GetLimit("scan_query_cap")
+      if cap < #queries then
+        local truncated = {}
+        for i = 1, cap do truncated[i] = queries[i] end
+        queries = truncated
+      end
+    end
+
     Scanner.results = {}
     Scanner.resultCount = 0
     Scanner._dirty = true
@@ -683,6 +716,14 @@ function ns.Scanner_ScanStep(clearCurrentList)
     Scanner.timeoutTimer = cancelTimer(Scanner.timeoutTimer)
 
     ns.DB_Log("SCAN", ("D\195\169marrage scan: %d requ\195\170tes WHO"):format(#queries))
+
+    -- Show upgrade hint if queries were truncated
+    if ns.Tier then
+      local cap = ns.Tier:GetLimit("scan_query_cap")
+      if cap < 99999 and #queries >= cap then
+        ns.Tier:ShowUpgrade("scan_query_cap")
+      end
+    end
     if ns.sessionStats then ns.sessionStats.scansStarted = ns.sessionStats.scansStarted + 1 end
 
     -- Discord notification
@@ -740,6 +781,14 @@ function ns.Scanner_Clear()
 end
 
 function ns.Scanner_AutoScanToggle(enabled)
+  -- Tier gate: auto-scan requires Recruteur tier
+  if enabled and ns.Tier and not ns.Tier:CanUse("auto_scan") then
+    ns.Tier:ShowUpgrade("auto_scan")
+    ns.db.profile.scanAutoEnabled = false
+    ns.UI_Refresh()
+    return
+  end
+
   ns.db.profile.scanAutoEnabled = enabled and true or false
 
   if enabled then

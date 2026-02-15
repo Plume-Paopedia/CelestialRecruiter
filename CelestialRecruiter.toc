@@ -17,6 +17,7 @@ Libs\AceDB-3.0\AceDB-3.0.xml
 
 Core\Util.lua
 Core\DB.lua
+Core\Tier.lua
 
 Modules\AntiSpam.lua
 Modules\Templates.lua

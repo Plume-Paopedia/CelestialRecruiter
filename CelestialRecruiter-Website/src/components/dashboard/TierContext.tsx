@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { TIER_LEVELS } from '@/lib/constants';
 
-type TierName = 'free' | 'recruteur' | 'pro';
+type TierName = 'free' | 'recruteur' | 'pro' | 'lifetime';
 
 interface TierContextType {
   currentTier: TierName;
