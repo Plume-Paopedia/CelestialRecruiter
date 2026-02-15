@@ -307,6 +307,9 @@ function W.MakeScroll(parent)
     track:SetScript("OnEnter", function() if not thumb._dragging then thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.50) end end)
     track:SetScript("OnLeave", function() if not thumb._dragging then thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.25) end end)
 
+    -- Forward-declare updThumb so drag scripts can reference it
+    local updThumb
+
     -- Click on track to jump scroll position
     track:SetScript("OnMouseDown", function(self, button)
         if button ~= "LeftButton" then return end
@@ -359,7 +362,7 @@ function W.MakeScroll(parent)
         if not self._dragging then self:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.25) end
     end)
 
-    local function updThumb()
+    updThumb = function()
         local mx = max(0, ch:GetHeight() - sf:GetHeight())
         if mx <= 0 then thumb:Hide(); return end
         thumb:Show()
