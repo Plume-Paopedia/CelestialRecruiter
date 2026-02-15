@@ -34,16 +34,25 @@ export function QueuePanel() {
       return s === 'new' || s === 'contacted' || s === 'invited';
     });
 
+    const THREE_DAYS = 3 * 86400;
+    const now = Math.floor(Date.now() / 1000);
+
     return queueKeys
       .filter(key => contacts[key])
       .slice(0, 50)
       .map(key => {
         const c = contacts[key];
+        // For "new" contacts: show "expired" if older than 3 days, else "pending"
+        let status: string = c.status;
+        if (c.status === 'new' || c.status === 'contacted') {
+          const age = c.firstSeen ? now - c.firstSeen : 0;
+          status = age >= THREE_DAYS ? 'expired' : 'pending';
+        }
         return {
           name: c.name,
-          className: c.classLabel || c.classFile || 'Unknown',
-          level: c.level || 0,
-          status: (c.status === 'new' ? 'pending' : c.status) as 'pending' | 'invited' | 'accepted' | 'declined',
+          className: c.classLabel || c.classFile || (c.status === 'joined' ? '—' : 'Unknown'),
+          level: c.level || (c.status === 'joined' ? '—' : 0),
+          status: status as 'pending' | 'expired' | 'invited' | 'joined',
           addedAt: formatTimestamp(c.firstSeen),
         };
       });

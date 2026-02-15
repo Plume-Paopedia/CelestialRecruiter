@@ -308,14 +308,18 @@ function CR:OnEnable()
     local totalMembers = GetNumGuildMembers()
     if totalMembers == 0 then return end
 
-    -- Build a set of current guild member names (strict full Name-Realm keys)
+    -- Build a set of current guild member names with class/level info
     local guildMembers = {}
     for i = 1, totalMembers do
-      local name = GetGuildRosterInfo(i)
+      local name, _, _, level, classDisplayName, _, _, _, _, _, classFileName = GetGuildRosterInfo(i)
       if name then
         local memberKey = ns.Util_Key(name)
         if memberKey then
-          guildMembers[memberKey] = true
+          guildMembers[memberKey] = {
+            level = level,
+            classFile = classFileName,
+            classLabel = classDisplayName,
+          }
         end
       end
     end
@@ -331,7 +335,33 @@ function CR:OnEnable()
       end
     end
     for _, key in ipairs(pendingJoins) do
+      -- Enrich class/level from roster before marking as joined
+      local ri = guildMembers[key]
+      if ri then
+        local c = ns.DB_GetContact(key)
+        if c and (not c.classFile or c.classFile == "" or c.level == 0) then
+          ns.DB_UpsertContact(key, {
+            level = ri.level or c.level,
+            classFile = ri.classFile or c.classFile,
+            classLabel = ri.classLabel or c.classLabel,
+          })
+        end
+      end
       onRecruitJoined(key)
+    end
+
+    -- Fix existing joined contacts with missing class/level from roster
+    for key, c in pairs(ns.db.global.contacts) do
+      if c and c.status == "joined" and guildMembers[key] then
+        local ri = guildMembers[key]
+        if ri and (not c.classFile or c.classFile == "" or c.level == 0) then
+          ns.DB_UpsertContact(key, {
+            level = ri.level or c.level,
+            classFile = ri.classFile or c.classFile,
+            classLabel = ri.classLabel or c.classLabel,
+          })
+        end
+      end
     end
 
     -- Re-verify "joined" contacts: remove false positives not actually in guild

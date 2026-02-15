@@ -473,7 +473,9 @@
     letter-spacing: 0.02em;
 
     &.pending { background: rgba($status-warning, 0.12); color: $status-warning; }
+    &.expired { background: rgba($text-muted, 0.15); color: $text-muted; }
     &.invited { background: rgba($status-info, 0.12); color: $status-info; }
+    &.joined { color: $text-muted; }
     &.accepted { background: rgba($status-success, 0.12); color: $status-success; }
     &.declined { background: rgba($status-error, 0.12); color: $status-error; }
     &.active { background: rgba($status-success, 0.12); color: $status-success; }
