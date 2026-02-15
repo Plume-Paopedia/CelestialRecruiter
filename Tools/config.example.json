@@ -1,13 +1,18 @@
 {
-  "savedvariables_path": "C:\\Program Files (x86)\\World of Warcraft\\_retail_\\WTF\\Account\\YOUR_ACCOUNT_NAME\\SavedVariables\\CelestialRecruiterDB.lua",
+  "savedvariables_path": "C:\\Program Files (x86)\\World of Warcraft\\_retail_\\WTF\\Account\\YOUR_ACCOUNT_NAME\\SavedVariables\\CelestialRecruiter.lua",
   "webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN",
   "check_interval": 5,
   "rate_limit_delay": 2,
   "region": "eu",
 
-  "discord_bot_token": "YOUR_DISCORD_BOT_TOKEN",
   "patreon_webhook_secret": "YOUR_PATREON_WEBHOOK_SECRET",
   "admin_token": "YOUR_ADMIN_SECRET_FOR_MANUAL_ENDPOINTS",
   "license_bot_port": 5000,
-  "license_bot_host": "0.0.0.0"
+  "license_bot_host": "0.0.0.0",
+
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_user": "celestialrecruiter@gmail.com",
+  "smtp_password": "YOUR_GMAIL_APP_PASSWORD",
+  "smtp_from_name": "CelestialRecruiter"
 }
