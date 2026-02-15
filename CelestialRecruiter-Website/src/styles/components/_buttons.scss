@@ -1,0 +1,181 @@
+@use '../variables' as *;
+@use '../animations';
+
+// ============================================
+// Shared Button Base
+// ============================================
+%btn-base {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+// ============================================
+// Legendary Button (Primary CTA)
+// Dark gold gradient, stone-like bevel
+// ============================================
+.btn-legendary {
+  @extend %btn-base;
+  background: linear-gradient(180deg, $gold-primary 0%, $gold-dark 100%);
+  border: 1px solid $gold-primary;
+  color: $bg-deepest;
+
+  box-shadow:
+    inset 0 1px 0 rgba(232, 213, 163, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+
+  // Subtle shimmer overlay
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(255, 255, 255, 0.15),
+      transparent
+    );
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    transition: none;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, $gold-light 0%, $gold-primary 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(232, 213, 163, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 4px 16px rgba(139, 115, 64, 0.3);
+
+    &::before {
+      animation: shimmer 3s infinite;
+    }
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.5),
+      0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// ============================================
+// Epic Button (Secondary CTA)
+// Dark purple-tinted stone
+// ============================================
+.btn-epic {
+  @extend %btn-base;
+  background: linear-gradient(180deg, #2a2235 0%, #1e1828 100%);
+  border: 1px solid rgba($epic-purple, 0.35);
+  color: #b8a0d4;
+
+  box-shadow:
+    inset 0 1px 0 rgba(163, 53, 238, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+
+  &:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, #332a40 0%, #252030 100%);
+    border-color: rgba($epic-purple, 0.5);
+    box-shadow:
+      inset 0 1px 0 rgba(163, 53, 238, 0.12),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(163, 53, 238, 0.12);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// ============================================
+// Rare Button
+// Dark blue-tinted stone
+// ============================================
+.btn-rare {
+  @extend %btn-base;
+  background: linear-gradient(180deg, #1e2535 0%, #161e2a 100%);
+  border: 1px solid rgba($rare-blue, 0.3);
+  color: #7db8e8;
+
+  box-shadow:
+    inset 0 1px 0 rgba(0, 112, 221, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+
+  &:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, #242d3e 0%, #1c2530 100%);
+    border-color: rgba($rare-blue, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(0, 112, 221, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 112, 221, 0.1);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// ============================================
+// Common Button — plain stone
+// ============================================
+.btn-common {
+  @extend %btn-base;
+  background: linear-gradient(180deg, $bg-card 0%, $bg-panel 100%);
+  border: 1px solid $border-subtle;
+  color: $text-primary;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+
+  &:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, $bg-hover 0%, $bg-card 100%);
+    border-color: $border-accent;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// ============================================
+// Button Sizes
+// ============================================
+.btn-mega {
+  padding: 1.25rem 3rem;
+  font-size: 1.2rem;
+
+  .btn-subtitle {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 0.25rem;
+    color: $text-muted;
+    opacity: 0.8;
+  }
+}

@@ -297,6 +297,7 @@ class DiscordWebhookSender:
         self.webhook_url = webhook_url
         self.rate_limiter = rate_limiter
         self.region = region
+        self._rio_cache: Dict[str, Dict[str, Any]] = {}  # name-realm -> raiderio data
 
     # ── helpers ──────────────────────────────────────────────────────
 
@@ -333,7 +334,10 @@ class DiscordWebhookSender:
     # ── Raider.io enrichment ────────────────────────────────────────
 
     def _fetch_raiderio(self, name: str, realm: str) -> Dict[str, Any]:
-        """Fetch ilvl, M+ score, raid prog, spec from Raider.io"""
+        """Fetch ilvl, M+ score, raid prog, spec from Raider.io (cached)"""
+        cache_key = f"{name}-{realm}"
+        if cache_key in self._rio_cache:
+            return self._rio_cache[cache_key]
         try:
             slug = self._realm_to_slug(realm)
             url = (
@@ -343,6 +347,7 @@ class DiscordWebhookSender:
             )
             resp = requests.get(url, timeout=5)
             if resp.status_code != 200:
+                self._rio_cache[cache_key] = {}
                 return {}
             d = resp.json()
             # Extract current raid prog (first key = current tier)
@@ -356,7 +361,7 @@ class DiscordWebhookSender:
             mp_score = 0
             if seasons:
                 mp_score = seasons[0].get("scores", {}).get("all", 0)
-            return {
+            result = {
                 "ilvl": d.get("gear", {}).get("item_level_equipped"),
                 "spec": d.get("active_spec_name", ""),
                 "mp_score": mp_score,
@@ -364,8 +369,11 @@ class DiscordWebhookSender:
                 "profile_url": d.get("profile_url", ""),
                 "thumbnail": d.get("thumbnail_url", ""),
             }
+            self._rio_cache[cache_key] = result
+            return result
         except Exception as e:
             logger.debug(f"Raider.io lookup failed for {name}-{realm}: {e}")
+            self._rio_cache[cache_key] = {}
             return {}
 
     # ── rich embed for player events ────────────────────────────────
@@ -561,6 +569,252 @@ class DiscordWebhookSender:
             logger.error(f"Unexpected error sending webhook: {e}")
             return False
 
+    # ── summary mode ─────────────────────────────────────────────────
+
+    # Event categories for grouping
+    SUMMARY_CATEGORIES = [
+        ("Guilde", {'guild_join', 'guild_leave', 'guild_promote', 'guild_demote'}),
+        ("Recrutement", {'player_whispered', 'player_invited', 'player_joined',
+                         'player_accepted', 'player_declined', 'whisper_received',
+                         'queue_added', 'queue_removed', 'player_blacklisted'}),
+        ("Scanner", {'scanner_started', 'scanner_stopped', 'scanner_complete',
+                     'autorecruiter_started', 'autorecruiter_stopped',
+                     'autorecruiter_complete'}),
+        ("Alertes", {'limit_reached', 'error_alert', 'daily_summary',
+                     'session_summary'}),
+    ]
+
+    def _enrich_player_line(self, event: Dict[str, Any]) -> str:
+        """Build a rich line for a player event with class, ilvl, armory link"""
+        fm = self._fields_to_map(event.get('fields', []))
+        desc = event.get('description', '')
+        icon = event.get('icon', '')
+        event_type = event.get('eventType', '')
+
+        pname, prealm = self._parse_player_realm(desc)
+        if not pname or not prealm:
+            # Fallback: just return basic info
+            short_desc = desc.replace('\n', ' ')
+            if len(short_desc) > 120:
+                short_desc = short_desc[:117] + '...'
+            return f"{icon} {short_desc}"
+
+        # Build identity parts
+        class_name = fm.get('Classe', fm.get('Class', ''))
+        level = fm.get('Niveau', fm.get('Level', ''))
+        _, class_icon = self._class_info(class_name)
+
+        # Raider.io enrichment for join/leave events
+        rio = {}
+        if event_type in self.ENRICH_EVENTS:
+            rio = self._fetch_raiderio(pname, prealm)
+
+        # Player name line
+        slug = self._realm_to_slug(prealm)
+        armory_url = f"https://worldofwarcraft.blizzard.com/fr-fr/character/{self.region}/{slug}/{pname.lower()}"
+
+        # Build identity: Niv. 80 · Mage · ilvl 615
+        identity = []
+        if level:
+            identity.append(f"Niv. {level}")
+        if class_name:
+            spec = rio.get('spec', '')
+            identity.append(f"{class_name}" + (f" ({spec})" if spec else ""))
+        if rio.get('ilvl'):
+            identity.append(f"ilvl {rio['ilvl']}")
+
+        # Build links
+        links = [f"[Armurerie]({armory_url})"]
+        if rio.get('profile_url'):
+            links.append(f"[Raider.io]({rio['profile_url']})")
+        else:
+            rio_url = f"https://raider.io/characters/{self.region}/{slug}/{pname}"
+            links.append(f"[Raider.io]({rio_url})")
+
+        # Compose line
+        line = f"{icon} [**{pname}-{prealm}**]({armory_url})"
+        if identity:
+            line += f"\n> {' · '.join(identity)}"
+
+        # Recruitment info
+        recruit_parts = []
+        if fm.get('Source'):
+            recruit_parts.append(fm['Source'])
+        if fm.get('Temps de conversion'):
+            recruit_parts.append(f"Conv: **{fm['Temps de conversion']}**")
+        # Extract recruiter from description
+        recruiter_match = re.search(r"Recrute par \*\*([^*]+)\*\*", desc)
+        if recruiter_match:
+            recruit_parts.append(f"par **{recruiter_match.group(1)}**")
+
+        if recruit_parts:
+            line += f"\n> {' · '.join(recruit_parts)}"
+
+        # M+ and raid progression
+        prog_parts = []
+        if rio.get('mp_score') and rio['mp_score'] > 0:
+            prog_parts.append(f"M+ {rio['mp_score']:.0f}")
+        if rio.get('raid_prog'):
+            prog_parts.append(rio['raid_prog'])
+        if prog_parts:
+            line += f"\n> {' · '.join(prog_parts)}"
+
+        line += f"\n> {' · '.join(links)}"
+
+        return line
+
+    def _build_summary_embed(self, events: List[Dict[str, Any]]) -> dict:
+        """Build a clean summary embed grouping all events by category
+        with armory links and Raider.io enrichment for player events."""
+
+        # Group events by category
+        categorized: Dict[str, List[Dict[str, Any]]] = {}
+        uncategorized: List[Dict[str, Any]] = []
+
+        for event in events:
+            et = event.get('eventType', 'unknown')
+            placed = False
+            for cat_name, cat_types in self.SUMMARY_CATEGORIES:
+                if et in cat_types:
+                    categorized.setdefault(cat_name, []).append(event)
+                    placed = True
+                    break
+            if not placed:
+                uncategorized.append(event)
+
+        # Build description with sections
+        description_parts = []
+        first_thumbnail = None  # First player thumbnail for embed
+
+        for cat_name, cat_types in self.SUMMARY_CATEGORIES:
+            cat_events = categorized.get(cat_name, [])
+            if not cat_events:
+                continue
+
+            section_lines = [f"__**{cat_name}**__ ({len(cat_events)})"]
+
+            for ev in cat_events:
+                et = ev.get('eventType', '')
+
+                # Player events get rich formatting with armory links
+                if et in self.PLAYER_EVENTS:
+                    line = self._enrich_player_line(ev)
+                    section_lines.append(line)
+
+                    # Capture first player thumbnail (already fetched in _enrich_player_line)
+                    if first_thumbnail is None:
+                        pn, pr = self._parse_player_realm(ev.get('description', ''))
+                        if pn and pr:
+                            key = f"{pn}-{pr}"
+                            if key in self._rio_cache:
+                                if self._rio_cache[key].get('thumbnail'):
+                                    first_thumbnail = self._rio_cache[key]['thumbnail']
+                else:
+                    # System events: simple formatting
+                    icon = ev.get('icon', '')
+                    title = ev.get('title', ev.get('eventType', '?'))
+                    desc = ev.get('description', '')
+                    if len(desc) > 80:
+                        desc = desc[:77] + '...'
+                    fields = ev.get('fields', [])
+                    line = f"{icon} **{title}**"
+                    if desc:
+                        line += f"\n> {desc}"
+                    # Inline field values
+                    if fields:
+                        field_parts = [f"{f.get('name', '')}: **{f.get('value', '')}**"
+                                       for f in fields[:4] if isinstance(f, dict)]
+                        if field_parts:
+                            line += f"\n> {' · '.join(field_parts)}"
+                    section_lines.append(line)
+
+            description_parts.append('\n\n'.join(section_lines))
+
+        if uncategorized:
+            lines = [f"__**Autres**__ ({len(uncategorized)})"]
+            for ev in uncategorized:
+                icon = ev.get('icon', '')
+                title = ev.get('title', ev.get('eventType', '?'))
+                lines.append(f"{icon} {title}")
+            description_parts.append('\n\n'.join(lines))
+
+        description = '\n\n'.join(description_parts)
+
+        # Truncate if too long for Discord (max 4096 chars)
+        if len(description) > 3900:
+            description = description[:3900] + '\n\n*... (tronque)*'
+
+        # Time range
+        timestamps = [e.get('timestamp', 0) for e in events if e.get('timestamp')]
+        ts_min = min(timestamps) if timestamps else time.time()
+        ts_max = max(timestamps) if timestamps else time.time()
+
+        time_min = datetime.fromtimestamp(ts_min)
+        time_max = datetime.fromtimestamp(ts_max)
+
+        # Date display
+        date_str = time_min.strftime('%d/%m/%Y')
+        time_range = f"{time_min.strftime('%H:%M')} — {time_max.strftime('%H:%M')}"
+
+        embed = {
+            "author": {
+                "name": f"Resume CelestialRecruiter",
+                "icon_url": self.BOT_ICON,
+            },
+            "title": f"{len(events)} evenement{'s' if len(events) > 1 else ''} · {date_str}",
+            "description": description,
+            "color": 0xC9AA71,  # CelestialRecruiter gold
+            "timestamp": datetime.fromtimestamp(ts_max, tz=timezone.utc).isoformat(),
+            "footer": {
+                "text": f"CelestialRecruiter · {time_range}",
+                "icon_url": self.BOT_ICON,
+            },
+        }
+
+        # Use first player thumbnail or bot icon
+        if first_thumbnail:
+            embed["thumbnail"] = {"url": first_thumbnail}
+
+        return embed
+
+    def send_summary(self, events: List[Dict[str, Any]]) -> bool:
+        """Send a summary embed grouping multiple events into one message"""
+        self._rio_cache.clear()  # Fresh cache per summary batch
+        try:
+            self.rate_limiter.wait_if_needed()
+
+            embed = self._build_summary_embed(events)
+
+            payload = {
+                "username": "CelestialRecruiter",
+                "avatar_url": self.BOT_ICON,
+                "embeds": [embed],
+            }
+
+            response = requests.post(self.webhook_url, json=payload, timeout=10)
+
+            if response.status_code == 204:
+                logger.info(f"Sent summary with {len(events)} events")
+                return True
+            elif response.status_code == 429:
+                retry_after = response.json().get('retry_after', 5)
+                logger.warning(f"Discord rate limit hit, waiting {retry_after}s")
+                time.sleep(retry_after)
+                return False
+            else:
+                logger.error(f"Discord webhook failed: {response.status_code} - {response.text}")
+                return False
+
+        except requests.exceptions.Timeout:
+            logger.error("Discord webhook timeout (summary)")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Discord webhook error (summary): {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error sending summary webhook: {e}")
+            return False
+
 
 class SavedVariablesWatcher(FileSystemEventHandler):
     """Watches SavedVariables file for changes"""
@@ -597,6 +851,7 @@ class DiscordWebhookBot:
             self.rate_limiter,
             region=self.config.get('region', 'eu')
         )
+        self.summary_mode = self.config.get('summary_mode', True)
         self.last_processed_timestamp = 0
         self.savedvariables_path = Path(self.config['savedvariables_path'])
         self._last_mtime = 0  # Track file modification time to avoid re-parsing unchanged files
@@ -700,29 +955,45 @@ class DiscordWebhookBot:
             # Sort by timestamp to process in order
             pending_events.sort(key=lambda e: e.get('timestamp', 0))
 
-            logger.info(f"Processing {len(pending_events)} pending events")
+            logger.info(f"Processing {len(pending_events)} pending events (summary_mode={self.summary_mode})")
 
-            # Send events
-            for event in pending_events:
+            # Summary mode: group all events into one embed
+            if self.summary_mode and len(pending_events) > 1:
                 try:
-                    success = self.sender.send_event(event)
+                    success = self.sender.send_summary(pending_events)
                 except Exception as e:
-                    logger.error(f"Exception sending event {event.get('eventType', '?')}: {e}")
+                    logger.error(f"Exception sending summary: {e}")
                     success = False
 
                 if success:
-                    # Update last processed timestamp
-                    event_ts = event.get('timestamp', 0)
-                    if event_ts > self.last_processed_timestamp:
-                        self.last_processed_timestamp = event_ts
+                    self.last_processed_timestamp = max(
+                        e.get('timestamp', 0) for e in pending_events
+                    )
                     self.save_state()
-
-                    # Add delay between webhooks
-                    time.sleep(self.config['rate_limit_delay'])
                 else:
-                    # Stop processing on failure (will retry on next check)
-                    logger.warning("Stopping queue processing due to send failure, will retry")
-                    break
+                    logger.warning("Summary send failed, will retry")
+            else:
+                # Individual mode: send events one by one
+                for event in pending_events:
+                    try:
+                        success = self.sender.send_event(event)
+                    except Exception as e:
+                        logger.error(f"Exception sending event {event.get('eventType', '?')}: {e}")
+                        success = False
+
+                    if success:
+                        # Update last processed timestamp
+                        event_ts = event.get('timestamp', 0)
+                        if event_ts > self.last_processed_timestamp:
+                            self.last_processed_timestamp = event_ts
+                        self.save_state()
+
+                        # Add delay between webhooks
+                        time.sleep(self.config['rate_limit_delay'])
+                    else:
+                        # Stop processing on failure (will retry on next check)
+                        logger.warning("Stopping queue processing due to send failure, will retry")
+                        break
         except Exception as e:
             logger.error(f"Unexpected error in process_queue: {e}")
 
@@ -732,6 +1003,7 @@ class DiscordWebhookBot:
         logger.info(f"Watching: {self.savedvariables_path}")
         logger.info(f"Webhook: {self.config['webhook_url'][:50]}...")
         logger.info(f"Check interval: {self.config['check_interval']}s")
+        logger.info(f"Summary mode: {self.summary_mode}")
         logger.info(f"Last processed timestamp: {self.last_processed_timestamp}")
 
         consecutive_errors = 0
@@ -842,7 +1114,8 @@ def create_default_config():
         "savedvariables_path": "C:\\Program Files (x86)\\World of Warcraft\\_retail_\\WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\CelestialRecruiterDB.lua",
         "webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN",
         "check_interval": 5,
-        "rate_limit_delay": 2
+        "rate_limit_delay": 2,
+        "summary_mode": True
     }
 
     config_path = Path('config.json')

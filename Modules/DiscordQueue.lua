@@ -108,6 +108,16 @@ function DQ:Init()
         discord.autoFlush = true
     end
 
+    -- Summary mode: group events into one embed (default: true)
+    if discord.summaryMode == nil then
+        discord.summaryMode = true
+    end
+
+    -- Flush delay in seconds (default: 30s — gives time to batch events)
+    if discord.flushDelay == nil then
+        discord.flushDelay = 30
+    end
+
     -- Initialize global queue
     if not ns.db.global.discordQueue then
         ns.db.global.discordQueue = {}
@@ -163,16 +173,18 @@ function DQ:ScheduleAutoFlush()
 
     -- Don't reload during combat — wait for combat end
     if InCombatLockdown() then
-        ns.Util_Print("|cff00d1ff[Discord]|r Envoi prevu apres le combat...")
+        ns.Util_Print("|cff00d1ff[Discord]|r Envoi prevu apres le combat (delai " .. tostring((ns.db.profile.discordNotify and ns.db.profile.discordNotify.flushDelay) or 30) .. "s)...")
         local frame = CreateFrame("Frame")
         frame:RegisterEvent("PLAYER_REGEN_ENABLED")
         frame:SetScript("OnEvent", function(self)
             self:UnregisterAllEvents()
-            C_Timer.After(1, doFlush)
+            local postCombatDelay = (ns.db.profile.discordNotify and ns.db.profile.discordNotify.flushDelay) or 30
+            C_Timer.After(postCombatDelay, doFlush)
         end)
     else
-        -- 2s delay: batch multiple events before reload
-        C_Timer.After(2, doFlush)
+        -- Configurable delay: batch multiple events before reload
+        local delay = (ns.db.profile.discordNotify and ns.db.profile.discordNotify.flushDelay) or 30
+        C_Timer.After(delay, doFlush)
     end
 end
 

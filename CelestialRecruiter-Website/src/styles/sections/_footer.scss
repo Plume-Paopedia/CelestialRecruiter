@@ -1,0 +1,40 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.site-footer {
+  background: $bg-deepest;
+  border-top: 1px solid $bg-hover;
+  padding: 3rem 1.5rem 2rem;
+  text-align: center;
+
+  .footer-brand {
+    font-family: 'Cinzel', serif;
+    font-size: 1.25rem;
+    @include gold-text;
+    margin-bottom: 1rem;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+
+    a {
+      color: $text-secondary;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: $gold-primary;
+      }
+    }
+  }
+
+  .footer-copy {
+    color: $text-muted;
+    font-size: 0.8rem;
+  }
+}

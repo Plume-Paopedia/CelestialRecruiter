@@ -1,0 +1,121 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// ============================================
+// Features Section
+// Medieval Affine — stone/gold, elegant, sober
+// ============================================
+.features-section {
+  @include section-base;
+  background: $bg-panel;
+}
+
+// ============================================
+// Features Grid
+// ============================================
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: $content-max-width;
+  margin: 0 auto;
+}
+
+// ============================================
+// Feature Card (extends quest-panel via class)
+// ============================================
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  // Tier badge — top-right corner
+  .feature-tier-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid;
+    border-radius: $radius-sm;
+    background: rgba($bg-deepest, 0.6);
+    line-height: 1;
+  }
+
+  // Icon container — circle with tier border
+  .feature-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: $bg-card;
+    border: 1px solid $border-subtle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+
+    &.tier-border-legendary { border-color: rgba($legendary-gold, 0.4); }
+    &.tier-border-epic      { border-color: rgba($epic-purple, 0.35); }
+    &.tier-border-rare      { border-color: rgba($rare-blue, 0.35); }
+  }
+
+  .feature-icon-char {
+    font-size: 1.1rem;
+    color: $gold-primary;
+    line-height: 1;
+  }
+
+  // Title
+  .feature-card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $gold-primary;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+
+  // Description
+  .feature-card-desc {
+    color: $text-secondary;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex: 1;
+  }
+
+  // Stats badge
+  .feature-card-stats {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $gold-primary;
+    padding: 0.3rem 0;
+    margin-bottom: 0.75rem;
+  }
+
+  // Unlock footer
+  .feature-card-unlock {
+    font-size: 0.78rem;
+    color: $text-muted;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba($border-subtle, 0.6);
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.02em;
+  }
+}
+
+// ============================================
+// CSS Custom Properties for tier colors
+// (allows inline style references via var())
+// ============================================
+:root {
+  --tier-legendary: #{$legendary-gold};
+  --tier-epic: #{$epic-purple};
+  --tier-rare: #{$rare-blue};
+}

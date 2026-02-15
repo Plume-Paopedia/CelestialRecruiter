@@ -1,0 +1,86 @@
+// ============================================
+// WoW-Authentic Color Palette
+// Warm, earthy, medieval — NOT neon/tech
+// ============================================
+
+// Rarity Colors (used SPARINGLY — only on tier labels)
+$legendary-gold: #ff8000;
+$epic-purple: #a335ee;
+$rare-blue: #0070dd;
+$uncommon-green: #1eff00;
+$common-white: #d4c5a9;
+$common-grey: #6b5f4d;
+
+// Background System — dark stone and leather tones
+$bg-deepest: #0d0c0a;
+$bg-panel: #1a1814;
+$bg-card: #211d18;
+$bg-hover: #2d2820;
+$bg-parchment: #2a2318;
+$bg-surface: #171411;
+
+// Gold — burnished/antique, NOT bright yellow
+$gold-primary: #C9AA71;
+$gold-dark: #8B7340;
+$gold-light: #E8D5A3;
+$gold-faint: rgba(201, 170, 113, 0.06);
+
+// Borders — warm browns and burnished tones
+$border-subtle: #352c20;
+$border-accent: #6b5635;
+$border-prominent: #8B7340;
+$border-faint: #2a2318;
+
+// Text — warm parchment tones, NOT clinical white
+$text-primary: #d4c5a9;
+$text-secondary: #a89b80;
+$text-muted: #6b5f4d;
+$text-faint: #4a3f32;
+
+// Red accent for urgency
+$red-accent: #8B2500;
+
+// Status colors (for dashboard)
+$status-success: #4ade80;
+$status-warning: #fbbf24;
+$status-error: #f87171;
+$status-info: #60a5fa;
+
+// Shadows
+$shadow-deep: rgba(0, 0, 0, 0.8);
+$shadow-warm: rgba(139, 115, 64, 0.15);
+$shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4), 0 0 1px rgba(139, 115, 64, 0.05);
+$shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 1px rgba(139, 115, 64, 0.1);
+
+// ============================================
+// Breakpoints
+// ============================================
+$bp-sm: 640px;
+$bp-md: 768px;
+$bp-lg: 1024px;
+$bp-xl: 1280px;
+$bp-2xl: 1536px;
+
+// ============================================
+// Spacing
+// ============================================
+$section-padding-y: 7rem;
+$section-padding-x: 1.5rem;
+$content-max-width: 1140px;
+
+// ============================================
+// Z-Index Scale
+// ============================================
+$z-starfield: 0;
+$z-content: 10;
+$z-nav: 50;
+$z-tooltip: 100;
+$z-toast: 200;
+$z-modal: 300;
+
+// ============================================
+// Border radius
+// ============================================
+$radius-sm: 3px;
+$radius-md: 6px;
+$radius-lg: 10px;

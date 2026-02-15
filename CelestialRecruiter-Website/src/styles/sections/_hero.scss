@@ -1,0 +1,107 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.hero-section {
+  @include section-base;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg-deepest;
+
+  .hero-content {
+    position: relative;
+    z-index: $z-content;
+    text-align: center;
+    max-width: 900px;
+    padding: 0 1.5rem;
+  }
+
+  .version-badge {
+    display: inline-block;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $text-muted;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid $border-subtle;
+    border-radius: $radius-sm;
+    background: rgba($bg-card, 0.6);
+    margin-bottom: 1rem;
+  }
+
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 6vw, 3.5rem);
+    font-weight: 900;
+    @include gold-text;
+    filter: drop-shadow(0 2px 8px rgba(200, 170, 110, 0.3));
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+    line-height: 1.1;
+  }
+
+  .hero-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: $gold-primary;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-tagline {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(0.9rem, 2vw, 1.15rem);
+    color: $text-secondary;
+    font-style: italic;
+    margin-bottom: 2.5rem;
+  }
+
+  .feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .feature-pill {
+    @include stone-panel;
+    padding: 0.6rem 1.2rem;
+    border-radius: 2px;
+    font-size: 0.85rem;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: border-color 0.3s ease;
+
+    &:hover {
+      border-color: $border-accent;
+    }
+
+    .pill-icon {
+      font-size: 1.1rem;
+    }
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+
+  .social-proof-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: $text-secondary;
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+}

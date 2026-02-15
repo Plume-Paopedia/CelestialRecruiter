@@ -1,0 +1,111 @@
+@use 'variables' as *;
+
+// ============================================
+// Responsive Breakpoints
+// ============================================
+@mixin sm { @media (min-width: $bp-sm) { @content; } }
+@mixin md { @media (min-width: $bp-md) { @content; } }
+@mixin lg { @media (min-width: $bp-lg) { @content; } }
+@mixin xl { @media (min-width: $bp-xl) { @content; } }
+
+// ============================================
+// Panel Styles — Stone & Parchment
+// ============================================
+
+@mixin stone-panel {
+  background: $bg-panel;
+  border: 1px solid $border-subtle;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    $shadow-card;
+}
+
+@mixin parchment-panel {
+  background: $bg-parchment;
+  border: 1px solid $border-accent;
+  box-shadow:
+    inset 0 1px 0 rgba(200, 170, 110, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+@mixin gold-border {
+  border: 1px solid $border-prominent;
+  box-shadow: 0 0 8px rgba(139, 115, 64, 0.12);
+}
+
+@mixin gold-text {
+  background: linear-gradient(135deg, $gold-primary, $gold-light);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+// ============================================
+// Tier Colors (used sparingly)
+// ============================================
+@mixin tier-color($tier) {
+  @if $tier == 'legendary' { color: $legendary-gold; }
+  @else if $tier == 'epic' { color: $epic-purple; }
+  @else if $tier == 'rare' { color: $rare-blue; }
+  @else if $tier == 'uncommon' { color: $uncommon-green; }
+  @else { color: $text-primary; }
+}
+
+@mixin tier-glow($tier) {
+  @if $tier == 'legendary' { text-shadow: 0 1px 6px rgba(200, 170, 110, 0.3); }
+  @else if $tier == 'epic' { text-shadow: 0 1px 6px rgba(163, 53, 238, 0.2); }
+  @else if $tier == 'rare' { text-shadow: 0 1px 6px rgba(0, 112, 221, 0.2); }
+  @else { text-shadow: none; }
+}
+
+@mixin tier-border($tier) {
+  @if $tier == 'legendary' {
+    border-color: rgba($legendary-gold, 0.3);
+    box-shadow: 0 0 6px rgba(200, 170, 110, 0.08);
+  }
+  @else if $tier == 'epic' {
+    border-color: rgba($epic-purple, 0.25);
+    box-shadow: 0 0 6px rgba(163, 53, 238, 0.08);
+  }
+  @else if $tier == 'rare' {
+    border-color: rgba($rare-blue, 0.25);
+    box-shadow: 0 0 6px rgba(0, 112, 221, 0.08);
+  }
+  @else {
+    border-color: $border-subtle;
+  }
+}
+
+// ============================================
+// Section Layout
+// ============================================
+@mixin section-base {
+  padding: $section-padding-y $section-padding-x;
+  position: relative;
+  overflow: hidden;
+}
+
+// ============================================
+// Glassmorphism
+// ============================================
+@mixin glass-panel {
+  background: rgba(13, 12, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid $border-faint;
+}
+
+// ============================================
+// Card hover
+// ============================================
+@mixin card-hover {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $shadow-card-hover;
+    border-color: $border-accent;
+  }
+}
