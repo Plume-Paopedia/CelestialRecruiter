@@ -126,7 +126,7 @@ local function MakeQueueRow(parent, i)
     row.repBar:SetPoint("BOTTOMLEFT")
 
     -- Score badge (colored number left of name)
-    row.scoreBadge = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.scoreBadge = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.scoreBadge:SetPoint("LEFT", 8, 0)
     row.scoreBadge:SetWidth(32)
     row.scoreBadge:SetJustifyH("CENTER")
@@ -146,7 +146,7 @@ local function MakeQueueRow(parent, i)
     row.name:SetWordWrap(false)
 
     -- Level + class
-    row.classInfo = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.classInfo = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.classInfo:SetPoint("LEFT", 224, 0)
     row.classInfo:SetWidth(100)
     row.classInfo:SetJustifyH("LEFT")
@@ -160,7 +160,7 @@ local function MakeQueueRow(parent, i)
     row.statusDot:SetPoint("LEFT", 328, 0)
 
     -- Info / status / source
-    row.info = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.info = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.info:SetPoint("LEFT", 340, 0)
     row.info:SetWidth(100)
     row.info:SetJustifyH("LEFT")
@@ -168,7 +168,7 @@ local function MakeQueueRow(parent, i)
     row.info:SetWordWrap(false)
 
     -- Last seen (dim text, far right area)
-    row.lastSeen = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.lastSeen = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.lastSeen:SetPoint("LEFT", 442, 0)
     row.lastSeen:SetWidth(80)
     row.lastSeen:SetJustifyH("LEFT")
@@ -306,15 +306,15 @@ function ns.UI_BuildQueue(parent)
         updatePreview(nil)
     end)
     qd.tplDD:SetPoint("LEFT", 0, 0)
-    W.AddTooltip(qd.tplDD, "Modele", "Choisir le modele de message utilise pour recruter.")
+    W.AddTooltip(qd.tplDD, "Mod\195\168le", "Choisir le mod\195\168le de message utilis\195\169 pour recruter.")
 
-    local tplLabel = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local tplLabel = controls:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     tplLabel:SetPoint("RIGHT", qd.tplDD, "LEFT", -6, 0)
-    tplLabel:SetText("Modele:")
+    tplLabel:SetText("Mod\195\168le:")
     tplLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
     -- Sort dropdown (with score option added)
-    local sortLabel = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sortLabel = controls:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     sortLabel:SetPoint("LEFT", qd.tplDD, "RIGHT", 16, 0)
     sortLabel:SetText("Tri:")
     sortLabel:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
@@ -335,7 +335,7 @@ function ns.UI_BuildQueue(parent)
     W.AddTooltip(qd.sortDD, "Tri", "Changer l'ordre d'affichage de la file.")
 
     -- Count label
-    qd.countText = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    qd.countText = controls:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     qd.countText:SetPoint("LEFT", qd.sortDD, "RIGHT", 12, 0)
     qd.countText:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
@@ -369,10 +369,34 @@ function ns.UI_BuildQueue(parent)
     qd.filterBtn:SetPoint("LEFT", qd.recruitAllBtn, "RIGHT", 6, 0)
     W.AddTooltip(qd.filterBtn, "Filtres", "Affiche ou masque le panneau de filtres avances.")
 
-    qd.filterBadge = controls:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    qd.filterBadge = controls:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     qd.filterBadge:SetPoint("LEFT", qd.filterBtn, "RIGHT", 3, 0)
     qd.filterBadge:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
     qd.filterBadge:SetText("")
+
+    -- "Retirer tout" button (clear all from queue)
+    qd.clearAllBtn = W.MakeBtn(controls, "Retirer tout", 100, "d", function()
+        StaticPopupDialogs["CR_CLEAR_QUEUE"] = {
+            text = "Retirer tous les joueurs de la file d'attente ?",
+            button1 = "Oui",
+            button2 = "Non",
+            OnAccept = function()
+                local keys = ns.DB_QueueList()
+                for _, key in ipairs(keys) do
+                    ns.DB_QueueRemove(key)
+                end
+                ns.DB_Log("QUEUE", "File vid\195\169e manuellement")
+                ns.UI_Refresh()
+                ns.Util_Print("File d'attente vid\195\169e.")
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+        }
+        StaticPopup_Show("CR_CLEAR_QUEUE")
+    end)
+    qd.clearAllBtn:SetPoint("LEFT", qd.filterBadge, "RIGHT", 6, 0)
+    W.AddTooltip(qd.clearAllBtn, "Retirer tout", "Vide enti\195\168rement la file d'attente.")
 
     -- Filter bar (animated panel)
     qd.filterBar = W.MakeFilterBar(parent, "queue", function(h, isFilterChange)
@@ -406,7 +430,7 @@ function ns.UI_BuildQueue(parent)
     prevTopLine:SetPoint("TOPRIGHT")
     prevTopLine:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.15)
 
-    qd.previewText = prevBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    qd.previewText = prevBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     qd.previewText:SetPoint("LEFT", 12, 0)
     qd.previewText:SetPoint("RIGHT", -8, 0)
     qd.previewText:SetJustifyH("LEFT")

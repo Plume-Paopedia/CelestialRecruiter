@@ -75,7 +75,7 @@ function CR:OnEnable()
     if now - lastBackup > dayInSeconds then
       ns.ImportExport:CreateAutoBackup()
       ns.db.global.lastAutoBackup = now
-      ns.Util_Print("Sauvegarde automatique effectuee.")
+      ns.Util_Print("Sauvegarde automatique effectu\195\169e.")
     end
   end
 
@@ -219,6 +219,21 @@ function CR:OnEnable()
           ns.DiscordQueue:ScheduleAutoFlush()
         end
       end
+      -- Welcome DM on guild join
+      if key and ns.db.profile.welcomeEnabled and ns.db.profile.welcomeMessage ~= "" then
+        local playerName = joined
+        local welcomeMsg = ns.db.profile.welcomeMessage
+        welcomeMsg = welcomeMsg:gsub("{name}", playerName or "")
+        welcomeMsg = welcomeMsg:gsub("{guild}", ns.db.profile.guildName or "")
+        welcomeMsg = welcomeMsg:gsub("{discord}", ns.db.profile.discord or "")
+        welcomeMsg = welcomeMsg:gsub("{raidDays}", ns.db.profile.raidDays or "")
+        welcomeMsg = welcomeMsg:gsub("{goal}", ns.db.profile.goal or "")
+        local delay = tonumber(ns.db.profile.welcomeDelay) or 5
+        C_Timer.After(delay, function()
+          SendChatMessage(welcomeMsg, "WHISPER", nil, playerName)
+          ns.DB_Log("IN", "Message de bienvenue envoy\195\169 \195\160 " .. playerName)
+        end)
+      end
       onRecruitJoined(key)
       return
     end
@@ -350,7 +365,15 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
     ns.DB_Reset()
     ns.Templates_Init()
     ns.UI_Refresh()
-    ns.Util_Print("Reset effectue.")
+    ns.Util_Print("Reset effectu\195\169.")
+    return
+  end
+
+  if msg == "softreset" then
+    ns.DB_SoftReset()
+    ns.Templates_Init()
+    ns.UI_Refresh()
+    ns.Util_Print("Soft reset effectu\195\169. Contacts, file, blacklist et stats r\195\169initialis\195\169s. R\195\169glages et mod\195\168les conserv\195\169s.")
     return
   end
 
@@ -371,10 +394,31 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
     return
   end
 
+  if msg == "webexport" then
+    if ns.ImportExport and ns.ImportExport.ShowWebExportDialog then
+      ns.ImportExport:ShowWebExportDialog()
+    else
+      ns.Util_Print("|cffff0000Erreur:|r Module ImportExport non charge.")
+    end
+    return
+  end
+
+  if msg == "webimport" then
+    if ns.ImportExport and ns.ImportExport.ShowWebImportDialog then
+      ns.ImportExport:ShowWebImportDialog()
+    else
+      ns.Util_Print("|cffff0000Erreur:|r Module ImportExport non charge.")
+    end
+    return
+  end
+
   if msg == "help" then
-    ns.Util_Print("Commandes: /cr, /cr reset, /cr flush, /cr help")
+    ns.Util_Print("Commandes: /cr, /cr reset, /cr softreset, /cr flush, /cr webexport, /cr webimport, /cr help")
+    ns.Util_Print("/cr softreset : R\195\169initialise contacts/file/stats mais conserve r\195\169glages et mod\195\168les")
     ns.Util_Print("/cr flush : Envoie les notifications Discord en attente (reload)")
-    ns.Util_Print("Scanner: bouton Scan (avec cooldown), import /who, joueurs sans guilde ajoutes en file.")
+    ns.Util_Print("/cr webexport : Exporte les donn\195\169es pour le dashboard web")
+    ns.Util_Print("/cr webimport : Importe les modifications du dashboard web")
+    ns.Util_Print("Scanner: bouton Scan (avec cooldown), import /who, joueurs sans guilde ajout\195\169s en file.")
     return
   end
 

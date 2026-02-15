@@ -26,10 +26,10 @@ UI.active = "Scanner"
 local TABS = {
     {key = "Scanner",   label = "|TInterface\\Icons\\INV_Misc_Spyglass_03:14:14:0:0|t |cff00aaffScanner|r",    badge = ns.UI_ScannerBadge, tip = "Recherche de joueurs via /who."},
     {key = "Queue",     label = "|TInterface\\Icons\\Spell_ChargePositive:14:14:0:0|t |cffFFD700File d'attente|r", badge = ns.UI_QueueBadge, tip = "Joueurs en attente de recrutement."},
-    {key = "Inbox",     label = "|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t |cff33e07aBoite|r",       badge = ns.UI_InboxBadge, tip = "Messages recus et conversations."},
+    {key = "Inbox",     label = "|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t |cff33e07aBo\195\174te|r",       badge = ns.UI_InboxBadge, tip = "Messages re\195\167us et conversations."},
     {key = "Analytics", label = "|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t |cffFF69B4Analytiques|r",  badge = ns.UI_AnalyticsBadge, tip = "Statistiques et objectifs de recrutement."},
-    {key = "Settings",  label = "|TInterface\\Icons\\Trade_Engineering:14:14:0:0|t |cff888888Reglages|r", tip = "Configuration de l'addon."},
-    {key = "Logs",      label = "|TInterface\\Icons\\INV_Misc_Book_09:14:14:0:0|t |cff888888Journaux|r", tip = "Journal des actions effectuees."},
+    {key = "Settings",  label = "|TInterface\\Icons\\Trade_Engineering:14:14:0:0|t |cff888888R\195\169glages|r", tip = "Configuration de l'addon."},
+    {key = "Logs",      label = "|TInterface\\Icons\\INV_Misc_Book_09:14:14:0:0|t |cff888888Journaux|r", tip = "Journal des actions effectu\195\169es."},
     {key = "Help",      label = "|TInterface\\Icons\\INV_Misc_QuestionMark:14:14:0:0|t |cff888888Aide|r", tip = "Guide d'utilisation et commandes."},
 }
 
@@ -271,12 +271,37 @@ local function CreateMainFrame()
             f:Hide()
         end
     end)
-    W.AddTooltip(closeBtn, "Fermer", "Fermer la fenetre CelestialRecruiter.")
+    W.AddTooltip(closeBtn, "Fermer", "Fermer la fen\195\170tre CelestialRecruiter.")
+
+    -- Tutorial "?" button
+    local helpBtn = CreateFrame("Button", nil, titleBar)
+    helpBtn:SetSize(22, 22)
+    helpBtn:SetPoint("RIGHT", closeBtn, "LEFT", -2, 0)
+    helpBtn.bg = helpBtn:CreateTexture(nil, "BACKGROUND")
+    helpBtn.bg:SetTexture(SOLID)
+    helpBtn.bg:SetAllPoints()
+    helpBtn.bg:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+    helpBtn.t = helpBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    helpBtn.t:SetPoint("CENTER")
+    helpBtn.t:SetText("?")
+    helpBtn.t:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+    helpBtn:SetScript("OnEnter", function(s)
+        s.t:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+        s.bg:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.18)
+    end)
+    helpBtn:SetScript("OnLeave", function(s)
+        s.t:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+        s.bg:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+    end)
+    helpBtn:SetScript("OnClick", function()
+        ns.UI_ShowTutorial()
+    end)
+    W.AddTooltip(helpBtn, "Tutoriel", "Ouvre le tutoriel interactif.")
 
     -- Search box
     local search = CreateFrame("EditBox", nil, titleBar, "BackdropTemplate")
     search:SetSize(180, 22)
-    search:SetPoint("RIGHT", closeBtn, "LEFT", -12, 0)
+    search:SetPoint("RIGHT", helpBtn, "LEFT", -12, 0)
     search:SetBackdrop({
         bgFile = SOLID, edgeFile = EDGE,
         edgeSize = 8, insets = {left = 2, right = 2, top = 2, bottom = 2},
@@ -484,7 +509,7 @@ local function CreateTabs(parent)
         btn.t:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
         -- Badge (count number) with pulse animation when > 0
-        btn.badge = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        btn.badge = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         btn.badge:SetPoint("LEFT", btn.t, "RIGHT", 4, 0)
         btn.badge:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
         btn.badge:SetText("")
@@ -683,12 +708,12 @@ local function CreateStatusBar(parent)
     sepR:SetPoint("TOPRIGHT")
     sepR:SetGradient("HORIZONTAL", CreateColor(C.accent[1], C.accent[2], C.accent[3], 0.30), CreateColor(C.border[1], C.border[2], C.border[3], 0.05))
 
-    UI.statsText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    UI.statsText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     UI.statsText:SetPoint("LEFT", 4, -2)
     UI.statsText:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
     -- Session stats (right side of status bar)
-    UI.sessionText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    UI.sessionText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     UI.sessionText:SetPoint("RIGHT", -4, -2)
     UI.sessionText:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
 
@@ -961,6 +986,13 @@ function ns.UI_Toggle()
     else
         UI.mainFrame:Show()
         RefreshCurrent()
+        -- Auto-show tutorial on first open
+        if ns.db and ns.db.profile and not ns.db.profile.tutorialSeen then
+            ns.db.profile.tutorialSeen = true
+            C_Timer.After(0.3, function()
+                ns.UI_ShowTutorial()
+            end)
+        end
     end
 end
 

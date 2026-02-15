@@ -277,7 +277,7 @@ function W.MakeFilterBar(parent, context, onChanged)
     local sourceItems = {
         {value = "_all",    label = "Source"},
         {value = "scanner", label = "Scanner"},
-        {value = "inbox",   label = "Boite"},
+        {value = "inbox",   label = "Bo\195\174te"},
     }
     fb.sourceDD = W.MakeDropdown(content, 80, sourceItems, "_all", function(v)
         Filters.active.source = (v ~= "_all") and v or nil

@@ -89,7 +89,7 @@ function ns.UI_BuildSettings(parent)
     y = y - 6
 
     -- Template: Par defaut
-    sd.tplDefault = W.MakeTextArea(ch, "Modele: Par defaut", 620, 48,
+    sd.tplDefault = W.MakeTextArea(ch, "Mod\195\168le: Par d\195\169faut", 620, 48,
         function() return ns.Templates_GetText("default") end,
         function(v) ns.Templates_SetText("default", v) end)
     sd.tplDefault:SetPoint("TOPLEFT", 4, row(68))
@@ -101,7 +101,7 @@ function ns.UI_BuildSettings(parent)
     sd.tplDefaultReset:SetPoint("LEFT", sd.tplDefault, "RIGHT", 8, -6)
 
     -- Template: Raid
-    sd.tplRaid = W.MakeTextArea(ch, "Modele: Raid", 620, 48,
+    sd.tplRaid = W.MakeTextArea(ch, "Mod\195\168le: Raid", 620, 48,
         function() return ns.Templates_GetText("raid") end,
         function(v) ns.Templates_SetText("raid", v) end)
     sd.tplRaid:SetPoint("TOPLEFT", 4, row(68))
@@ -113,7 +113,7 @@ function ns.UI_BuildSettings(parent)
     sd.tplRaidReset:SetPoint("LEFT", sd.tplRaid, "RIGHT", 8, -6)
 
     -- Template: Court
-    sd.tplShort = W.MakeTextArea(ch, "Modele: Court", 620, 48,
+    sd.tplShort = W.MakeTextArea(ch, "Mod\195\168le: Court", 620, 48,
         function() return ns.Templates_GetText("short") end,
         function(v) ns.Templates_SetText("short", v) end)
     sd.tplShort:SetPoint("TOPLEFT", 4, row(68))
@@ -123,6 +123,37 @@ function ns.UI_BuildSettings(parent)
         sd.tplShort:SetValue(ns.Templates_GetText("short"))
     end)
     sd.tplShortReset:SetPoint("LEFT", sd.tplShort, "RIGHT", 8, -6)
+
+    -- Dynamic custom templates (created from web dashboard or other sources)
+    sd.customTplWidgets = {}
+    local allTemplates = ns.Templates_All()
+    -- Sort by id for stable order
+    local customIds = {}
+    for id, tpl in pairs(allTemplates) do
+        if not tpl.builtin then customIds[#customIds + 1] = id end
+    end
+    table.sort(customIds)
+    for _, id in ipairs(customIds) do
+        local tpl = allTemplates[id]
+        local tplWidget = W.MakeTextArea(ch, "Mod\195\168le: " .. (tpl.name or id), 620, 48,
+            function() return ns.Templates_GetText(id) end,
+            function(v) ns.Templates_SetText(id, v) end)
+        tplWidget:SetPoint("TOPLEFT", 4, row(68))
+
+        local delBtn = W.MakeBtn(ch, "Suppr.", 52, "n", function()
+            if ns.db.profile.customTemplates then
+                ns.db.profile.customTemplates[id] = nil
+            end
+            ns.Templates_Init()
+            ns.Util_Print("|cffC9AA71[Templates]|r Mod\195\168le '" .. id .. "' supprim\195\169.")
+            tplWidget:Hide()
+            if sd.customTplWidgets[id] then
+                sd.customTplWidgets[id].delBtn:Hide()
+            end
+        end)
+        delBtn:SetPoint("LEFT", tplWidget, "RIGHT", 8, -6)
+        sd.customTplWidgets[id] = { widget = tplWidget, delBtn = delBtn }
+    end
 
     ---------------------------------------------------------------------------
     -- Section: Anti-spam
@@ -325,7 +356,7 @@ function ns.UI_BuildSettings(parent)
             ns.db.profile.discordNotify.enabled = v
         end)
     discordEnabled:SetPoint("TOPLEFT", 8, row(26))
-    W.AddTooltip(discordEnabled, "Activer Discord", "Envoie des notifications Discord pour les evenements de recrutement")
+    W.AddTooltip(discordEnabled, "Activer Discord", "Envoie des notifications Discord pour les \195\169v\195\169nements de recrutement")
 
     local autoFlushCheck = W.MakeCheck(ch, "Envoi temps reel (auto-reload)",
         function() return ns.db.profile.discordNotify and ns.db.profile.discordNotify.autoFlush ~= false end,
@@ -334,13 +365,31 @@ function ns.UI_BuildSettings(parent)
             ns.db.profile.discordNotify.autoFlush = v
         end)
     autoFlushCheck:SetPoint("TOPLEFT", 8, row(26))
-    W.AddTooltip(autoFlushCheck, "Envoi temps reel", "Reload automatiquement l'interface apres chaque evenement pour envoyer les notifications Discord instantanement (~7s)")
+    W.AddTooltip(autoFlushCheck, "Envoi temps r\195\169el", "Reload automatiquement l'interface apr\195\168s chaque \195\169v\195\169nement pour envoyer les notifications Discord")
+
+    local summaryCheck = W.MakeCheck(ch, "Mode resume (grouper les evenements)",
+        function() return ns.db.profile.discordNotify and ns.db.profile.discordNotify.summaryMode ~= false end,
+        function(v)
+            if not ns.db.profile.discordNotify then ns.db.profile.discordNotify = {} end
+            ns.db.profile.discordNotify.summaryMode = v
+        end)
+    summaryCheck:SetPoint("TOPLEFT", 8, row(26))
+    W.AddTooltip(summaryCheck, "Mode r\195\169sum\195\169", "Regroupe les \195\169v\195\169nements en un seul message Discord au lieu d'envoyer un message par \195\169v\195\169nement")
+
+    local flushDelayInput = W.MakeNumInput(ch, "Delai d'envoi (secondes)", 120,
+        function() return ns.db.profile.discordNotify and ns.db.profile.discordNotify.flushDelay or 30 end,
+        function(v)
+            if not ns.db.profile.discordNotify then ns.db.profile.discordNotify = {} end
+            ns.db.profile.discordNotify.flushDelay = v
+        end, 30, 5, 120)
+    flushDelayInput:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(flushDelayInput, "D\195\169lai d'envoi", "Temps d'attente avant d'envoyer les notifications (permet de regrouper plusieurs \195\169v\195\169nements)")
 
     -- Event toggles
     y = y - 8
     local eventHeader = ch:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     eventHeader:SetPoint("TOPLEFT", 8, row(20))
-    eventHeader:SetText("Types d'evenements:")
+    eventHeader:SetText("Types d'\195\169v\195\169nements:")
     eventHeader:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
 
     sd.discordEventChecks = {}
@@ -523,7 +572,75 @@ function ns.UI_BuildSettings(parent)
         sd._campRows[i] = r
     end
 
-    sd.totalH = 900
+    ---------------------------------------------------------------------------
+    -- Section: Message de bienvenue
+    ---------------------------------------------------------------------------
+    local hWelcome = W.MakeHeader(ch, "Message de bienvenue")
+    hWelcome:SetPoint("TOPLEFT", 4, row(30))
+    W.MakeSeparator(ch, hWelcome)
+    y = y - 8
+
+    local welcomeHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    welcomeHint:SetPoint("TOPLEFT", 8, row(16))
+    welcomeHint:SetText("Envoie automatiquement un whisper de bienvenue quand un joueur rejoint la guilde.")
+    welcomeHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    y = y - 4
+
+    sd.welcomeCheck = W.MakeCheck(ch, "Envoyer un message de bienvenue automatique",
+        function() return p().welcomeEnabled end,
+        function(v) p().welcomeEnabled = v end)
+    sd.welcomeCheck:SetPoint("TOPLEFT", 8, row(26))
+    W.AddTooltip(sd.welcomeCheck, "Bienvenue auto", "Envoie un whisper de bienvenue aux nouveaux membres de la guilde.")
+
+    sd.welcomeMsg = W.MakeTextArea(ch, "Message de bienvenue", 620, 48,
+        function() return p().welcomeMessage end,
+        function(v) p().welcomeMessage = v end)
+    sd.welcomeMsg:SetPoint("TOPLEFT", 4, row(68))
+
+    sd.welcomeDelay = W.MakeNumInput(ch, "D\195\169lai (secondes)", 120,
+        function() return p().welcomeDelay end,
+        function(v) p().welcomeDelay = v end, 5, 1, 60)
+    sd.welcomeDelay:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(sd.welcomeDelay, "D\195\169lai", "Secondes d'attente apr\195\168s l'arriv\195\169e du joueur avant d'envoyer le message.")
+
+    y = y - 8
+
+    ---------------------------------------------------------------------------
+    -- Section: Maintenance
+    ---------------------------------------------------------------------------
+    local hMaint = W.MakeHeader(ch, "Maintenance")
+    hMaint:SetPoint("TOPLEFT", 4, row(30))
+    W.MakeSeparator(ch, hMaint)
+    y = y - 8
+
+    local maintHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    maintHint:SetPoint("TOPLEFT", 8, row(18))
+    maintHint:SetText("Soft reset : efface contacts, file, blacklist et stats. Conserve r\195\169glages et mod\195\168les.")
+    maintHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    y = y - 4
+
+    sd.softResetBtn = W.MakeBtn(ch, "Soft Reset", 110, "d", function()
+        StaticPopupDialogs["CR_SOFT_RESET"] = {
+            text = "Soft reset : effacer contacts, file d'attente, blacklist et statistiques ?\n\nLes r\195\169glages et mod\195\168les seront conserv\195\169s.",
+            button1 = "Oui, r\195\169initialiser",
+            button2 = "Annuler",
+            OnAccept = function()
+                ns.DB_SoftReset()
+                ns.Templates_Init()
+                ns.UI_Refresh()
+                ns.Util_Print("Soft reset effectu\195\169. R\195\169glages et mod\195\168les conserv\195\169s.")
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+        }
+        StaticPopup_Show("CR_SOFT_RESET")
+    end)
+    sd.softResetBtn:SetPoint("TOPLEFT", 4, row(34))
+    W.AddTooltip(sd.softResetBtn, "Soft Reset", "Efface contacts, file, blacklist et stats.\nConserve r\195\169glages, mod\195\168les et anti-spam.")
+
+    sd._buildEndY = y
+    sd.totalH = math.max(900, math.abs(y) + 40)
     ch:SetHeight(sd.totalH)
 end
 
@@ -669,8 +786,8 @@ function ns.UI_RefreshSettings()
         local jProg = prog.joined or {}
         r._info:SetText(
             "Tpl: " .. (camp.template or "default") ..
-            " | Contactes: " .. (cProg.current or 0) .. "/" .. (cProg.target or 0) ..
-            " | Invites: " .. (iProg.current or 0) .. "/" .. (iProg.target or 0) ..
+            " | Contact\195\169s: " .. (cProg.current or 0) .. "/" .. (cProg.target or 0) ..
+            " | Invit\195\169s: " .. (iProg.current or 0) .. "/" .. (iProg.target or 0) ..
             " | Recrues: " .. (jProg.current or 0) .. "/" .. (jProg.target or 0)
         )
 

@@ -24,7 +24,7 @@ local ACHIEVEMENTS = {
     -- ===== RECRUTEMENT =====
     {
         id = "first_contact",
-        name = "Premiere prise de contact",
+        name = "Premi\195\168re prise de contact",
         description = "Envoyer un message a votre premier contact.",
         icon = "|TInterface\\Icons\\Achievement_Character_Human_Male:16|t",
         category = "recrutement",
@@ -84,8 +84,8 @@ local ACHIEVEMENTS = {
     },
     {
         id = "first_recruit",
-        name = "Premiere recrue",
-        description = "Un joueur contacte rejoint la guilde.",
+        name = "Premi\195\168re recrue",
+        description = "Un joueur contact\195\169 rejoint la guilde.",
         icon = "|TInterface\\Icons\\Achievement_GuildPerk_WorkingOvertime:16|t",
         category = "recrutement",
         condition = function(data)
@@ -127,7 +127,7 @@ local ACHIEVEMENTS = {
     {
         id = "social_butterfly",
         name = "Papillon social",
-        description = "Recevoir des reponses de 10 contacts differents.",
+        description = "Recevoir des r\195\169ponses de 10 contacts diff\195\169rents.",
         icon = "|TInterface\\Icons\\Achievement_GuildPerk_HappyHour:16|t",
         category = "social",
         condition = function(data)
@@ -137,7 +137,7 @@ local ACHIEVEMENTS = {
     {
         id = "conversation_starter",
         name = "Brise-glace",
-        description = "Recevoir des reponses de 25 contacts differents.",
+        description = "Recevoir des r\195\169ponses de 25 contacts diff\195\169rents.",
         icon = "|TInterface\\Icons\\Spell_Holy_PrayerOfHealing:16|t",
         category = "social",
         condition = function(data)

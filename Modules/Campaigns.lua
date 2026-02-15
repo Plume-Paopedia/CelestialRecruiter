@@ -153,7 +153,7 @@ function Camp:Complete(campId)
     camp.stats.completedAt = time()
     camp.updatedAt = time()
 
-    ns.DB_Log("CAMP", ("Campagne terminee: %s - Contactes: %d, Invites: %d, Recrues: %d"):format(
+    ns.DB_Log("CAMP", ("Campagne termin\195\169e: %s - Contact\195\169s: %d, Invit\195\169s: %d, Recrues: %d"):format(
         camp.name, camp.stats.contacted, camp.stats.invited, camp.stats.joined))
 
     if ns.Notifications_Success then

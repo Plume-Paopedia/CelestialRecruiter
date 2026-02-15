@@ -448,7 +448,7 @@ function ns.UI_RefreshScanner()
                 sd.classInfo:SetText(format("En cours :  |c%s%s|r   Niv %s", hex, cn, lr))
             end
         elseif awaiting then
-            sd.classInfo:SetText("Attente de reponse /who...")
+            sd.classInfo:SetText("Attente de r\195\169ponse /who...")
         elseif autoOn and autoReady then
             sd.classInfo:SetText("|cff33e07aPret!|r  Cliquez ou appuyez une touche")
         else

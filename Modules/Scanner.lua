@@ -346,7 +346,7 @@ local function processWhoResults(completedQuery)
   end
 
   if addedPlayers > 0 or addedQueue > 0 then
-    ns.DB_Log("SCAN", ("Trouves: +%d | Ajoutes en file: +%d | Total liste: %d"):format(
+    ns.DB_Log("SCAN", ("Trouv\195\169s: +%d | Ajout\195\169s en file: +%d | Total liste: %d"):format(
       addedPlayers, addedQueue, Scanner.resultCount
     ))
     if ns.sessionStats then
@@ -682,7 +682,7 @@ function ns.Scanner_ScanStep(clearCurrentList)
     Scanner.lastWhoSent = 0
     Scanner.timeoutTimer = cancelTimer(Scanner.timeoutTimer)
 
-    ns.DB_Log("SCAN", ("Demarrage scan: %d requetes WHO"):format(#queries))
+    ns.DB_Log("SCAN", ("D\195\169marrage scan: %d requ\195\170tes WHO"):format(#queries))
     if ns.sessionStats then ns.sessionStats.scansStarted = ns.sessionStats.scansStarted + 1 end
 
     -- Discord notification

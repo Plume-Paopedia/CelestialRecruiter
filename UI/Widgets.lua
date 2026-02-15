@@ -10,7 +10,7 @@ ns.UIWidgets = W
 
 local SOLID = "Interface\\Buttons\\WHITE8x8"
 local EDGE  = "Interface\\Tooltips\\UI-Tooltip-Border"
-local ROW_H = 28
+local ROW_H = 32
 local max, min = math.max, math.min
 local pairs, ipairs, tostring = pairs, ipairs, tostring
 local unpack = unpack
@@ -155,7 +155,7 @@ end
 ---------------------------------------------------------------------------
 function W.MakeBtn(parent, text, w, style, onClick)
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    b:SetSize(w, 24)
+    b:SetSize(w, 28)
     local norms = {
         p = {0.06, 0.30, 0.55, 0.90},
         d = {0.50, 0.10, 0.10, 0.85},
@@ -192,7 +192,7 @@ function W.MakeBtn(parent, text, w, style, onClick)
     glow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
     glow:Hide()
 
-    b.t = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    b.t = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     b.t:SetPoint("CENTER")
     b.t:SetText(text)
     b.t:SetTextColor(unpack(C.text))
@@ -304,8 +304,60 @@ function W.MakeScroll(parent)
 
     -- Scrollbar hover: brighten thumb
     track:EnableMouse(true)
-    track:SetScript("OnEnter", function() thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.50) end)
-    track:SetScript("OnLeave", function() thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.25) end)
+    track:SetScript("OnEnter", function() if not thumb._dragging then thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.50) end end)
+    track:SetScript("OnLeave", function() if not thumb._dragging then thumb:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.25) end end)
+
+    -- Click on track to jump scroll position
+    track:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        local _, cursorY = GetCursorPosition()
+        cursorY = cursorY / self:GetEffectiveScale()
+        local trackTop = self:GetTop()
+        if not trackTop then return end
+        local clickRatio = (trackTop - cursorY) / track:GetHeight()
+        local contentH = max(0, ch:GetHeight() - sf:GetHeight())
+        if contentH > 0 then
+            sf._targetScroll = max(0, min(contentH, clickRatio * contentH))
+            if not sf:GetScript("OnUpdate") then
+                sf:SetScript("OnUpdate", sf._scrollUpdateFn)
+            end
+        end
+    end)
+
+    -- Draggable thumb
+    thumb:EnableMouse(true)
+    thumb:RegisterForDrag("LeftButton")
+    thumb._dragging = false
+    thumb:SetScript("OnDragStart", function(self)
+        self._dragging = true
+        self._dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
+        self._dragStartScroll = sf:GetVerticalScroll()
+        self:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.70)
+    end)
+    thumb:SetScript("OnDragStop", function(self)
+        self._dragging = false
+        self:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.25)
+    end)
+    thumb:SetScript("OnUpdate", function(self)
+        if not self._dragging then return end
+        local cursorY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
+        local deltaY = self._dragStartY - cursorY
+        local trackH = track:GetHeight() - self:GetHeight()
+        local contentH = max(0, ch:GetHeight() - sf:GetHeight())
+        if trackH > 0 and contentH > 0 then
+            local scrollDelta = (deltaY / trackH) * contentH
+            local newScroll = max(0, min(contentH, self._dragStartScroll + scrollDelta))
+            sf:SetVerticalScroll(newScroll)
+            sf._targetScroll = newScroll
+            updThumb()
+        end
+    end)
+    thumb:SetScript("OnEnter", function(self)
+        if not self._dragging then self:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.50) end
+    end)
+    thumb:SetScript("OnLeave", function(self)
+        if not self._dragging then self:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], 0.25) end
+    end)
 
     local function updThumb()
         local mx = max(0, ch:GetHeight() - sf:GetHeight())
@@ -410,13 +462,13 @@ function W.MakeDropdown(parent, w, items, cur, onChange)
     dd:SetBackdropColor(0.07, 0.08, 0.14, 0.9)
     dd:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.5)
 
-    dd.t = dd:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    dd.t = dd:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     dd.t:SetPoint("LEFT", 6, 0)
     dd.t:SetPoint("RIGHT", -16, 0)
     dd.t:SetJustifyH("LEFT")
     dd.t:SetTextColor(unpack(C.text))
 
-    local ar = dd:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local ar = dd:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     ar:SetPoint("RIGHT", -4, 0)
     ar:SetText("v")
     ar:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
@@ -444,7 +496,7 @@ function W.MakeDropdown(parent, w, items, cur, onChange)
         b.bg:SetAllPoints()
         b.bg:SetTexture(SOLID)
         b.bg:SetVertexColor(0, 0, 0, 0)
-        b.tx = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        b.tx = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         b.tx:SetPoint("LEFT", 4, 0)
         b.tx:SetText(it.label)
         b.tx:SetTextColor(unpack(C.text))
@@ -488,22 +540,22 @@ end
 ---------------------------------------------------------------------------
 function W.MakeInput(parent, label, w, get, set)
     local f = CreateFrame("Frame", nil, parent)
-    f:SetSize(w, 40)
-    local l = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f:SetSize(w, 44)
+    local l = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     l:SetPoint("TOPLEFT", 0, 0)
     l:SetText(label)
     l:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
     local eb = CreateFrame("EditBox", nil, f, "BackdropTemplate")
-    eb:SetPoint("TOPLEFT", 0, -14)
-    eb:SetSize(w, 22)
+    eb:SetPoint("TOPLEFT", 0, -16)
+    eb:SetSize(w, 24)
     eb:SetBackdrop({
         bgFile = SOLID, edgeFile = EDGE,
         edgeSize = 8, insets = {left = 2, right = 2, top = 2, bottom = 2},
     })
     eb:SetBackdropColor(0.05, 0.06, 0.11, 0.85)
     eb:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.4)
-    eb:SetFontObject(GameFontHighlightSmall)
+    eb:SetFontObject(GameFontHighlight)
     eb:SetTextInsets(6, 6, 0, 0)
     eb:SetAutoFocus(false)
     eb:SetText(get() or "")
@@ -559,7 +611,7 @@ function W.MakeCheck(parent, label, get, set)
     ck:SetVertexColor(C.accent[1], C.accent[2], C.accent[3])
     f:SetCheckedTexture(ck)
 
-    f.label = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.label = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.label:SetPoint("LEFT", f, "RIGHT", 6, 0)
     f.label:SetText(label)
     f.label:SetTextColor(C.text[1], C.text[2], C.text[3])
@@ -597,7 +649,7 @@ end
 -- Widget: Section Header (gold text with separator line)
 ---------------------------------------------------------------------------
 function W.MakeHeader(parent, text)
-    local h = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local h = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     h:SetText(text)
     h:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
     return h
@@ -618,8 +670,8 @@ end
 ---------------------------------------------------------------------------
 function W.MakeTextArea(parent, label, w, h, get, set)
     local f = CreateFrame("Frame", nil, parent)
-    f:SetSize(w, h + 16)
-    local l = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f:SetSize(w, h + 18)
+    local l = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     l:SetPoint("TOPLEFT", 0, 0)
     l:SetText(label)
     l:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
@@ -636,7 +688,7 @@ function W.MakeTextArea(parent, label, w, h, get, set)
 
     local eb = CreateFrame("EditBox", nil, box)
     eb:SetWidth(w - 16)
-    eb:SetFontObject(GameFontHighlightSmall)
+    eb:SetFontObject(GameFontHighlight)
     eb:SetMultiLine(true)
     eb:SetAutoFocus(false)
     eb:SetTextInsets(6, 6, 4, 4)
@@ -673,11 +725,11 @@ function W.MakeInfoBlock(parent, text)
     local f = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     f:SetBackdrop({bgFile = SOLID})
     f:SetBackdropColor(0.06, 0.07, 0.13, 0.6)
-    f.t = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.t = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.t:SetPoint("TOPLEFT", 10, -8)
     f.t:SetPoint("RIGHT", f, "RIGHT", -10, 0)
     f.t:SetJustifyH("LEFT")
-    f.t:SetSpacing(3)
+    f.t:SetSpacing(4)
     f.t:SetText(text)
     f.t:SetTextColor(C.text[1], C.text[2], C.text[3])
     function f:UpdateHeight()
@@ -706,7 +758,7 @@ function W.AddRowGlow(row)
     glow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
     glow:Hide()
     row._rowGlow = glow
-    row:HookScript("OnEnter", function() glow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.06); glow:Show() end)
+    row:HookScript("OnEnter", function() glow:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.10); glow:Show() end)
     row:HookScript("OnLeave", function() glow:Hide() end)
 end
 
@@ -769,23 +821,23 @@ function W.ShowPlayerTooltip(anchor, key, scanData)
 
         GameTooltip:AddLine(" ")
         if (c.firstSeen or 0) > 0 then
-            GameTooltip:AddDoubleLine("Premiere vue:", ns.Util_FormatAgo(c.firstSeen), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+            GameTooltip:AddDoubleLine("Premi\195\168re vue:", ns.Util_FormatAgo(c.firstSeen), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
         end
         if (c.lastSeen or 0) > 0 then
-            GameTooltip:AddDoubleLine("Derniere vue:", ns.Util_FormatAgo(c.lastSeen), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+            GameTooltip:AddDoubleLine("Derni\195\168re vue:", ns.Util_FormatAgo(c.lastSeen), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
         end
 
         if (c.lastInviteAt or 0) > 0 then
-            GameTooltip:AddDoubleLine("Derniere invitation:", ns.Util_FormatAgo(c.lastInviteAt), C.gold[1], C.gold[2], C.gold[3], C.text[1], C.text[2], C.text[3])
+            GameTooltip:AddDoubleLine("Derni\195\168re invitation:", ns.Util_FormatAgo(c.lastInviteAt), C.gold[1], C.gold[2], C.gold[3], C.text[1], C.text[2], C.text[3])
         else
-            GameTooltip:AddDoubleLine("Derniere invitation:", "jamais", C.gold[1], C.gold[2], C.gold[3], C.muted[1], C.muted[2], C.muted[3])
+            GameTooltip:AddDoubleLine("Derni\195\168re invitation:", "jamais", C.gold[1], C.gold[2], C.gold[3], C.muted[1], C.muted[2], C.muted[3])
         end
 
         if (c.lastWhisperIn or 0) > 0 then
-            GameTooltip:AddDoubleLine("Dernier msg recu:", ns.Util_FormatAgo(c.lastWhisperIn), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+            GameTooltip:AddDoubleLine("Dernier msg re\195\167u:", ns.Util_FormatAgo(c.lastWhisperIn), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
         end
         if (c.lastWhisperOut or 0) > 0 then
-            GameTooltip:AddDoubleLine("Dernier msg envoye:", ns.Util_FormatAgo(c.lastWhisperOut), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
+            GameTooltip:AddDoubleLine("Dernier msg envoy\195\169:", ns.Util_FormatAgo(c.lastWhisperOut), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
         end
 
         if c.notes and c.notes ~= "" then
@@ -794,7 +846,7 @@ function W.ShowPlayerTooltip(anchor, key, scanData)
         end
     else
         GameTooltip:AddLine(" ")
-        GameTooltip:AddDoubleLine("Derniere invitation:", "jamais", C.gold[1], C.gold[2], C.gold[3], C.muted[1], C.muted[2], C.muted[3])
+        GameTooltip:AddDoubleLine("Derni\195\168re invitation:", "jamais", C.gold[1], C.gold[2], C.gold[3], C.muted[1], C.muted[2], C.muted[3])
     end
 
     GameTooltip:Show()

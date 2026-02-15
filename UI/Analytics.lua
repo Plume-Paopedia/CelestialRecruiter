@@ -10,6 +10,43 @@ local C = W.C
 local ad = {}  -- analytics data references
 
 ---------------------------------------------------------------------------
+-- Animated Number Counter
+---------------------------------------------------------------------------
+local function AnimateNumber(fontString, target, duration, fmt)
+    if not fontString then return end
+    duration = duration or 0.8
+    fmt = fmt or "%d"
+
+    local current = fontString._animCurrent or 0
+    if current == target then return end
+
+    fontString._animStart = current
+    fontString._animTarget = target
+    fontString._animElapsed = 0
+    fontString._animDuration = duration
+    fontString._animFmt = fmt
+
+    if not fontString._animFrame then
+        fontString._animFrame = CreateFrame("Frame")
+        fontString._animFrame._fs = fontString
+        fontString._animFrame:SetScript("OnUpdate", function(self, dt)
+            local fs = self._fs
+            fs._animElapsed = (fs._animElapsed or 0) + dt
+            local t = math.min(1, fs._animElapsed / fs._animDuration)
+            -- Ease-out cubic
+            local ease = 1 - (1 - t) * (1 - t) * (1 - t)
+            local val = fs._animStart + (fs._animTarget - fs._animStart) * ease
+            fs._animCurrent = (t >= 1) and fs._animTarget or val
+            fs:SetText(string.format(fs._animFmt, fs._animCurrent))
+            if t >= 1 then
+                self:Hide()
+            end
+        end)
+    end
+    fontString._animFrame:Show()
+end
+
+---------------------------------------------------------------------------
 -- Build Analytics Tab
 ---------------------------------------------------------------------------
 function ns.UI_BuildAnalytics(panel)
@@ -24,7 +61,7 @@ function ns.UI_BuildAnalytics(panel)
     -- Header
     local header = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     header:SetPoint("TOPLEFT", 16, yOffset)
-    header:SetText("|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t Analytiques et apercu")
+    header:SetText("|TInterface\\Icons\\INV_Misc_StoneTablet_05:14:14:0:0|t Analytiques et aper\195\167u")
     header:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
     yOffset = yOffset - 40
 
@@ -33,19 +70,19 @@ function ns.UI_BuildAnalytics(panel)
     -- ═══════════════════════════════════════════════════
     local summaryLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     summaryLabel:SetPoint("TOPLEFT", 16, yOffset)
-    summaryLabel:SetText("|TInterface\\Icons\\Spell_Holy_BorrowedTime:14:14:0:0|t Resume global")
+    summaryLabel:SetText("|TInterface\\Icons\\Spell_Holy_BorrowedTime:14:14:0:0|t R\195\169sum\195\169 global")
     summaryLabel:SetTextColor(C.text[1], C.text[2], C.text[3])
     yOffset = yOffset - 30
 
     -- Create 4 stat cards
-    local cardW = 200
-    local cardH = 60
-    local cardSpacing = 10
+    local cardW = 210
+    local cardH = 70
+    local cardSpacing = 8
     ad.cards = {}
 
     local cardDefs = {
-        {key = "contacted", label = "Contactes",  icon = "|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t", color = C.accent},
-        {key = "invited",   label = "Invites",    icon = "|TInterface\\Icons\\Spell_ChargePositive:14:14:0:0|t", color = C.green},
+        {key = "contacted", label = "Contact\195\169s",  icon = "|TInterface\\Icons\\INV_Letter_15:14:14:0:0|t", color = C.accent},
+        {key = "invited",   label = "Invit\195\169s",    icon = "|TInterface\\Icons\\Spell_ChargePositive:14:14:0:0|t", color = C.green},
         {key = "joined",    label = "Recrues",    icon = "|TInterface\\Icons\\Achievement_GuildPerk_EverybodysFriend:14:14:0:0|t", color = C.gold},
         {key = "conversion",label = "Conversion", icon = "|TInterface\\Icons\\INV_Misc_EngGizmos_20:14:14:0:0|t", color = {1, 0.41, 0.71}},
     }
@@ -61,28 +98,38 @@ function ns.UI_BuildAnalytics(panel)
         card:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.8)
         card:SetBackdropBorderColor(def.color[1], def.color[2], def.color[3], 0.4)
 
-        -- Accent bar on left
+        -- Hover effect
+        card:EnableMouse(true)
+        card._defColor = def.color
+        card:SetScript("OnEnter", function(self)
+            self:SetBackdropBorderColor(self._defColor[1], self._defColor[2], self._defColor[3], 0.8)
+        end)
+        card:SetScript("OnLeave", function(self)
+            self:SetBackdropBorderColor(self._defColor[1], self._defColor[2], self._defColor[3], 0.4)
+        end)
+
+        -- Accent bar on left (thicker)
         local bar = card:CreateTexture(nil, "OVERLAY")
         bar:SetTexture(W.SOLID)
-        bar:SetWidth(3)
+        bar:SetWidth(4)
         bar:SetPoint("TOPLEFT", 3, -3)
         bar:SetPoint("BOTTOMLEFT", 3, 3)
         bar:SetVertexColor(def.color[1], def.color[2], def.color[3], 0.8)
 
         -- Icon
         local icon = card:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        icon:SetPoint("LEFT", 14, 0)
+        icon:SetPoint("LEFT", 16, 0)
         icon:SetText(def.icon)
 
         -- Value (big number)
         local value = card:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-        value:SetPoint("TOPLEFT", 40, -8)
+        value:SetPoint("TOPLEFT", 44, -10)
         value:SetText("0")
         value:SetTextColor(C.text[1], C.text[2], C.text[3])
 
         -- Label
-        local label = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        label:SetPoint("BOTTOMLEFT", 40, 8)
+        local label = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        label:SetPoint("BOTTOMLEFT", 44, 10)
         label:SetText(def.label)
         label:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
 
@@ -103,8 +150,8 @@ function ns.UI_BuildAnalytics(panel)
     -- Funnel visual (horizontal bars showing pipeline)
     ad.funnelBars = {}
     local funnelDefs = {
-        {key = "contacted", label = "Contactes",  color = C.accent},
-        {key = "invited",   label = "Invites",    color = C.orange},
+        {key = "contacted", label = "Contact\195\169s",  color = C.accent},
+        {key = "invited",   label = "Invit\195\169s",    color = C.orange},
         {key = "joined",    label = "Recrues",    color = C.green},
     }
 
@@ -283,8 +330,8 @@ function ns.UI_BuildAnalytics(panel)
 
     ad.trendCards = {}
     local trendDefs = {
-        {key = "contacted", label = "Contactes"},
-        {key = "invited",   label = "Invites"},
+        {key = "contacted", label = "Contact\195\169s"},
+        {key = "invited",   label = "Invit\195\169s"},
         {key = "joined",    label = "Recrues"},
     }
 
@@ -670,7 +717,7 @@ function ns.UI_BuildAnalytics(panel)
     ghJoined:SetPoint("LEFT", 310, 0); ghJoined:SetWidth(80); ghJoined:SetText("Recrues")
     ghJoined:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
     local ghContacted = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    ghContacted:SetPoint("LEFT", 394, 0); ghContacted:SetWidth(80); ghContacted:SetText("Contactes")
+    ghContacted:SetPoint("LEFT", 394, 0); ghContacted:SetWidth(80); ghContacted:SetText("Contact\195\169s")
     ghContacted:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
     local ghToday = guildHeaderRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     ghToday:SetPoint("LEFT", 478, 0); ghToday:SetWidth(100); ghToday:SetText("Aujourd'hui")
@@ -839,16 +886,16 @@ function ns.UI_RefreshAnalytics()
     local conversionPct = funnelContacted > 0 and (funnelJoined / funnelContacted * 100) or 0
 
     if ad.cards.contacted then
-        ad.cards.contacted.value:SetText(tostring(funnelContacted))
+        AnimateNumber(ad.cards.contacted.value, funnelContacted, 0.8, "%d")
     end
     if ad.cards.invited then
-        ad.cards.invited.value:SetText(tostring(funnelInvited))
+        AnimateNumber(ad.cards.invited.value, funnelInvited, 0.8, "%d")
     end
     if ad.cards.joined then
-        ad.cards.joined.value:SetText(tostring(funnelJoined))
+        AnimateNumber(ad.cards.joined.value, funnelJoined, 0.8, "%d")
     end
     if ad.cards.conversion then
-        ad.cards.conversion.value:SetText(string.format("%.1f%%", conversionPct))
+        AnimateNumber(ad.cards.conversion.value, conversionPct, 0.8, "%.1f%%")
     end
 
     -- 2. Conversion Funnel — use same real counts
@@ -862,8 +909,8 @@ function ns.UI_RefreshAnalytics()
             joined = funnelJoined,
         }
         local funnelLabels = {
-            contacted = "Contactes",
-            invited = "Invites",
+            contacted = "Contact\195\169s",
+            invited = "Invit\195\169s",
             joined = "Recrues",
         }
         for _, def in ipairs({"contacted", "invited", "joined"}) do
@@ -1234,7 +1281,7 @@ function ns.UI_RefreshAnalytics()
 
                     local cStats = camp.stats or {}
                     local cGoals = camp.goals or {}
-                    row.stats:SetText(("Contactes: %d | Invites: %d | Recrues: %d/%d"):format(
+                    row.stats:SetText(("Contact\195\169s: %d | Invit\195\169s: %d | Recrues: %d/%d"):format(
                         cStats.contacted or 0, cStats.invited or 0, cStats.joined or 0, cGoals.targetJoined or 0
                     ))
 

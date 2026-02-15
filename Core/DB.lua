@@ -37,6 +37,10 @@ local DEFAULTS = {
     customTemplates = {},
     showMinimapButton = true,
     minimapAngle = 220,
+    tutorialSeen = false,
+    welcomeEnabled = false,
+    welcomeMessage = "Bienvenue dans {guild}, {name} ! N'h\195\169site pas \195\160 rejoindre notre Discord : {discord}",
+    welcomeDelay = 5,
   },
   char = {
     leaderboard = {
@@ -185,6 +189,29 @@ function ns.DB_Reset()
     local g = GetGuildInfo("player")
     if g then ns.db.profile.guildName = g end
   end
+end
+
+function ns.DB_SoftReset()
+  -- Clear contacts, queue, blacklist, logs — but keep profile settings & templates
+  ns.db.global.contacts = {}
+  ns.db.global.queue = {}
+  ns.db.global.blacklist = {}
+  ns.db.global.logs = {}
+  -- Reset leaderboard stats
+  if ns.db.char and ns.db.char.leaderboard then
+    ns.db.char.leaderboard.daily = {}
+    ns.db.char.leaderboard.totalAllTime = { contacted = 0, invited = 0, joined = 0, whispers = 0 }
+  end
+  -- Reset session stats
+  if ns.sessionStats then
+    ns.sessionStats.scansStarted = 0
+    ns.sessionStats.playersFound = 0
+    ns.sessionStats.queueAdded = 0
+    ns.sessionStats.invitesSent = 0
+    ns.sessionStats.whispersSent = 0
+    ns.sessionStats.recruitsJoined = 0
+  end
+  rebuildQueueSet()
 end
 
 function ns.DB_GetContact(key)

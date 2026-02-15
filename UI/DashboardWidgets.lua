@@ -160,7 +160,7 @@ registerWidget("conversion_funnel", "Entonnoir de conversion", "|TInterface\\Ico
     function(card)
         local c = card._content
         local colors = {C.accent, C.orange, C.green, C.gold}
-        local labels = {"Contactes", "Invites", "Recrues"}
+        local labels = {"Contact\195\169s", "Invit\195\169s", "Recrues"}
 
         card._funnelBars = {}
         for i = 1, 3 do
@@ -569,7 +569,7 @@ registerWidget("weekly_trends", "Tendances semaine", "|TInterface\\Icons\\INV_Mi
     function(card)
         local c = card._content
         card._trendItems = {}
-        local labels = {"Contactes", "Invites", "Recrues"}
+        local labels = {"Contact\195\169s", "Invit\195\169s", "Recrues"}
         local colors = {C.accent, C.orange, C.gold}
 
         for i = 1, 3 do

@@ -791,55 +791,132 @@ function ns.UI_BuildHelp(parent)
 
     hd.sf = sf
     hd.ch = ch
-    hd.blocks = {}
+    hd.sections = {}
+    -- First two sections expanded by default
+    hd.expanded = {}
+    for i = 1, #SECTIONS do
+        hd.expanded[i] = (i <= 2)
+    end
 end
 
 ---------------------------------------------------------------------------
--- Refresh (rebuild blocks on first show, then just update height)
+-- Refresh (rebuild blocks on first show, then relayout)
 ---------------------------------------------------------------------------
 function ns.UI_RefreshHelp()
     if not hd.ch then return end
 
-    -- Build blocks lazily on first refresh (so parent has width)
-    if #hd.blocks == 0 and hd.ch:GetWidth() > 10 then
-        local y = 0
-        for _, sec in ipairs(SECTIONS) do
-            -- Section header
-            local h = W.MakeHeader(hd.ch, sec.title)
-            h:SetPoint("TOPLEFT", 4, -y)
-            W.MakeSeparator(hd.ch, h)
-            y = y + 24
+    -- Build section widgets lazily on first refresh (so parent has width)
+    if #hd.sections == 0 and hd.ch:GetWidth() > 10 then
+        -- "Tout ouvrir / Tout fermer" toggle button
+        hd.toggleAllBtn = W.MakeBtn(hd.ch, "Tout ouvrir", 100, "n", function()
+            -- Check if all are expanded
+            local allOpen = true
+            for i = 1, #SECTIONS do
+                if not hd.expanded[i] then allOpen = false; break end
+            end
+            for i = 1, #SECTIONS do
+                hd.expanded[i] = not allOpen
+            end
+            ns.UI_RefreshHelp()
+        end)
+        hd.toggleAllBtn:SetPoint("TOPLEFT", 4, 0)
+
+        for i, sec in ipairs(SECTIONS) do
+            local s = {}
+
+            -- Clickable header frame
+            s.headerBtn = CreateFrame("Button", nil, hd.ch)
+            s.headerBtn:SetHeight(26)
+            s.headerBtn:SetPoint("LEFT", 0, 0)
+            s.headerBtn:SetPoint("RIGHT", 0, 0)
+            s.headerBtn:EnableMouse(true)
+
+            -- Header background (subtle hover)
+            s.headerBg = s.headerBtn:CreateTexture(nil, "BACKGROUND")
+            s.headerBg:SetTexture(W.SOLID)
+            s.headerBg:SetAllPoints()
+            s.headerBg:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+
+            s.headerBtn:SetScript("OnEnter", function()
+                s.headerBg:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0.08)
+            end)
+            s.headerBtn:SetScript("OnLeave", function()
+                s.headerBg:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 0)
+            end)
+
+            -- Arrow indicator
+            s.arrow = s.headerBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            s.arrow:SetPoint("LEFT", 6, 0)
+            s.arrow:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+            -- Title text
+            s.title = s.headerBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            s.title:SetPoint("LEFT", s.arrow, "RIGHT", 6, 0)
+            s.title:SetText(sec.title)
+            s.title:SetTextColor(C.gold[1], C.gold[2], C.gold[3])
+
+            -- Separator
+            s.sep = hd.ch:CreateTexture(nil, "OVERLAY")
+            s.sep:SetTexture(W.SOLID)
+            s.sep:SetHeight(1)
+            s.sep:SetPoint("TOPLEFT", s.headerBtn, "BOTTOMLEFT", 0, -2)
+            s.sep:SetPoint("RIGHT", hd.ch, "RIGHT", -4, 0)
+            s.sep:SetVertexColor(C.gold[1], C.gold[2], C.gold[3], 0.3)
 
             -- Content block
-            local block = W.MakeInfoBlock(hd.ch, sec.text)
-            block:SetPoint("TOPLEFT", hd.ch, "TOPLEFT", 4, -y)
-            block:SetPoint("RIGHT", hd.ch, "RIGHT", -4, 0)
-            block:UpdateHeight()
-            y = y + block:GetHeight() + 14
+            s.block = W.MakeInfoBlock(hd.ch, sec.text)
 
-            hd.blocks[#hd.blocks + 1] = block
+            -- Toggle on click
+            local idx = i
+            s.headerBtn:SetScript("OnClick", function()
+                hd.expanded[idx] = not hd.expanded[idx]
+                ns.UI_RefreshHelp()
+            end)
+
+            hd.sections[i] = s
         end
-        hd.totalH = y + 10
     end
 
-    -- Recalculate block heights on width changes
-    if #hd.blocks > 0 then
-        local y = 0
-        local idx = 1
-        for _, sec in ipairs(SECTIONS) do
-            y = y + 24
-            local block = hd.blocks[idx]
-            if block then
-                block:ClearAllPoints()
-                block:SetPoint("TOPLEFT", hd.ch, "TOPLEFT", 4, -y)
-                block:SetPoint("RIGHT", hd.ch, "RIGHT", -4, 0)
-                block:UpdateHeight()
-                y = y + block:GetHeight() + 14
-                idx = idx + 1
-            end
+    if #hd.sections == 0 then return end
+
+    -- Update toggle button label
+    if hd.toggleAllBtn then
+        local allOpen = true
+        for i = 1, #SECTIONS do
+            if not hd.expanded[i] then allOpen = false; break end
         end
-        hd.totalH = y + 10
+        hd.toggleAllBtn:SetLabel(allOpen and "Tout fermer" or "Tout ouvrir")
     end
 
-    hd.ch:SetHeight(hd.totalH or 800)
+    -- Relayout all sections based on expanded state
+    local y = 32  -- space for toggle button
+    for i, sec in ipairs(SECTIONS) do
+        local s = hd.sections[i]
+        if not s then break end
+
+        local isOpen = hd.expanded[i]
+
+        -- Arrow
+        s.arrow:SetText(isOpen and "\226\150\188" or "\226\150\182")
+
+        -- Position header
+        s.headerBtn:ClearAllPoints()
+        s.headerBtn:SetPoint("TOPLEFT", 0, -y)
+        s.headerBtn:SetPoint("RIGHT", 0, 0)
+        y = y + 28
+
+        if isOpen then
+            s.block:ClearAllPoints()
+            s.block:SetPoint("TOPLEFT", hd.ch, "TOPLEFT", 4, -y)
+            s.block:SetPoint("RIGHT", hd.ch, "RIGHT", -4, 0)
+            s.block:UpdateHeight()
+            s.block:Show()
+            y = y + s.block:GetHeight() + 10
+        else
+            s.block:Hide()
+        end
+    end
+
+    hd.totalH = y + 10
+    hd.ch:SetHeight(hd.totalH)
 end

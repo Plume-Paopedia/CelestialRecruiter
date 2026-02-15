@@ -188,7 +188,7 @@ local function ShowInboxTooltip(anchor, key)
         GameTooltip:AddDoubleLine("Dernier msg envoye:", agoFr(c.lastWhisperOut), C.dim[1], C.dim[2], C.dim[3], C.text[1], C.text[2], C.text[3])
     end
     if (c.lastInviteAt or 0) > 0 then
-        GameTooltip:AddDoubleLine("Derniere invitation:", agoFr(c.lastInviteAt), C.gold[1], C.gold[2], C.gold[3], C.text[1], C.text[2], C.text[3])
+        GameTooltip:AddDoubleLine("Derni\195\168re invitation:", agoFr(c.lastInviteAt), C.gold[1], C.gold[2], C.gold[3], C.text[1], C.text[2], C.text[3])
     end
 
     -- Notes
