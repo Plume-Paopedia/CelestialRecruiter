@@ -6,6 +6,8 @@ import { usePatch } from '@/components/dashboard/PatchContext';
 
 const TEMPLATE_VARIABLES = [
   { token: '{name}', desc: 'Player name' },
+  { token: '{class}', desc: 'Player class' },
+  { token: '{level}', desc: 'Player level' },
   { token: '{guild}', desc: 'Guild name' },
   { token: '{discord}', desc: 'Discord link' },
   { token: '{raidDays}', desc: 'Raid schedule' },

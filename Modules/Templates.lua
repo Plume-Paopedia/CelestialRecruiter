@@ -94,6 +94,8 @@ function ns.Templates_Render(key, tplId)
 
   local map = {
     ["{name}"] = clean(c.name or key),
+    ["{class}"] = clean(c.classLabel or c.classFile or "aventurier"),
+    ["{level}"] = clean(tostring(c.level or "")),
     ["{guild}"] = clean(p.guildName ~= "" and p.guildName or "notre guilde"),
     ["{discord}"] = clean(p.discord ~= "" and p.discord or "a definir"),
     ["{raidDays}"] = clean(p.raidDays ~= "" and p.raidDays or "a definir"),

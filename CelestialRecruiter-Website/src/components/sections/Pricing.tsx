@@ -24,7 +24,7 @@ export function PricingSection() {
       >
         <span className="section-label">Pricing</span>
         <h2>Choose Your Path</h2>
-        <p>Join 847+ guild officers recruiting smarter</p>
+        <p>Support the project and unlock your full potential</p>
       </motion.div>
 
       {/* Scarcity Banner */}
@@ -47,7 +47,7 @@ export function PricingSection() {
           letterSpacing: '0.03em',
         }}
       >
-        Early Supporter Pricing &mdash; Limited slots available
+        Early Supporter Pricing &mdash; Thank you for supporting development
       </motion.div>
 
       {/* Pricing Grid */}
@@ -252,7 +252,7 @@ export function PricingSection() {
                   marginTop: '0.75rem',
                 }}
               >
-                847 officers upgraded this month
+                Most popular tier for active recruiters
               </div>
             )}
           </motion.div>
@@ -295,8 +295,8 @@ export function PricingSection() {
             lineHeight: 1.6,
           }}
         >
-          Multi-character sync &bull; Web dashboard &bull; Custom features
-          &bull; 1-on-1 coaching
+          Web dashboard &bull; Priority support &bull; Custom feature requests
+          &bull; Direct contact with the developer
         </p>
         <a
           href={LINKS.patreon}

@@ -24,9 +24,9 @@ export function SocialProofSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <span className="section-label">Social Proof</span>
-        <h2>Trusted by Mythic-Tier Guilds</h2>
-        <p>Real results from real guild officers</p>
+        <span className="section-label">By the Numbers</span>
+        <h2>Built for Serious Recruiters</h2>
+        <p>A feature-packed addon designed for guild officers</p>
       </motion.div>
 
       {/* Stats Grid */}
@@ -67,7 +67,6 @@ export function SocialProofSection() {
               <AnimatedCounter
                 end={stat.value}
                 suffix={stat.suffix}
-                decimals={stat.decimals || 0}
               />
             </div>
             <div

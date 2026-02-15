@@ -28,7 +28,7 @@ export function HeroSection() {
           variants={fadeInUp}
           className="version-badge"
         >
-          v3.5.1
+          v3.6.0
         </motion.span>
 
         {/* Title */}
@@ -108,8 +108,8 @@ export function HeroSection() {
           className="social-proof-counter"
           variants={fadeInUp}
         >
-          <AnimatedCounter end={12847} suffix="+" />
-          <span>recruits joined via CelestialRecruiter</span>
+          <AnimatedCounter end={42} suffix="+" />
+          <span>features packed into one addon</span>
         </motion.div>
       </motion.div>
     </section>

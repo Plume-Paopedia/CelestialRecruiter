@@ -73,7 +73,7 @@ export function FinalCTASection() {
             marginBottom: '2.5rem',
           }}
         >
-          Join 847+ guild officers who stopped wasting time on manual /who
+          Stop wasting time on manual /who &mdash; let the addon do the work
         </motion.p>
 
         {/* Dual CTA */}

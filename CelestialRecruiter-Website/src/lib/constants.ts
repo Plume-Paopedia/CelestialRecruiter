@@ -8,7 +8,7 @@ export const FEATURES = [
     icon: '🎯',
     tier: 'epic' as const,
     description: 'Background scanner discovers players while you raid. Never manually /who again.',
-    stats: '+847% recruitment efficiency',
+    stats: 'Hands-free scanning',
     unlock: 'Recruteur Tier',
   },
   {
@@ -16,8 +16,8 @@ export const FEATURES = [
     title: 'AI Auto-Recruiter',
     icon: '🤖',
     tier: 'legendary' as const,
-    description: 'Set rules, walk away. Recruits while you sleep with Thompson Sampling optimization.',
-    stats: 'Saves 12+ hours/week',
+    description: 'Set rules, walk away. Recruits while you sleep with smart prioritization by class and level.',
+    stats: 'Fully automated',
     unlock: 'Pro Tier',
   },
   {
@@ -25,8 +25,8 @@ export const FEATURES = [
     title: 'Advanced Analytics',
     icon: '📊',
     tier: 'epic' as const,
-    description: 'Heatmaps, conversion funnels, response tracking. Recruit smarter, not harder.',
-    stats: '31% higher conversion',
+    description: 'Hourly analytics, conversion funnels, template performance tracking. Recruit smarter, not harder.',
+    stats: 'Data-driven recruiting',
     unlock: 'Recruteur Tier',
   },
   {
@@ -43,8 +43,8 @@ export const FEATURES = [
     title: 'Smart Templates',
     icon: '📝',
     tier: 'rare' as const,
-    description: 'Dynamic templates with player name, class, level variables. Personalize every message.',
-    stats: '+62% response rate',
+    description: 'Dynamic templates with {name}, {class}, {level}, {guild}, {discord} and more. Personalize every message.',
+    stats: 'Personalized outreach',
     unlock: 'Recruteur Tier',
   },
   {
@@ -79,10 +79,10 @@ export const PRICING_TIERS = [
     color: 'common' as const,
     features: [
       'Manual Scanner',
-      '50 Contact Queue',
-      '2 Templates',
+      'Contact Queue',
+      '3 Built-in Templates',
       'Basic Filters',
-      '1 Theme',
+      '6 Themes',
     ],
     limitations: [
       '✗ No Auto-Scan',
@@ -110,7 +110,7 @@ export const PRICING_TIERS = [
       '✓ Achievements',
       '✓ Import/Export',
     ],
-    savings: 'Saves 8+ hours/week',
+    savings: 'Automate your recruitment',
     cta: 'Get Recruteur',
     ctaStyle: 'btn-rare',
     ctaLink: 'https://www.patreon.com/celestialrecruiter',
@@ -133,8 +133,8 @@ export const PRICING_TIERS = [
       '✓ Early Access',
       '✓ Priority Support',
     ],
-    savings: 'Saves 12+ hours/week',
-    value: 'Best ROI for serious recruiters',
+    savings: 'Full automation suite',
+    value: 'Everything included for serious recruiters',
     cta: 'Get Pro',
     ctaStyle: 'btn-epic',
     ctaLink: 'https://www.patreon.com/celestialrecruiter',
@@ -147,31 +147,31 @@ export const PRICING_TIERS = [
 // ============================================
 export const TESTIMONIALS = [
   {
-    quote: 'Went from 2 recruits/week to 15. This is insane.',
-    author: 'Thoridan',
-    guild: 'Eternal Flames',
-    server: 'Dalaran-EU',
+    quote: 'Auto-Scan runs in the background while you raid. No more manually typing /who every 5 minutes.',
+    author: 'Auto-Scanner',
+    guild: 'Background scanning',
+    server: 'All servers',
     wowClass: 'paladin',
   },
   {
-    quote: 'The analytics alone are worth it. Finally data-driven recruiting.',
-    author: 'Shadowmeld',
-    guild: 'Night Watch',
-    server: 'Archimonde-EU',
+    quote: 'Track conversion funnels, hourly activity, and template performance. See what works and double down.',
+    author: 'Analytics',
+    guild: 'Data-driven recruiting',
+    server: 'All servers',
     wowClass: 'rogue',
   },
   {
-    quote: 'Auto-Recruiter saved our guild during prog. Filled the roster overnight.',
-    author: 'Celestara',
-    guild: 'Celestial Order',
-    server: 'Hyjal-EU',
+    quote: 'Set your rules once: target classes, level ranges, time windows. The auto-recruiter handles the rest.',
+    author: 'Auto-Recruiter',
+    guild: 'Hands-free recruiting',
+    server: 'All servers',
     wowClass: 'priest',
   },
   {
-    quote: 'Discord integration is a game changer. I recruit from my phone now.',
-    author: 'Grimmjaw',
-    guild: 'Iron Wolves',
-    server: 'Kazzak-EU',
+    quote: 'Get notified on Discord when someone whispers, joins, or leaves. 30+ event types with color-coded embeds.',
+    author: 'Discord Webhooks',
+    guild: 'Real-time alerts',
+    server: 'All servers',
     wowClass: 'warrior',
   },
 ];
@@ -180,10 +180,10 @@ export const TESTIMONIALS = [
 // Stats
 // ============================================
 export const STATS = [
-  { icon: '📊', value: 12847, label: 'Players Recruited', suffix: '+' },
-  { icon: '⚡', value: 3492, label: 'Invites Sent', suffix: '+' },
-  { icon: '👥', value: 847, label: 'Active Guilds', suffix: '+' },
-  { icon: '⭐', value: 4.9, label: 'Average Rating', suffix: '/5', decimals: 1 },
+  { icon: '📊', value: 42, label: 'Features Built', suffix: '+' },
+  { icon: '⚡', value: 30, label: 'Discord Event Types', suffix: '+' },
+  { icon: '👥', value: 13, label: 'Achievements', suffix: '' },
+  { icon: '⭐', value: 6, label: 'Theme Presets', suffix: '' },
 ];
 
 // ============================================
@@ -192,7 +192,7 @@ export const STATS = [
 export const FAQS = [
   {
     q: 'Why should I pay for an addon?',
-    a: 'The free tier is fully functional! Paid tiers unlock automation that saves 12+ hours/week. If you recruit actively, your time is worth more than 3\u20AC/month.',
+    a: 'The free tier is fully functional! Paid tiers support continued development and give you access to automation features like Auto-Scan, Auto-Recruiter, and Discord integration.',
   },
   {
     q: 'Can I try Pro before committing?',
@@ -204,7 +204,7 @@ export const FAQS = [
   },
   {
     q: 'How does Discord integration work?',
-    a: 'Real-time webhooks send notifications to your Discord server when players whisper, join, or opt-in. Setup takes about 5 minutes with our guided wizard.',
+    a: 'Real-time webhooks send notifications to your Discord server when players whisper, join, or opt-in. Paste your webhook URL in the addon settings and toggle the events you want.',
   },
   {
     q: 'What happens if I cancel my subscription?',
@@ -212,7 +212,7 @@ export const FAQS = [
   },
   {
     q: 'Does it work on all servers and regions?',
-    a: 'Yes! CelestialRecruiter works on all retail WoW servers across EU and US regions. Classic support is coming soon.',
+    a: 'Yes! CelestialRecruiter works on all retail WoW servers across EU and US regions.',
   },
 ];
 
@@ -242,7 +242,7 @@ export const LINKS = {
   patreon: 'https://www.patreon.com/celestialrecruiter',
   discord: 'https://discord.gg/3HwyEBaAQB',
   curseforge: 'https://www.curseforge.com/wow/addons/celestialrecruiter',
-  github: 'https://github.com/celestialrecruiter',
+  github: 'https://github.com/Plume-Paopedia/CelestialRecruiter',
 };
 
 // ============================================

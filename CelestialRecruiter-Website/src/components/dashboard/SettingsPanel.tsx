@@ -6,10 +6,12 @@ import { useData, type AddonSettings } from '@/components/dashboard/DataContext'
 import { usePatch } from '@/components/dashboard/PatchContext';
 
 const THEME_SWATCHES = [
-  { name: 'Classic Gold', gradient: 'linear-gradient(135deg, #1a1814, #352c20, #C9AA71)' },
-  { name: 'Frost', gradient: 'linear-gradient(135deg, #0a1628, #1a2a4a, #69CCF0)' },
-  { name: 'Fel', gradient: 'linear-gradient(135deg, #0a1a0a, #1a3a1a, #1eff00)' },
-  { name: 'Shadow', gradient: 'linear-gradient(135deg, #1a0a2a, #2a1840, #a335ee)' },
+  { name: 'Sombre', gradient: 'linear-gradient(135deg, #0d0f1c, #141829, #00adff)' },
+  { name: 'Clair', gradient: 'linear-gradient(135deg, #f0f1f5, #fafafc, #338cd9)' },
+  { name: 'R\u00eave Violet', gradient: 'linear-gradient(135deg, #140d1e, #1a1029, #bf59ff)' },
+  { name: 'For\u00eat', gradient: 'linear-gradient(135deg, #0d1a14, #121e1a, #4de680)' },
+  { name: 'Oc\u00e9an', gradient: 'linear-gradient(135deg, #0a1424, #0e192e, #26b3f2)' },
+  { name: 'Ambre', gradient: 'linear-gradient(135deg, #1a140d, #241c12, #ffb333)' },
 ];
 
 const NOTIFICATION_TOGGLES = [
@@ -101,17 +103,15 @@ export function SettingsPanel() {
             {THEME_SWATCHES.map((swatch, i) => (
               <div
                 key={swatch.name}
-                className={`theme-swatch${i === 0 ? ' active' : ''}${i > 0 && isFree ? ' locked' : ''}`}
+                className={`theme-swatch${i === 0 ? ' active' : ''}`}
                 style={{ background: swatch.gradient }}
                 title={swatch.name}
               />
             ))}
           </div>
-          {isFree && (
-            <div style={{ fontSize: '0.7rem', color: '#6b5f4d', marginTop: '0.5rem' }}>
-              Unlock additional themes with the Recruteur tier.
-            </div>
-          )}
+          <div style={{ fontSize: '0.7rem', color: '#6b5f4d', marginTop: '0.5rem' }}>
+            All 6 themes available. Use /cr in-game to switch themes.
+          </div>
         </div>
       </div>
 
