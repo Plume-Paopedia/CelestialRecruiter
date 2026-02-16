@@ -28,6 +28,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# WoW addon tools - secrets & logs
+Tools/config.json
+Tools/*.log
+Tools/__pycache__/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
