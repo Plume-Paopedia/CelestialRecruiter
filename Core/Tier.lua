@@ -266,6 +266,9 @@ function T:Activate(keyStr)
         return false, "Cl\195\169 vide. Format: CR-TIER-DATE-CHECKSUM"
     end
 
+    -- Normalize: uppercase the key (slash command lowercases input)
+    keyStr = keyStr:upper()
+
     -- Parse: CR-{TIER}-{YYYYMMDD}-{8hex}
     local tierCode, dateStr, checksum = keyStr:match("^CR%-(%u+)%-(%d%d%d%d%d%d%d%d)%-(%x%x%x%x%x%x%x%x)$")
     if not tierCode then
@@ -278,9 +281,9 @@ function T:Activate(keyStr)
         return false, "Tier inconnu: " .. tierCode
     end
 
-    -- Validate checksum
+    -- Validate checksum (compare lowercase since djb2 returns lowercase hex)
     local expected = computeChecksum(tierCode, dateStr)
-    if checksum ~= expected then
+    if checksum:lower() ~= expected then
         return false, "Cl\195\169 invalide (checksum incorrect)."
     end
 
