@@ -114,7 +114,7 @@ export const PRICING_TIERS = [
     savings: 'Automate your recruitment',
     cta: 'Get Recruteur',
     ctaStyle: 'btn-rare',
-    ctaLink: 'https://www.patreon.com/celestialrecruiter',
+    ctaLink: 'https://www.patreon.com/cw/Plume_',
     popular: true,
   },
   {
@@ -138,7 +138,7 @@ export const PRICING_TIERS = [
     value: 'Everything included for serious recruiters',
     cta: 'Get Pro',
     ctaStyle: 'btn-epic',
-    ctaLink: 'https://www.patreon.com/celestialrecruiter',
+    ctaLink: 'https://www.patreon.com/cw/Plume_',
     recommended: true,
   },
 ];
@@ -240,7 +240,7 @@ export const CLASS_COLORS: Record<string, string> = {
 // External Links
 // ============================================
 export const LINKS = {
-  patreon: 'https://www.patreon.com/celestialrecruiter',
+  patreon: 'https://www.patreon.com/cw/Plume_',
   discord: 'https://discord.gg/3HwyEBaAQB',
   curseforge: 'https://www.curseforge.com/wow/addons/celestialrecruiter',
   github: 'https://github.com/Plume-Paopedia/CelestialRecruiter',
