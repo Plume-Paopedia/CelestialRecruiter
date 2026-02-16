@@ -311,6 +311,10 @@ class AIRecruiter:
 
         self.guild_info = self._build_guild_info()
         self.sv_path = Path(config["savedvariables_path"])
+        # AI_Data.lua lives in the addon directory (NOT in SavedVariables)
+        # WoW loads this as a regular addon file - it won't overwrite it on save
+        self.addon_dir = Path(config.get("addon_path", "")) if config.get("addon_path") else Path(__file__).parent.parent
+        self.ai_data_path = self.addon_dir / "AI_Data.lua"
         self.last_processed = 0.0
 
     def _build_guild_info(self) -> str:
@@ -338,76 +342,31 @@ class AIRecruiter:
             return None
 
     def read_existing_ai(self) -> Dict:
-        """Read existing CelestialRecruiterAI from the same SavedVariables file."""
-        if not self.sv_path.exists():
+        """Read existing CelestialRecruiterAI from AI_Data.lua in addon directory."""
+        if not self.ai_data_path.exists():
             return {}
         try:
-            content = self.sv_path.read_text(encoding="utf-8")
+            content = self.ai_data_path.read_text(encoding="utf-8")
             data = LuaParser.parse_savedvariables(content)
             return data.get("CelestialRecruiterAI", {})
         except Exception:
             return {}
 
-    # -----------------------------------------------------------------------
-    # Write AI data into the existing SavedVariables file
-    # -----------------------------------------------------------------------
-    def _remove_variable_block(self, content: str, var_name: str) -> str:
-        """Remove a top-level variable assignment block from Lua content."""
-        pattern = re.compile(rf'^{re.escape(var_name)}\s*=\s*\{{', re.MULTILINE)
-        match = pattern.search(content)
-        if not match:
-            return content
+    def write_ai_data(self, data: dict):
+        """Write CelestialRecruiterAI to AI_Data.lua in the addon directory.
 
-        # Find matching closing brace using brace counting
-        start = match.start()
-        brace_pos = match.end() - 1  # position of opening {
-        depth = 1
-        pos = brace_pos + 1
-        in_string = False
-        string_char = None
-
-        while pos < len(content) and depth > 0:
-            ch = content[pos]
-            if in_string:
-                if ch == '\\':
-                    pos += 2
-                    continue
-                if ch == string_char:
-                    in_string = False
-            else:
-                if ch in ('"', "'"):
-                    in_string = True
-                    string_char = ch
-                elif ch == '{':
-                    depth += 1
-                elif ch == '}':
-                    depth -= 1
-            pos += 1
-
-        # Remove from start to pos (inclusive of trailing newlines)
-        end = pos
-        while end < len(content) and content[end] in ('\n', '\r', ' ', '\t'):
-            end += 1
-
-        return content[:start] + content[end:]
-
-    def write_ai_to_sv(self, data: dict):
-        """Write CelestialRecruiterAI into the existing SavedVariables file.
-
-        WoW stores ALL addon SavedVariables in a single file named after the
-        addon folder (CelestialRecruiter.lua). We must inject our AI variable
-        into that same file, NOT write a separate file.
+        This is a regular addon file (NOT a SavedVariable), so WoW loads it
+        on /reload but never overwrites it. This solves the timing problem
+        where WoW would overwrite SavedVariables before reading them.
         """
-        # Read existing content
-        existing = ""
-        if self.sv_path.exists():
-            existing = self.sv_path.read_text(encoding="utf-8")
-
-        # Remove old CelestialRecruiterAI block if present
-        existing = self._remove_variable_block(existing, "CelestialRecruiterAI")
-
-        # Generate new AI block
-        lines = ["CelestialRecruiterAI = {"]
+        lines = [
+            "-- CelestialRecruiter AI Data",
+            "-- Written by the Python companion (ai_recruiter.py)",
+            f"-- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "-- Do NOT edit manually - this file is overwritten automatically",
+            "",
+            "CelestialRecruiterAI = {",
+        ]
         pad = "\t"
         for k, v in data.items():
             lua_key = (
@@ -418,13 +377,9 @@ class AIRecruiter:
             lines.append(f"{pad}{lua_key} = {LuaWriter.to_lua(v, 1)},")
         lines.append("}")
         lines.append("")
-        ai_block = "\n".join(lines)
 
-        # Append to existing content
-        final = existing.rstrip() + "\n\n" + ai_block
-
-        self.sv_path.write_text(final, encoding="utf-8")
-        logger.info(f"Wrote CelestialRecruiterAI into {self.sv_path} ({len(data)} keys)")
+        self.ai_data_path.write_text("\n".join(lines), encoding="utf-8")
+        logger.info(f"Wrote AI_Data.lua -> {self.ai_data_path} ({len(data)} keys)")
 
     def extract_contacts(self, db: Dict) -> Dict[str, Dict]:
         """Extract contacts from the DB structure."""
@@ -844,7 +799,7 @@ class AIRecruiter:
             "pendingReplies": {},
         }
 
-        self.write_ai_to_sv(output)
+        self.write_ai_data(output)
         self.last_processed = time.time()
 
         logger.info(
@@ -934,7 +889,7 @@ def main():
     logger.info(f"Model: {engine.model}")
     logger.info(f"Guild: {config.get('guild_name', '?')}")
     logger.info(f"SavedVariables: {engine.sv_path}")
-    logger.info(f"AI output: injected into same file")
+    logger.info(f"AI_Data.lua: {engine.ai_data_path}")
 
     if args.once:
         engine.process()
