@@ -447,9 +447,10 @@ class AIRecruiter:
                 continue
 
             contact = contacts.get(key, {})
-            # Skip already contacted/invited/joined/ignored
+            # Skip only fully processed contacts (invited/joined/ignored)
+            # Keep "new" and "contacted" since they still appear in queue UI
             status = contact.get("status", "new")
-            if status in ("contacted", "invited", "joined", "ignored"):
+            if status in ("invited", "joined", "ignored"):
                 continue
 
             to_generate.append((key, contact))

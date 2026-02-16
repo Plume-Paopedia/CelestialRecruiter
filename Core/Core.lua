@@ -48,6 +48,7 @@ function CR:OnInitialize()
   if ns.AIConversation and ns.AIConversation.Init then
     ns.AIConversation:Init()
   end
+
   if ns.SleepRecruiter and ns.SleepRecruiter.Init then
     ns.SleepRecruiter:Init()
   end
