@@ -488,6 +488,14 @@ class AIRecruiter:
             text = response.content[0].text.strip()
             return self._parse_batch_response(text, batch)
 
+        except anthropic.AuthenticationError as e:
+            logger.error(f"Claude API auth error: {e}")
+            logger.error("Verifiez votre cle API dans config.json (anthropic_api_key)")
+            return {}
+        except anthropic.RateLimitError as e:
+            logger.warning(f"Claude API rate limit: {e}")
+            logger.warning("Credits insuffisants ou trop de requetes. Voir https://console.anthropic.com/")
+            return {}
         except Exception as e:
             logger.error(f"Claude API error (messages): {e}")
             return {}
@@ -865,14 +873,22 @@ def main():
     # Initial processing
     engine.process()
 
-    # Watch loop
+    # Watch loop - try watchdog first, fall back to polling
+    use_watchdog = False
     if WATCHDOG_AVAILABLE:
-        logger.info("Starting file watcher (watchdog)...")
-        handler = SVFileHandler(engine, cooldown=config.get("watch_interval", 30))
-        observer = Observer()
-        observer.schedule(handler, str(engine.sv_path.parent), recursive=False)
-        observer.start()
+        try:
+            logger.info("Starting file watcher (watchdog)...")
+            handler = SVFileHandler(engine, cooldown=config.get("watch_interval", 30))
+            observer = Observer()
+            observer.schedule(handler, str(engine.sv_path.parent), recursive=False)
+            observer.start()
+            use_watchdog = True
+        except Exception as e:
+            logger.warning(f"Watchdog failed (Python 3.13+ compat issue?): {e}")
+            logger.info("Falling back to polling mode...")
+            use_watchdog = False
 
+    if use_watchdog:
         try:
             while True:
                 time.sleep(1)
