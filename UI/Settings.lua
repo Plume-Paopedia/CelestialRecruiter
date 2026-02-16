@@ -606,6 +606,96 @@ function ns.UI_BuildSettings(parent)
     y = y - 8
 
     ---------------------------------------------------------------------------
+    -- Section: Mode Nuit & AI
+    ---------------------------------------------------------------------------
+    local hNuit = W.MakeHeader(ch, "Mode Nuit & AI")
+    hNuit:SetPoint("TOPLEFT", 4, row(30))
+    W.MakeSeparator(ch, hNuit)
+    y = y - 8
+
+    local nuitHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    nuitHint:SetPoint("TOPLEFT", 8, row(16))
+    nuitHint:SetText("Recrutement AFK automatique. Traite la file d'attente pendant que vous dormez. N\195\169cessite le tier Pro.")
+    nuitHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    y = y - 6
+
+    -- Toggle button
+    sd.nuitToggle = W.MakeBtn(ch, "D\195\169marrer Mode Nuit", 160, "p", function()
+        if ns.SleepRecruiter and ns.SleepRecruiter.Toggle then
+            ns.SleepRecruiter:Toggle()
+            ns.UI_RefreshSettings()
+        end
+    end)
+    sd.nuitToggle:SetPoint("TOPLEFT", 4, row(34))
+    W.AddTooltip(sd.nuitToggle, "Mode Nuit", "D\195\169marre/arr\195\170te le recrutement automatique AFK.\nUtilise les messages AI si disponibles, sinon le mod\195\168le s\195\169lectionn\195\169.\nCommande: /cr nuit")
+
+    -- Status text (dynamic, updated in refresh)
+    sd.nuitStatus = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sd.nuitStatus:SetPoint("LEFT", sd.nuitToggle, "RIGHT", 12, 6)
+    sd.nuitStatus:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    sd.nuitStatus:SetText("")
+
+    -- Mode dropdown
+    local nuitModeItems = {
+        { label = "Whisper + Invite", value = "recruit" },
+        { label = "Whisper seul", value = "whisper" },
+        { label = "Invite seul", value = "invite" },
+    }
+    sd.nuitMode = W.MakeDropdown(ch, 160, nuitModeItems,
+        (p().sleepRecruiter and p().sleepRecruiter.mode) or "recruit",
+        function(v) p().sleepRecruiter.mode = v end)
+    sd.nuitMode:SetPoint("TOPLEFT", 4, row(46))
+
+    -- Template dropdown (fallback)
+    local nuitTplItems = {}
+    for id, tpl in pairs(ns.Templates_All()) do
+        nuitTplItems[#nuitTplItems + 1] = { label = tpl.name or id, value = id }
+    end
+    table.sort(nuitTplItems, function(a, b) return a.label < b.label end)
+
+    sd.nuitTemplate = W.MakeDropdown(ch, 160, nuitTplItems,
+        (p().sleepRecruiter and p().sleepRecruiter.template) or "default",
+        function(v) p().sleepRecruiter.template = v end)
+    sd.nuitTemplate:SetPoint("LEFT", sd.nuitMode, "RIGHT", 12, 0)
+
+    -- Delay between actions
+    local nuitDelay = W.MakeNumInput(ch, "D\195\169lai entre actions (s)", 145,
+        function() return p().sleepRecruiter and p().sleepRecruiter.delayBetweenActions or 60 end,
+        function(v) p().sleepRecruiter.delayBetweenActions = v end, 60, 30, 300)
+    nuitDelay:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(nuitDelay, "D\195\169lai", "Secondes entre chaque action de recrutement (30-300).")
+
+    -- Max duration
+    local nuitDuration = W.MakeNumInput(ch, "Dur\195\169e max (heures)", 145,
+        function() return p().sleepRecruiter and p().sleepRecruiter.maxDurationHours or 8 end,
+        function(v) p().sleepRecruiter.maxDurationHours = v end, 8, 1, 12)
+    nuitDuration:SetPoint("LEFT", nuitDelay, "RIGHT", 12, 0)
+    W.AddTooltip(nuitDuration, "Dur\195\169e max", "Dur\195\169e maximale du Mode Nuit avant arr\195\170t automatique (1-12h).")
+
+    -- Max contacts
+    local nuitMax = W.MakeNumInput(ch, "Max contacts", 145,
+        function() return p().sleepRecruiter and p().sleepRecruiter.maxContacts or 200 end,
+        function(v) p().sleepRecruiter.maxContacts = v end, 200, 10, 999)
+    nuitMax:SetPoint("LEFT", nuitDuration, "RIGHT", 12, 0)
+    W.AddTooltip(nuitMax, "Max contacts", "Nombre maximum de contacts \195\160 traiter avant arr\195\170t (10-999).")
+
+    -- Reload interval
+    local nuitReload = W.MakeNumInput(ch, "Intervalle reload (min)", 145,
+        function() return p().sleepRecruiter and p().sleepRecruiter.reloadIntervalMin or 10 end,
+        function(v) p().sleepRecruiter.reloadIntervalMin = v end, 10, 5, 20)
+    nuitReload:SetPoint("TOPLEFT", 4, row(46))
+    W.AddTooltip(nuitReload, "Intervalle reload", "Fr\195\169quence de ReloadUI pour synchroniser les messages AI (5-20 min).")
+
+    -- Use AI toggle
+    sd.nuitUseAI = W.MakeCheck(ch, "Utiliser les messages AI (si Python actif)",
+        function() return p().sleepRecruiter and p().sleepRecruiter.useAI ~= false end,
+        function(v) p().sleepRecruiter.useAI = v end)
+    sd.nuitUseAI:SetPoint("TOPLEFT", 8, row(26))
+    W.AddTooltip(sd.nuitUseAI, "Messages AI", "Utilise les messages g\195\169n\195\169r\195\169s par le companion Python (Claude API).\nSi d\195\169sactiv\195\169 ou Python non lanc\195\169, utilise le mod\195\168le s\195\169lectionn\195\169.")
+
+    y = y - 8
+
+    ---------------------------------------------------------------------------
     -- Section: Maintenance
     ---------------------------------------------------------------------------
     local hMaint = W.MakeHeader(ch, "Maintenance")
@@ -649,6 +739,20 @@ end
 ---------------------------------------------------------------------------
 function ns.UI_RefreshSettings()
     if not sd.ch then return end
+
+    -- Update Mode Nuit toggle button
+    if sd.nuitToggle and ns.SleepRecruiter then
+        local isActive = ns.SleepRecruiter:IsActive()
+        sd.nuitToggle:SetLabel(isActive and "Arr\195\170ter Mode Nuit" or "D\195\169marrer Mode Nuit")
+        if sd.nuitStatus then
+            if isActive then
+                local stats = ns.SleepRecruiter:GetStats()
+                sd.nuitStatus:SetText("|cff33dd77Actif|r - " .. (stats.processed or 0) .. " trait\195\169s")
+            else
+                sd.nuitStatus:SetText("|cffaaaaaa Inactif|r")
+            end
+        end
+    end
 
     local dy = sd._abDynY
 

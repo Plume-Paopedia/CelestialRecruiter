@@ -45,6 +45,12 @@ function CR:OnInitialize()
   if ns.SmartSuggestions and ns.SmartSuggestions.Init then
     ns.SmartSuggestions:Init()
   end
+  if ns.AIConversation and ns.AIConversation.Init then
+    ns.AIConversation:Init()
+  end
+  if ns.SleepRecruiter and ns.SleepRecruiter.Init then
+    ns.SleepRecruiter:Init()
+  end
 end
 
 function CR:OnEnable()
@@ -470,9 +476,19 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
     return
   end
 
+  if msg == "nuit" then
+    if ns.SleepRecruiter and ns.SleepRecruiter.Toggle then
+      ns.SleepRecruiter:Toggle()
+    else
+      ns.Util_Print("|cffff0000Erreur:|r Module SleepRecruiter non charg\195\169.")
+    end
+    return
+  end
+
   if msg == "help" then
-    ns.Util_Print("Commandes: /cr, /cr reset, /cr softreset, /cr flush, /cr webexport, /cr webimport, /cr activate, /cr tier, /cr help")
+    ns.Util_Print("Commandes: /cr, /cr reset, /cr softreset, /cr flush, /cr nuit, /cr webexport, /cr webimport, /cr activate, /cr tier, /cr help")
     ns.Util_Print("/cr softreset : R\195\169initialise contacts/file/stats mais conserve r\195\169glages et mod\195\168les")
+    ns.Util_Print("/cr nuit : Activer/d\195\169sactiver le Mode Nuit (recrutement AFK avec IA)")
     ns.Util_Print("/cr flush : Envoie les notifications Discord en attente (reload)")
     ns.Util_Print("/cr webexport : Exporte les donn\195\169es pour le dashboard web")
     ns.Util_Print("/cr webimport : Importe les modifications du dashboard web")

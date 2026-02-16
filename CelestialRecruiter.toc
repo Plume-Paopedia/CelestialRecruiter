@@ -7,7 +7,7 @@
 ## X-Website: https://discord.gg/3HwyEBaAQB
 ## X-Curse-Project-ID:
 ## X-Localizations: frFR
-## SavedVariables: CelestialRecruiterDB
+## SavedVariables: CelestialRecruiterDB, CelestialRecruiterAI
 
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
@@ -38,6 +38,8 @@ Modules\Leaderboard.lua
 Modules\SmartSuggestions.lua
 Modules\Discord.lua
 Modules\DiscordQueue.lua
+Modules\AIConversation.lua
+Modules\SleepRecruiter.lua
 Modules\BulkOperations.lua
 
 UI\Widgets.lua

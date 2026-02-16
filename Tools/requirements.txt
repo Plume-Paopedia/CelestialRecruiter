@@ -3,6 +3,7 @@
 # Required
 requests>=2.28.0    # For Discord webhook companion (discord_webhook.py)
 flask>=3.0.0        # For Patreon license bot (patreon_license_bot.py)
+anthropic>=0.40.0   # For AI recruiter companion (ai_recruiter.py)
 
 # Optional but recommended
 watchdog>=2.1.0     # For file system monitoring (more efficient than polling)

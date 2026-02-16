@@ -54,7 +54,14 @@ function ns.Queue_Whisper(key, tplId)
   -- Ensure actualTplId is never nil (fallback to original tplId or "default")
   actualTplId = actualTplId or tplId or "default"
 
-  local msg = ns.Templates_Render(key, actualTplId)
+  -- AI message fallback: use pre-generated AI message during Mode Nuit
+  local msg
+  if ns.SleepRecruiter and ns.SleepRecruiter:IsActive() and ns.AIConversation then
+    msg = ns.AIConversation:GetAIMessage(key)
+  end
+  if not msg or msg == "" then
+    msg = ns.Templates_Render(key, actualTplId)
+  end
   if not msg or msg == "" then
     ns.Util_Print("Message bloque (modele vide)")
     return false, "empty_template"

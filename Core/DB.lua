@@ -42,6 +42,17 @@ local DEFAULTS = {
     welcomeMessage = "Bienvenue dans {guild}, {name} ! N'h\195\169site pas \195\160 rejoindre notre Discord : {discord}",
     welcomeDelay = 5,
     license = nil, -- { key, tier, expiry, activatedAt }
+
+    -- Sleep Recruiter (Mode Nuit)
+    sleepRecruiter = {
+      mode = "recruit",           -- "whisper" | "invite" | "recruit"
+      template = "default",
+      delayBetweenActions = 60,   -- 30-300 seconds
+      maxDurationHours = 8,       -- 1-12 hours
+      maxContacts = 200,          -- 10-999
+      reloadIntervalMin = 10,     -- 5-20 minutes
+      useAI = true,               -- use AI messages when available
+    },
   },
   char = {
     leaderboard = {
@@ -70,6 +81,7 @@ local DEFAULTS = {
     queue = {},      -- array of keys
     blacklist = {},  -- [key]=true
     logs = {},       -- ring buffer
+    aiPendingReplies = {},  -- { [key] = { msg, timestamp, context } }
   }
 }
 

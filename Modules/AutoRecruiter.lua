@@ -365,6 +365,14 @@ function AR:Start()
         return
     end
 
+    -- Mutual exclusion with Sleep Recruiter
+    if ns.SleepRecruiter and ns.SleepRecruiter:IsActive() then
+        if ns.Notifications_Warning then
+            ns.Notifications_Warning("Auto-recrutement", "Impossible : le Mode Nuit est actif.")
+        end
+        return
+    end
+
     self.active = true
     self.paused = false
     self.currentIndex = 1

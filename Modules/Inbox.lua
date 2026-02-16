@@ -100,6 +100,11 @@ function ns.Inbox_Init()
 
     ns.DB_Log("IN", "Ajout manuel requis dans la liste d'attente: " .. key)
 
+    -- Mode Nuit: AI Conversation engine handles incoming whispers
+    if ns.AIConversation and ns.SleepRecruiter and ns.SleepRecruiter:IsActive() then
+      ns.AIConversation:HandleIncoming(key, msg)
+    end
+
     ns.UI_Refresh()
   end)
 

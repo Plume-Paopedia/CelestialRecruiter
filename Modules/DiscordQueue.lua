@@ -59,6 +59,11 @@ local EVENT_TYPES = {
     autorecruiter_stopped = { color = COLORS.PURPLE, icon = "⏸️", label = "Auto-Recruteur Arrêté" },
     autorecruiter_complete = { color = COLORS.PURPLE, icon = "✅", label = "Auto-Recruteur Terminé" },
 
+    -- Sleep Recruiter (Mode Nuit)
+    sleeprecruiter_started = { color = COLORS.PURPLE, icon = "🌙", label = "Mode Nuit D\195\169marr\195\169" },
+    sleeprecruiter_complete = { color = COLORS.PURPLE, icon = "☀️", label = "Mode Nuit Termin\195\169" },
+    ai_conversation = { color = COLORS.BLUE, icon = "🤖", label = "Conversation AI" },
+
     -- Alerts
     limit_reached = { color = COLORS.RED, icon = "⚠️", label = "Limite Atteinte" },
     error_alert = { color = COLORS.RED, icon = "❌", label = "Erreur" },
@@ -809,6 +814,73 @@ function DQ:NotifyAutoRecruiterComplete(stats)
     })
 end
 
+-- Sleep Recruiter: Started
+function DQ:NotifySleepRecruiterStarted(settings)
+    local fields = {}
+    if settings then
+        table.insert(fields, {
+            name = "Mode",
+            value = settings.mode or "recruit",
+            inline = true
+        })
+        table.insert(fields, {
+            name = "Dur\195\169e max",
+            value = tostring(settings.maxDurationHours or 8) .. "h",
+            inline = true
+        })
+        table.insert(fields, {
+            name = "Max contacts",
+            value = tostring(settings.maxContacts or 200),
+            inline = true
+        })
+        table.insert(fields, {
+            name = "D\195\169lai",
+            value = tostring(settings.delayBetweenActions or 60) .. "s",
+            inline = true
+        })
+        table.insert(fields, {
+            name = "AI",
+            value = settings.useAI and "Activ\195\169" or "D\195\169sactiv\195\169",
+            inline = true
+        })
+    end
+
+    self:QueueEvent("sleeprecruiter_started", {
+        description = "Mode Nuit d\195\169marr\195\169 - recrutement AFK en cours",
+        fields = fields
+    })
+end
+
+-- Sleep Recruiter: Complete
+function DQ:NotifySleepRecruiterComplete(stats)
+    local fields = {}
+    if stats then
+        if stats.processed then
+            table.insert(fields, { name = "Trait\195\169s", value = tostring(stats.processed), inline = true })
+        end
+        if stats.contacted then
+            table.insert(fields, { name = "Contact\195\169s", value = tostring(stats.contacted), inline = true })
+        end
+        if stats.invited then
+            table.insert(fields, { name = "Invit\195\169s", value = tostring(stats.invited), inline = true })
+        end
+        if stats.aiMessages then
+            table.insert(fields, { name = "Messages AI", value = tostring(stats.aiMessages), inline = true })
+        end
+        if stats.aiResponses then
+            table.insert(fields, { name = "R\195\169ponses AI", value = tostring(stats.aiResponses), inline = true })
+        end
+        if stats.errors then
+            table.insert(fields, { name = "Erreurs", value = tostring(stats.errors), inline = true })
+        end
+    end
+
+    self:QueueEvent("sleeprecruiter_complete", {
+        description = "Mode Nuit termin\195\169",
+        fields = fields
+    })
+end
+
 -- Limit Reached Alert
 function DQ:NotifyLimitReached(limitType, current, max)
     self:QueueEvent("limit_reached", {
@@ -900,6 +972,14 @@ function DQ:GetEventTypes()
                 { id = "scanner_stopped", label = "Scanner arrêté" },
                 { id = "scanner_complete", label = "Scan terminé" },
                 { id = "autorecruiter_complete", label = "Auto-recruteur terminé" },
+            }
+        },
+        {
+            label = "Mode Nuit & AI",
+            events = {
+                { id = "sleeprecruiter_started", label = "Mode Nuit d\195\169marr\195\169" },
+                { id = "sleeprecruiter_complete", label = "Mode Nuit termin\195\169" },
+                { id = "ai_conversation", label = "Conversation AI" },
             }
         },
         {

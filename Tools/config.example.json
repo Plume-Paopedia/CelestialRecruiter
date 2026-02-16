@@ -14,5 +14,14 @@
   "smtp_port": 587,
   "smtp_user": "celestialrecruiter@gmail.com",
   "smtp_password": "YOUR_GMAIL_APP_PASSWORD",
-  "smtp_from_name": "CelestialRecruiter"
+  "smtp_from_name": "CelestialRecruiter",
+
+  "anthropic_api_key": "sk-ant-YOUR_ANTHROPIC_API_KEY",
+  "ai_model": "claude-sonnet-4-5-20250929",
+  "guild_name": "MaGuilde",
+  "guild_description": "Guilde PvE semi-HL, ambiance chill, raids 2 soirs/semaine",
+  "guild_discord": "https://discord.gg/VOTRE_DISCORD",
+  "ai_language": "fr",
+  "max_message_length": 240,
+  "watch_interval": 30
 }

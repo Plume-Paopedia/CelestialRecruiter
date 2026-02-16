@@ -39,6 +39,9 @@ local LIMITS = {
     -- Auto-Recruiter
     auto_recruiter        = { "pro",       false, false, true },
 
+    -- Sleep Recruiter (Mode Nuit)
+    sleep_recruiter       = { "pro",       false, false, true },
+
     -- Statistics
     stats_history_days    = { "free",       7,    30,    90 },
     stats_advanced        = { "recruteur", false, true,  true },
@@ -227,6 +230,7 @@ local UPGRADE_HINTS = {
     web_export           = "Exportez vos donn\195\169es vers le dashboard web.",
     filter_presets_max   = "Sauvegardez vos combinaisons de filtres pr\195\169f\195\169r\195\169es.",
     scan_query_cap       = "Scan limit\195\169 (free). Le scan complet couvre tout le serveur.",
+    sleep_recruiter      = "Mode Nuit : recrutez pendant que vous dormez. Votre file est trait\195\169e automatiquement avec l'IA.",
 }
 
 -- Throttle: don't spam the same upgrade prompt
