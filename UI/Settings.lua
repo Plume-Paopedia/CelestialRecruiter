@@ -252,6 +252,14 @@ function ns.UI_BuildSettings(parent)
     y = y - 8
 
     local checks = {
+        {"|cff00d1ffMessages AI|r : envoyer les messages g\195\169n\195\169r\195\169s par l'IA",
+            function() return p().aiEnabled end,
+            function(v) p().aiEnabled = v end,
+            "Utilise les messages personnalises generes par le companion Python (Claude API) au lieu des templates. Necessite ai_recruiter.py actif + /reload."},
+        {"|cff00d1ffR\195\169ponses AI|r : r\195\169pondre automatiquement aux whispers",
+            function() return p().aiAutoRespond end,
+            function(v) p().aiAutoRespond = v end,
+            "Repond automatiquement aux whispers entrants (oui->invite, non->ignore, question->FAQ/AI). Fonctionne meme sans Mode Nuit."},
         {"Exiger opt-in par mot cle",
             function() return p().inviteKeywordOnly end,
             function(v) p().inviteKeywordOnly = v end,

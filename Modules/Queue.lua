@@ -56,7 +56,8 @@ function ns.Queue_Whisper(key, tplId)
 
   -- AI message: use pre-generated AI message if available (from Python companion)
   local msg
-  if ns.AIConversation and ns.AIConversation.GetAIMessage then
+  local aiOn = ns.db and ns.db.profile and ns.db.profile.aiEnabled
+  if aiOn and ns.AIConversation and ns.AIConversation.GetAIMessage then
     msg = ns.AIConversation:GetAIMessage(key)
   end
   if not msg or msg == "" then

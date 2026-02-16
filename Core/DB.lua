@@ -43,6 +43,10 @@ local DEFAULTS = {
     welcomeDelay = 5,
     license = nil, -- { key, tier, expiry, activatedAt }
 
+    -- AI Recruitment (global toggle, independent of Mode Nuit)
+    aiEnabled = false,          -- use AI messages for outgoing whispers
+    aiAutoRespond = false,      -- auto-respond to incoming whispers via AI
+
     -- Sleep Recruiter (Mode Nuit)
     sleepRecruiter = {
       mode = "recruit",           -- "whisper" | "invite" | "recruit"
