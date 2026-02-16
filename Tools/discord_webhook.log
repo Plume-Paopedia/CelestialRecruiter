@@ -84,3 +84,80 @@
 2026-02-14 02:06:56,658 [INFO] Sent event: player_joined
 2026-02-14 02:06:58,783 [INFO] Sent event: player_joined
 2026-02-14 02:07:00,996 [INFO] Sent event: player_joined
+2026-02-15 11:38:59,010 [INFO] Loaded state: last_processed_timestamp=1771031202
+2026-02-15 11:38:59,011 [INFO] Starting polling mode
+2026-02-15 11:38:59,011 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-15 11:38:59,011 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-15 11:38:59,011 [INFO] Check interval: 3s
+2026-02-15 11:38:59,012 [INFO] Last processed timestamp: 1771031202
+2026-02-15 11:39:00,122 [INFO] Processing 8 pending events
+2026-02-15 11:39:01,142 [INFO] Sent event: player_joined
+2026-02-15 11:39:03,029 [INFO] Sent event: player_joined
+2026-02-15 11:39:04,983 [INFO] Sent event: player_joined
+2026-02-15 11:39:07,175 [INFO] Sent event: player_joined
+2026-02-15 11:39:09,089 [INFO] Sent event: player_joined
+2026-02-15 11:39:11,271 [INFO] Sent event: player_joined
+2026-02-15 11:39:13,397 [INFO] Sent event: player_joined
+2026-02-15 11:39:15,503 [INFO] Sent event: player_joined
+2026-02-15 12:07:01,104 [INFO] Processing 4 pending events
+2026-02-15 12:07:02,428 [INFO] Sent event: player_joined
+2026-02-15 12:07:04,686 [INFO] Sent event: player_joined
+2026-02-15 12:07:07,145 [INFO] Sent event: player_joined
+2026-02-15 12:07:09,682 [INFO] Sent event: player_joined
+2026-02-15 12:44:44,420 [INFO] Processing 2 pending events
+2026-02-15 12:44:45,272 [INFO] Sent event: whisper_received
+2026-02-15 12:44:47,726 [INFO] Sent event: player_joined
+2026-02-15 12:45:29,308 [INFO] Loaded state: last_processed_timestamp=1771155875
+2026-02-15 12:45:29,308 [INFO] Starting polling mode
+2026-02-15 12:45:29,309 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-15 12:45:29,309 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-15 12:45:29,309 [INFO] Check interval: 3s
+2026-02-15 12:45:29,309 [INFO] Summary mode: True
+2026-02-15 12:45:29,309 [INFO] Last processed timestamp: 1771155875
+2026-02-15 12:45:41,626 [INFO] Processing 3 pending events (summary_mode=True)
+2026-02-15 12:45:42,421 [INFO] Sent summary with 3 events
+2026-02-15 14:05:49,844 [INFO] Loaded state: last_processed_timestamp=1771155919
+2026-02-15 14:05:49,844 [INFO] Starting polling mode
+2026-02-15 14:05:49,844 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-15 14:05:49,844 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-15 14:05:49,844 [INFO] Check interval: 3s
+2026-02-15 14:05:49,844 [INFO] Summary mode: True
+2026-02-15 14:05:49,845 [INFO] Last processed timestamp: 1771155919
+2026-02-15 14:09:11,403 [INFO] Loaded state: last_processed_timestamp=1771155919
+2026-02-15 14:09:11,404 [INFO] Starting polling mode
+2026-02-15 14:09:11,404 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-15 14:09:11,404 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-15 14:09:11,404 [INFO] Check interval: 3s
+2026-02-15 14:09:11,404 [INFO] Summary mode: True
+2026-02-15 14:09:11,404 [INFO] Last processed timestamp: 1771155919
+2026-02-15 14:10:41,896 [INFO] Processing 1 pending events (summary_mode=True)
+2026-02-15 14:10:43,437 [INFO] Sent event: player_joined
+2026-02-15 14:26:35,012 [INFO] Processing 7 pending events (summary_mode=True)
+2026-02-15 14:26:39,140 [INFO] Sent summary with 7 events
+2026-02-15 14:38:40,490 [INFO] Loaded state: last_processed_timestamp=1771161820
+2026-02-15 14:38:40,490 [INFO] Starting polling mode
+2026-02-15 14:38:40,490 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-15 14:38:40,491 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-15 14:38:40,491 [INFO] Check interval: 3s
+2026-02-15 14:38:40,491 [INFO] Summary mode: True
+2026-02-15 14:38:40,491 [INFO] Last processed timestamp: 1771161820
+2026-02-15 15:44:42,884 [INFO] Loaded state: last_processed_timestamp=1771161820
+2026-02-15 15:44:42,884 [INFO] Starting polling mode
+2026-02-15 15:44:42,884 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-15 15:44:42,884 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-15 15:44:42,884 [INFO] Check interval: 3s
+2026-02-15 15:44:42,885 [INFO] Summary mode: True
+2026-02-15 15:44:42,885 [INFO] Last processed timestamp: 1771161820
+2026-02-15 15:44:53,840 [INFO] Processing 2 pending events (summary_mode=True)
+2026-02-15 15:44:55,239 [INFO] Sent summary with 2 events
+2026-02-16 01:10:08,925 [INFO] Loaded state: last_processed_timestamp=1771166501
+2026-02-16 01:10:08,927 [INFO] Starting polling mode
+2026-02-16 01:10:08,928 [INFO] Watching: C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\405720625#1\SavedVariables\CelestialRecruiter.lua
+2026-02-16 01:10:08,928 [INFO] Webhook: https://discord.com/api/webhooks/14719503539719374...
+2026-02-16 01:10:08,929 [INFO] Check interval: 3s
+2026-02-16 01:10:08,929 [INFO] Summary mode: True
+2026-02-16 01:10:08,931 [INFO] Last processed timestamp: 1771166501
+2026-02-16 01:10:12,332 [INFO] Processing 4 pending events (summary_mode=True)
+2026-02-16 01:10:15,424 [INFO] Sent summary with 4 events
+2026-02-16 01:10:32,090 [INFO] Processing 9 pending events (summary_mode=True)
+2026-02-16 01:10:36,269 [INFO] Sent summary with 9 events
