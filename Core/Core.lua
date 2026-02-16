@@ -454,7 +454,7 @@ SlashCmdList["CELESTIALRECRUITER"] = function(msg)
 
   -- License activation: /cr activate CR-TIER-YYYYMMDD-CHECKSUM
   if msg:sub(1, 9) == "activate " then
-    local keyStr = ns.Util_Trim(msg:sub(10))
+    local keyStr = string.upper(ns.Util_Trim(msg:sub(10)))
     if ns.Tier and ns.Tier.Activate then
       local ok, err = ns.Tier:Activate(keyStr)
       if not ok then
