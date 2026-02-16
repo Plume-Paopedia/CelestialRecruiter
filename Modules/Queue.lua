@@ -54,9 +54,9 @@ function ns.Queue_Whisper(key, tplId)
   -- Ensure actualTplId is never nil (fallback to original tplId or "default")
   actualTplId = actualTplId or tplId or "default"
 
-  -- AI message fallback: use pre-generated AI message during Mode Nuit
+  -- AI message: use pre-generated AI message if available (from Python companion)
   local msg
-  if ns.SleepRecruiter and ns.SleepRecruiter:IsActive() and ns.AIConversation then
+  if ns.AIConversation and ns.AIConversation.GetAIMessage then
     msg = ns.AIConversation:GetAIMessage(key)
   end
   if not msg or msg == "" then
