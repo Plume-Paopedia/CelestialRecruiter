@@ -136,7 +136,7 @@ function T:_Validate(license)
     end
 
     -- Check expiry (YYYYMMDD format as number)
-    local now = tonumber(os.date("%Y%m%d"))
+    local now = tonumber(date("%Y%m%d"))
     if license.expiry < now then
         -- Expired
         if ns.Notifications_Info then
