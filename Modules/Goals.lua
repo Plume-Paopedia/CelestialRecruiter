@@ -736,6 +736,7 @@ function G:GetAllAchievements()
     local showAll = not ns.Tier or ns.Tier:CanUse("achievements_full")
 
     local result = {}
+    local hiddenCount = 0
     for _, def in ipairs(ACHIEVEMENTS) do
         if showAll or def.category == "recrutement" then
             local unlockData = achievements[def.id]
@@ -748,7 +749,14 @@ function G:GetAllAchievements()
                 unlocked    = unlockData ~= nil,
                 unlockedAt  = unlockData and unlockData.unlockedAt or nil,
             })
+        else
+            hiddenCount = hiddenCount + 1
         end
+    end
+
+    -- Notify about hidden achievements (once per session via ShowUpgrade throttle)
+    if hiddenCount > 0 then
+        ns.Tier:ShowUpgrade("achievements_full")
     end
 
     -- Sort: by category order, then unlocked first within each category

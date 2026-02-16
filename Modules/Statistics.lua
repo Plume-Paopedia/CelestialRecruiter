@@ -129,7 +129,10 @@ end
 -- Get best hours for recruiting (based on success rate)
 function Stats:GetBestHours()
     -- Tier gate: advanced stats require Recruteur+
-    if ns.Tier and not ns.Tier:CanUse("stats_advanced") then return {} end
+    if ns.Tier and not ns.Tier:CanUse("stats_advanced") then
+        ns.Tier:ShowUpgrade("stats_advanced")
+        return {}
+    end
     if not ns.db.global.statistics then self:Init() end
     local hourly = ns.db.global.statistics.hourlyActivity
 
@@ -150,7 +153,10 @@ end
 -- Get template performance (success rate)
 function Stats:GetTemplatePerformance()
     -- Tier gate: advanced stats require Recruteur+
-    if ns.Tier and not ns.Tier:CanUse("stats_advanced") then return {} end
+    if ns.Tier and not ns.Tier:CanUse("stats_advanced") then
+        ns.Tier:ShowUpgrade("stats_advanced")
+        return {}
+    end
     if not ns.db.global.statistics then self:Init() end
     local tplStats = ns.db.global.statistics.templateStats
 
@@ -232,6 +238,7 @@ end
 function Stats:GetTrends()
     -- Tier gate: trends require Recruteur+
     if ns.Tier and not ns.Tier:CanUse("stats_advanced") then
+        ns.Tier:ShowUpgrade("stats_advanced")
         return { contactedChange = 0, invitedChange = 0, joinedChange = 0 }
     end
     local daily = self:GetDailyActivity(14)

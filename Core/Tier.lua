@@ -137,8 +137,8 @@ function T:_Validate(license)
     if license.expiry < now then
         -- Expired
         if ns.Notifications_Info then
-            ns.Notifications_Info("Licence expiree",
-                "Votre licence " .. (license.tier or "") .. " a expire. Renouvelez sur Patreon.")
+            ns.Notifications_Info("Licence expir\195\169e",
+                "Votre licence " .. (license.tier or "") .. " a expir\195\169. Renouvelez sur Patreon.")
         end
         return "free"
     end
@@ -196,37 +196,37 @@ end
 local TIER_NAMES = {
     free      = "Le Scout",
     recruteur = "Le Recruteur (3\226\130\172/mois)",
-    pro       = "L'Elite (7\226\130\172/mois)",
-    lifetime  = "Le Legendaire (20\226\130\172)",
+    pro       = "L'\195\137lite (7\226\130\172/mois)",
+    lifetime  = "Le L\195\169gendaire (20\226\130\172)",
 }
 
 local UPGRADE_HINTS = {
-    auto_scan            = "Auto-Scan scanne en arriere-plan pendant que vous jouez.",
-    auto_scan_continuous = "Cycles de scan illimites en continu.",
-    auto_recruiter       = "Recrutement automatique pendant que vous jouez.",
-    contacts_max         = "Sauvegardez plus de contacts pour ne rien perdre.",
-    queue_max            = "File d'attente elargie pour traiter plus de recrues.",
-    custom_templates_max = "Creez plus de modeles personnalises.",
-    template_vars_all    = "Utilisez {discord}, {raidDays}, {goal} dans vos messages.",
-    stats_advanced       = "Decouvrez vos meilleures heures et templates.",
-    ab_testing           = "Trouvez automatiquement le meilleur modele.",
-    campaigns_active_max = "Gerez plusieurs campagnes simultanees.",
-    campaigns_scheduling = "Planifiez vos campagnes par jour et heure.",
-    discord_webhook      = "Recevez des notifications Discord en temps reel.",
-    discord_all_events   = "Tous les 30+ types d'evenements Discord.",
-    bulk_tag_status      = "Operations en masse : tag et statut.",
-    bulk_whisper_invite  = "Whisper et invite en masse.",
-    themes_preset_max    = "Debloquez tous les themes visuels.",
-    theme_custom         = "Creez votre propre theme personnalise.",
-    achievements_full    = "Debloquez les 29 succes et categories.",
-    leaderboard_full     = "Classement complet et participation guilde.",
-    suggestions_max      = "Toutes les suggestions intelligentes.",
-    reputation_full      = "Score de reputation detaille (0-100).",
+    auto_scan            = "L'Auto-Scan d\195\169couvre des joueurs en arri\195\168re-plan pendant que vous jouez.",
+    auto_scan_continuous = "Auto-scan arr\195\170t\195\169 apr\195\168s 1 cycle. Cycles illimit\195\169s en continu.",
+    auto_recruiter       = "Recrutement 100% automatique. Z\195\169ro clic, z\195\169ro effort.",
+    contacts_max         = "Base pleine ! Plus de contacts = plus de recrues potentielles.",
+    queue_max            = "File d'attente pleine ! \195\137largissez-la pour ne perdre aucun prospect.",
+    custom_templates_max = "Cr\195\169ez plus de mod\195\168les personnalis\195\169s pour chaque situation.",
+    template_vars_all    = "D\195\169bloquez {discord}, {raidDays}, {goal} pour des messages plus percutants.",
+    stats_advanced       = "D\195\169couvrez vos meilleures heures et templates les plus efficaces.",
+    ab_testing           = "Testez vos templates automatiquement et trouvez le plus performant.",
+    campaigns_active_max = "Limite de campagnes atteinte. G\195\169rez-en plus simultan\195\169ment.",
+    campaigns_scheduling = "Planifiez vos campagnes par jour et heure pour cibler les pics d'activit\195\169.",
+    discord_webhook      = "Notifications Discord en temps r\195\169el quand un joueur rejoint ou \195\169crit.",
+    discord_all_events   = "Tous les 30+ types d'\195\169v\195\169nements Discord pour un suivi complet.",
+    bulk_tag_status      = "Op\195\169rations en masse : taguez et changez le statut de dizaines de contacts.",
+    bulk_whisper_invite  = "Whisper et invite en masse. Gagnez des heures chaque semaine.",
+    themes_preset_max    = "D\195\169bloquez les 6 th\195\168mes visuels pour personnaliser votre interface.",
+    theme_custom         = "Cr\195\169ez votre propre th\195\168me avec le cr\195\169ateur de couleurs.",
+    achievements_full    = "D\195\169bloquez les 29 succ\195\168s et toutes les cat\195\169gories.",
+    leaderboard_full     = "Classement complet sans plafond et participation guilde.",
+    suggestions_max      = "Toutes les suggestions intelligentes pour optimiser votre recrutement.",
+    reputation_full      = "Score de r\195\169putation d\195\169taill\195\169 (0-100) avec analyse des facteurs.",
     welcome_dm           = "Message de bienvenue automatique aux nouvelles recrues.",
-    auto_backup          = "Sauvegarde automatique quotidienne.",
-    web_export           = "Exportez vers le dashboard web.",
-    filter_presets_max   = "Sauvegardez vos filtres preferes.",
-    scan_query_cap       = "Scan complet du serveur sans limite de requetes.",
+    auto_backup          = "Sauvegarde automatique quotidienne de vos donn\195\169es.",
+    web_export           = "Exportez vos donn\195\169es vers le dashboard web.",
+    filter_presets_max   = "Sauvegardez vos combinaisons de filtres pr\195\169f\195\169r\195\169es.",
+    scan_query_cap       = "Scan limit\195\169 (free). Le scan complet couvre tout le serveur.",
 }
 
 -- Throttle: don't spam the same upgrade prompt
@@ -248,7 +248,7 @@ function T:ShowUpgrade(featureId)
     local hint = UPGRADE_HINTS[featureId] or ""
 
     if ns.Notifications_Info then
-        ns.Notifications_Info("Fonctionnalite reservee",
+        ns.Notifications_Info("Fonctionnalit\195\169 r\195\169serv\195\169e",
             hint .. " Disponible avec " .. tierName .. ".")
     else
         ns.Util_Print("|cffC9AA71[Tier]|r " .. hint .. " Disponible avec " .. tierName .. ".")
@@ -259,7 +259,7 @@ end
 
 function T:Activate(keyStr)
     if not keyStr or keyStr == "" then
-        return false, "Cle vide. Format: CR-TIER-DATE-CHECKSUM"
+        return false, "Cl\195\169 vide. Format: CR-TIER-DATE-CHECKSUM"
     end
 
     -- Parse: CR-{TIER}-{YYYYMMDD}-{8hex}
@@ -277,7 +277,7 @@ function T:Activate(keyStr)
     -- Validate checksum
     local expected = computeChecksum(tierCode, dateStr)
     if checksum ~= expected then
-        return false, "Cle invalide (checksum incorrect)."
+        return false, "Cl\195\169 invalide (checksum incorrect)."
     end
 
     -- Store license
@@ -297,9 +297,9 @@ function T:Activate(keyStr)
     -- Celebration!
     local tierName = TIER_NAMES[tier] or tier
     if ns.Notifications_Celebrate then
-        ns.Notifications_Celebrate("Licence activee !", tierName .. " debloque. Merci pour votre soutien !")
+        ns.Notifications_Celebrate("Licence activ\195\169e !", tierName .. " d\195\169bloqu\195\169. Merci pour votre soutien !")
     else
-        ns.Util_Print("|cff00ff00Licence activee !|r " .. tierName .. " debloque. Merci !")
+        ns.Util_Print("|cff00ff00Licence activ\195\169e !|r " .. tierName .. " d\195\169bloqu\195\169. Merci !")
     end
 
     -- Play effects

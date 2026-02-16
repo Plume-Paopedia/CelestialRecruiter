@@ -123,6 +123,12 @@ function ns.Templates_Render(key, tplId)
     map["{discord}"] = clean(p.discord ~= "" and p.discord or "a definir")
     map["{raidDays}"] = clean(p.raidDays ~= "" and p.raidDays or "a definir")
     map["{goal}"] = clean(p.goal ~= "" and p.goal or "a definir")
+  else
+    -- Show placeholder so user knows the variable exists but is locked
+    map["{discord}"] = "[Recruteur]"
+    map["{raidDays}"] = "[Recruteur]"
+    map["{goal}"] = "[Recruteur]"
+    ns.Tier:ShowUpgrade("template_vars_all")
   end
 
   local out = tpl.text

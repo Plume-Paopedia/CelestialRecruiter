@@ -208,6 +208,7 @@ function L:_UpdateTier()
     -- Tier gate: Free users capped at Silver, full leaderboard requires Recruteur+
     if ns.Tier and not ns.Tier:CanUse("leaderboard_full") then
         if tier == "gold" or tier == "diamond" then
+            ns.Tier:ShowUpgrade("leaderboard_full")
             tier = "silver"
         end
     end

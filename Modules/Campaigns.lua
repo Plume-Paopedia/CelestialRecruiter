@@ -241,6 +241,7 @@ function Camp:CheckSchedule(campId)
 
     -- Tier gate: scheduling requires Pro tier
     if ns.Tier and not ns.Tier:CanUse("campaigns_scheduling") then
+        ns.Tier:ShowUpgrade("campaigns_scheduling")
         return true -- ignore schedule if not Pro (always allow)
     end
 

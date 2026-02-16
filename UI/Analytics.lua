@@ -852,6 +852,29 @@ function ns.UI_BuildAnalytics(panel)
     -- Set scroll content height
     scroll:SetH(math.abs(yOffset) + 20)
 
+    -- Empty state overlay (shown when no data)
+    ad.emptyState = CreateFrame("Frame", nil, panel, "BackdropTemplate")
+    ad.emptyState:SetAllPoints(scroll.frame)
+    ad.emptyState:SetBackdrop({bgFile = W.SOLID})
+    ad.emptyState:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.92)
+    ad.emptyState:SetFrameStrata("DIALOG")
+
+    local emptyIcon = ad.emptyState:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    emptyIcon:SetPoint("CENTER", 0, 30)
+    emptyIcon:SetText("|TInterface\\Icons\\INV_Misc_StoneTablet_05:32:32:0:0|t")
+
+    local emptyTitle = ad.emptyState:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    emptyTitle:SetPoint("CENTER", 0, -5)
+    emptyTitle:SetText("Aucune donn\195\169e disponible")
+    emptyTitle:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+
+    local emptyHint = ad.emptyState:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    emptyHint:SetPoint("CENTER", 0, -30)
+    emptyHint:SetText("Lancez un scan et recrutez des joueurs pour voir vos analytiques ici.")
+    emptyHint:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+
+    ad.emptyState:Hide()
+
     -- Store references
     ns._analyticsData = ad
     ns._analyticsScroll = scroll
@@ -866,8 +889,10 @@ function ns.UI_RefreshAnalytics()
 
     -- 1. Summary Cards — count actual contact statuses from DB (reliable)
     local realContacted, realInvited, realJoined = 0, 0, 0
+    local hasAnyContact = false
     if ns.db and ns.db.global and ns.db.global.contacts then
         for _, c in pairs(ns.db.global.contacts) do
+            hasAnyContact = true
             if c.status == "contacted" then
                 realContacted = realContacted + 1
             elseif c.status == "invited" then
@@ -875,6 +900,15 @@ function ns.UI_RefreshAnalytics()
             elseif c.status == "joined" then
                 realJoined = realJoined + 1
             end
+        end
+    end
+
+    -- Show/hide empty state overlay
+    if ad.emptyState then
+        if hasAnyContact then
+            ad.emptyState:Hide()
+        else
+            ad.emptyState:Show()
         end
     end
     -- In the funnel: contacted = everyone we reached out to (contacted + invited + joined)

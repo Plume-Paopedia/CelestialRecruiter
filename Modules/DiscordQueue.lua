@@ -81,6 +81,7 @@ function DQ:Init()
 
     -- Tier gate: Discord webhook requires Recruteur+
     if ns.Tier and not ns.Tier:CanUse("discord_webhook") then
+        ns.Tier:ShowUpgrade("discord_webhook")
         return
     end
 

@@ -91,6 +91,15 @@ local function addReputationTooltip(contact, score)
         GameTooltip:AddDoubleLine("Prob. conversion :", format("%d%%", pct),
             C.dim[1], C.dim[2], C.dim[3], probColor[1], probColor[2], probColor[3])
     end
+
+    -- Color scale legend
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine("-- Echelle des couleurs --", C.dim[1], C.dim[2], C.dim[3])
+    GameTooltip:AddDoubleLine("  80+", "Chaud",     C.dim[1], C.dim[2], C.dim[3], 1.00, 0.55, 0.10)
+    GameTooltip:AddDoubleLine("  50-79", "Prometteur", C.dim[1], C.dim[2], C.dim[3], 0.20, 0.88, 0.48)
+    GameTooltip:AddDoubleLine("  30-49", "Neutre",   C.dim[1], C.dim[2], C.dim[3], 0.55, 0.58, 0.66)
+    GameTooltip:AddDoubleLine("  10-29", "Froid",    C.dim[1], C.dim[2], C.dim[3], 0.40, 0.60, 0.90)
+    GameTooltip:AddDoubleLine("  0-9",   "Ignorer",  C.dim[1], C.dim[2], C.dim[3], 1.00, 0.40, 0.40)
 end
 
 ---------------------------------------------------------------------------
@@ -259,14 +268,21 @@ local function batchRecruitAll()
     local failCount = 0
 
     ns.Util_Print(format("Recrutement en masse: %d joueur(s)...", total))
+    if ns.Notifications_Info then
+        ns.Notifications_Info("Recrutement en masse", format("Envoi en cours pour %d joueur(s)...", total))
+    end
 
     local function processNext()
         idx = idx + 1
         if idx > total then
             batchRunning = false
-            ns.Util_Print(format(
-                "Recrutement termine: %d/%d envoyes, %d en echec.",
-                successCount, total, failCount))
+            local msg = format("Recrutement termin\195\169 : %d/%d envoy\195\169s, %d en \195\169chec.", successCount, total, failCount)
+            ns.Util_Print(msg)
+            if successCount > 0 and ns.Notifications_Success then
+                ns.Notifications_Success("Recrutement termin\195\169", format("%d/%d messages envoy\195\169s avec succ\195\168s.", successCount, total))
+            elseif ns.Notifications_Info then
+                ns.Notifications_Info("Recrutement termin\195\169", msg)
+            end
             ns.UI_Refresh()
             return
         end

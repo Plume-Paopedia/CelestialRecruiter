@@ -387,6 +387,15 @@ local function finishScan(logLine)
     })
   end
 
+  -- Toast notification for scan completion
+  local found = Scanner.resultCount or 0
+  if found > 0 and ns.Notifications_Success then
+    ns.Notifications_Success("Scan termin\195\169",
+      format("%d joueur(s) trouv\195\169(s), %d requ\195\170tes envoy\195\169es.", found, Scanner.querySent or 0))
+  elseif ns.Notifications_Info and logLine then
+    ns.Notifications_Info("Scan termin\195\169", logLine)
+  end
+
   ns.UI_Refresh()
 end
 

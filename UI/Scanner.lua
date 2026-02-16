@@ -10,6 +10,24 @@ local format = string.format
 local sd = {}
 local _lastAmbientTime = 0
 
+-- Confirmation popup for clearing scanner results
+StaticPopupDialogs["CELREC_CONFIRM_CLEAR"] = {
+    text = "Voulez-vous vraiment effacer tous les r\195\169sultats du scan ?",
+    button1 = "Oui",
+    button2 = "Non",
+    OnAccept = function()
+        ns.Scanner_Clear()
+        if ns.Notifications_Info then
+            ns.Notifications_Info("R\195\169sultats vid\195\169s", "Les r\195\169sultats du scan ont \195\169t\195\169 effac\195\169s.")
+        end
+        ns.UI_Refresh()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 -- Pre-computed color strings (avoid format() in tight loops)
 local MUTED_HEX = format("%02x%02x%02x", C.muted[1]*255, C.muted[2]*255, C.muted[3]*255)
 local STATUS_BLACKLIST = "|cffff6666Blackliste|r"
@@ -168,16 +186,21 @@ function ns.UI_BuildScanner(parent)
     -- Import /who
     sd.importBtn = W.MakeBtn(controls, "Importer /who", 100, "n", function()
         local added, total = ns.Scanner_ImportCurrentWho()
-        ns.Util_Print(("Import /who: %d/%d"):format(added or 0, total or 0))
+        local msg = format("Import /who: %d/%d", added or 0, total or 0)
+        ns.Util_Print(msg)
+        if ns.Notifications_Success and (added or 0) > 0 then
+            ns.Notifications_Success("Import /who", format("%d joueur(s) import\195\169(s) sur %d.", added, total))
+        elseif ns.Notifications_Info then
+            ns.Notifications_Info("Import /who", "Aucun nouveau joueur trouv\195\169.")
+        end
         ns.UI_Refresh()
     end)
     sd.importBtn:SetPoint("LEFT", sd.stopBtn, "RIGHT", 6, 0)
     W.AddTooltip(sd.importBtn, "Importer /who", "Importe les resultats de la fenetre /who actuelle.")
 
-    -- Clear
+    -- Clear (with confirmation)
     sd.clearBtn = W.MakeBtn(controls, "Vider", 60, "n", function()
-        ns.Scanner_Clear()
-        ns.UI_Refresh()
+        StaticPopup_Show("CELREC_CONFIRM_CLEAR")
     end)
     sd.clearBtn:SetPoint("LEFT", sd.importBtn, "RIGHT", 6, 0)
     W.AddTooltip(sd.clearBtn, "Vider", "Supprime tous les resultats du scan.")
