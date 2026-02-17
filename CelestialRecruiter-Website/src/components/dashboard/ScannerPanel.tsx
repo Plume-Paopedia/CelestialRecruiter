@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { CLASS_COLORS } from '@/lib/constants';
 import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
@@ -14,11 +14,22 @@ export function ScannerPanel() {
   const { hasAccess } = useTier();
   const { data } = useData();
   const showAutoScan = hasAccess('recruteur');
+  const [search, setSearch] = useState('');
 
   const players = useMemo(() => {
     if (!data) return [];
+    const q = search.toLowerCase().trim();
     return Object.values(data.contacts)
       .filter(c => c.status === 'new' || c.status === 'contacted')
+      .filter(c => {
+        if (!q) return true;
+        return (
+          (c.name || '').toLowerCase().includes(q) ||
+          (c.classLabel || c.classFile || '').toLowerCase().includes(q) ||
+          (c.zone || '').toLowerCase().includes(q) ||
+          (c.guild || '').toLowerCase().includes(q)
+        );
+      })
       .sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0))
       .slice(0, 50)
       .map(c => ({
@@ -29,7 +40,7 @@ export function ScannerPanel() {
         guild: c.guild || '',
         status: 'online' as const,
       }));
-  }, [data]);
+  }, [data, search]);
 
   return (
     <div>
@@ -44,7 +55,9 @@ export function ScannerPanel() {
           <input
             type="text"
             placeholder="Search players..."
-            readOnly
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search players by name, class, zone, or guild"
             style={{
               flex: 1,
               background: '#211d18',

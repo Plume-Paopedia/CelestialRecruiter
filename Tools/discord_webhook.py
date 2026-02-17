@@ -67,9 +67,9 @@ class DiscordRateLimiter:
         self.window_seconds = window_seconds
         self.request_times = deque()
 
-    def wait_if_needed(self):
-        """Block if rate limit would be exceeded"""
-        for _ in range(10):  # Max 10 retries instead of unbounded recursion
+    def wait_if_needed(self) -> bool:
+        """Block if rate limit would be exceeded. Returns True if OK to proceed."""
+        for _ in range(10):  # Max 10 retries
             now = time.time()
 
             # Remove old requests outside the window
@@ -83,10 +83,14 @@ class DiscordRateLimiter:
                     logger.warning(f"Rate limit reached, waiting {sleep_time:.1f}s")
                     time.sleep(sleep_time)
                     continue  # Re-check after sleep
-            break
 
-        # Record this request
-        self.request_times.append(time.time())
+            # Slot available — record this request and proceed
+            self.request_times.append(time.time())
+            return True
+
+        # Exhausted retries without finding a slot
+        logger.error("Rate limit: exhausted retries, skipping request")
+        return False
 
 
 class LuaParser:
@@ -871,6 +875,15 @@ class DiscordWebhookBot:
             for field in required:
                 if field not in config:
                     raise ValueError(f"Missing required config field: {field}")
+
+            # Reject placeholder values
+            placeholders = ["YOUR_", "CHANGE_ME", "xxx"]
+            for field in required:
+                value = config[field]
+                for placeholder in placeholders:
+                    if placeholder in str(value).upper():
+                        logger.error(f"Config '{field}' contains placeholder value. Edit config.json before running.")
+                        sys.exit(1)
 
             # Set defaults
             config.setdefault('check_interval', 5)

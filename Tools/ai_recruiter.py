@@ -203,7 +203,9 @@ class LuaWriter:
             s.replace("\\", "\\\\")
             .replace('"', '\\"')
             .replace("\n", "\\n")
+            .replace("\r", "\\r")
             .replace("\t", "\\t")
+            .replace("\0", "")
         )
 
     @staticmethod
@@ -440,20 +442,37 @@ class AIRecruiter:
         messages = {}
         to_generate = []
 
+        # Debug: count status distribution
+        status_counts = {}
+        skip_existing = 0
+        skip_no_contact = 0
+
         for key in queue:
             # Skip if we already have a message
             if key in existing_messages and existing_messages[key]:
                 messages[key] = existing_messages[key]
+                skip_existing += 1
                 continue
 
-            contact = contacts.get(key, {})
+            contact = contacts.get(key)
+            if not contact or not isinstance(contact, dict):
+                skip_no_contact += 1
+                continue
+
             # Skip only fully processed contacts (invited/joined/ignored)
             # Keep "new" and "contacted" since they still appear in queue UI
             status = contact.get("status", "new")
+            status_counts[status] = status_counts.get(status, 0) + 1
             if status in ("invited", "joined", "ignored"):
                 continue
 
             to_generate.append((key, contact))
+
+        logger.info(
+            f"Queue analysis: {len(queue)} total, {skip_existing} have msg, "
+            f"{skip_no_contact} no contact, statuses: {status_counts}, "
+            f"{len(to_generate)} to generate"
+        )
 
         if not to_generate:
             logger.info("No new messages to generate")
@@ -873,6 +892,15 @@ def load_config(config_path: str) -> dict:
         if not config.get(key):
             logger.error(f"Missing required config key: {key}")
             sys.exit(1)
+
+    # Reject placeholder values
+    placeholders = ["YOUR_", "CHANGE_ME", "xxx", "sk-ant-..."]
+    for key in required:
+        value = str(config[key])
+        for placeholder in placeholders:
+            if placeholder in value:
+                logger.error(f"Config '{key}' contains placeholder value. Edit config.json before running.")
+                sys.exit(1)
 
     return config
 

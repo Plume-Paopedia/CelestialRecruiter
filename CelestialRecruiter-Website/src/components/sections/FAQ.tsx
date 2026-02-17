@@ -16,18 +16,22 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         border: open ? '1px solid #6b5635' : '1px solid #352c20',
         borderRadius: '6px',
         overflow: 'hidden',
-        cursor: 'pointer',
         transition: 'border-color 0.3s ease',
       }}
-      onClick={() => setOpen(!open)}
     >
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!open); } }}
         style={{
           padding: '1.15rem 1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: '1rem',
+          cursor: 'pointer',
         }}
       >
         <h3

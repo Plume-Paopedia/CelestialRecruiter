@@ -85,7 +85,7 @@ function SR:Init()
     if saved._lastStats and not saved._lastStats.stopReason then
         saved._lastStats.stopReason = "disconnect"
         C_Timer.After(5, function()
-            self:ShowCompletionSummary(saved._lastStats)
+            self:ShowCrashResume(saved._lastStats)
         end)
     end
 
@@ -662,4 +662,36 @@ function SR:ShowCompletionSummary(stats)
     if ns.Notifications_Success then
         ns.Notifications_Success("Mode Nuit termin\195\169", summary)
     end
+end
+
+---------------------------------------------------------------------------
+-- Crash resume dialog (shows after reconnect with option to restart)
+---------------------------------------------------------------------------
+StaticPopupDialogs["CELREC_SLEEP_CRASH_RESUME"] = {
+    text = "|cffC9AA71CelestialRecruiter|r\n\nLe Mode Nuit \195\169tait actif avant la d\195\169connexion.\n%s\n\nReprendre le Mode Nuit ?",
+    button1 = "Reprendre",
+    button2 = "Fermer",
+    OnAccept = function()
+        ns.SleepRecruiter:Start()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+function SR:ShowCrashResume(stats)
+    if not stats then return end
+
+    local elapsed = stats.elapsed or 0
+    local summary = string.format(
+        "%d contact\195\169(s), %d invit\195\169(s), %d msg AI en %s",
+        stats.contacted or 0, stats.invited or 0,
+        stats.aiMessages or 0, formatDuration(elapsed))
+
+    -- Show the dialog with stats
+    StaticPopup_Show("CELREC_SLEEP_CRASH_RESUME", summary)
+
+    -- Also show the completion toast
+    self:ShowCompletionSummary(stats)
 end

@@ -1,0 +1,424 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+// ============================================
+// Activate Page — License Activation
+// ============================================
+.activate-page {
+  min-height: 100vh;
+  background: $bg-deepest;
+  padding-top: 56px;
+}
+
+.activate-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  position: relative;
+  z-index: $z-content;
+}
+
+// ── Loading ──────────────────────────────────
+.activate-loading {
+  text-align: center;
+  padding: 4rem 0;
+  color: $text-secondary;
+
+  .activate-spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid $border-subtle;
+    border-top-color: $gold-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Error State ──────────────────────────────
+.activate-error-panel {
+  text-align: center;
+  padding: 2rem 0;
+
+  .activate-error-icon {
+    font-size: 2.5rem;
+    color: $status-error;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $status-error;
+    margin-bottom: 0.5rem;
+  }
+
+  > p {
+    color: $text-secondary;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.activate-error-help {
+  @include stone-panel;
+  border-radius: $radius-md;
+  padding: 1.25rem;
+  text-align: left;
+  font-size: 0.82rem;
+  color: $text-muted;
+
+  ul {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+    line-height: 1.8;
+  }
+
+  a {
+    color: $gold-primary;
+    text-decoration: none;
+    border-bottom: 1px solid rgba($gold-primary, 0.3);
+    &:hover { opacity: 0.8; }
+  }
+}
+
+// ── Header ───────────────────────────────────
+.activate-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .activate-section-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: $gold-dark;
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    color: $gold-primary;
+    text-shadow: 0 1px 8px rgba(201, 170, 113, 0.08);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 0.9rem;
+  }
+}
+
+// ── Patron Info Card ─────────────────────────
+.activate-patron-card {
+  @include stone-panel;
+  border-radius: $radius-md;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+
+  // Corner decorations
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1px solid $border-accent;
+    pointer-events: none;
+  }
+  &::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+  &::after { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+
+  &.tier-rare { border-color: rgba($rare-blue, 0.25); }
+  &.tier-epic { border-color: rgba($epic-purple, 0.25); }
+  &.tier-legendary { border-color: rgba($legendary-gold, 0.25); }
+
+  .activate-patron-greeting {
+    font-size: 0.95rem;
+    color: $text-primary;
+    margin-bottom: 0.5rem;
+    strong { color: $gold-primary; }
+  }
+
+  .activate-tier-badge {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+}
+
+// ── Form Section ─────────────────────────────
+.activate-form-section {
+  margin-bottom: 1.5rem;
+
+  .activate-label {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 0.25rem;
+  }
+
+  .activate-input-hint {
+    font-size: 0.75rem;
+    color: $text-muted;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.activate-input {
+  width: 100%;
+  background: $bg-card;
+  border: 1px solid $border-subtle;
+  border-radius: $radius-sm;
+  padding: 0.85rem 1rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 1rem;
+  color: $text-primary;
+  outline: none;
+  transition: border-color 0.2s ease;
+  text-align: center;
+  letter-spacing: 0.02em;
+
+  &:focus { border-color: $gold-dark; }
+  &::placeholder { color: $text-faint; }
+  &:disabled { opacity: 0.5; }
+}
+
+.activate-input-error {
+  font-size: 0.75rem;
+  color: $status-error;
+  margin-top: 0.35rem;
+  text-align: center;
+}
+
+// ── Notice ───────────────────────────────────
+.activate-notice {
+  font-size: 0.78rem;
+  color: $text-muted;
+  line-height: 1.6;
+  padding: 0.75rem 1rem;
+  background: rgba($text-faint, 0.06);
+  border-radius: $radius-sm;
+  border: 1px solid $border-faint;
+  margin-bottom: 1.5rem;
+
+  strong { color: $text-secondary; }
+}
+
+// ── Actions ──────────────────────────────────
+.activate-actions {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .activate-submit-btn {
+    width: 100%;
+    &:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  }
+}
+
+// ============================================
+// Success State
+// ============================================
+.activate-success-header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .activate-success-icon {
+    font-size: 2.5rem;
+    color: $status-success;
+    margin-bottom: 0.75rem;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    @include gold-text;
+    filter: drop-shadow(0 1px 4px rgba(139, 115, 64, 0.2));
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 0.9rem;
+  }
+}
+
+// ── Key Display ──────────────────────────────
+@keyframes warmGlow {
+  0%, 100% { box-shadow: $shadow-card, 0 0 0 rgba(139, 115, 64, 0); }
+  50% { box-shadow: $shadow-card, 0 0 12px rgba(139, 115, 64, 0.08); }
+}
+
+.activate-key-panel {
+  @include stone-panel;
+  border-radius: $radius-md;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  animation: warmGlow 4s ease-in-out infinite;
+
+  // Corner decorations
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1px solid $border-accent;
+    pointer-events: none;
+  }
+  &::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+  &::after { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+
+  &.tier-rare { border-color: rgba($rare-blue, 0.3); }
+  &.tier-epic { border-color: rgba($epic-purple, 0.3); }
+  &.tier-legendary { border-color: rgba($legendary-gold, 0.3); }
+
+  .activate-key-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: $gold-dark;
+    margin-bottom: 0.75rem;
+  }
+
+  .activate-key-value {
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(1rem, 3vw, 1.35rem);
+    color: $gold-primary;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    background: $bg-deepest;
+    border: 1px solid $border-subtle;
+    border-radius: $radius-sm;
+    margin-bottom: 1rem;
+    user-select: all;
+    word-break: break-all;
+    text-shadow: 0 1px 4px rgba(139, 115, 64, 0.15);
+  }
+}
+
+.activate-copy-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.65rem 2rem;
+  background: linear-gradient(180deg, rgba($gold-primary, 0.2), rgba($gold-dark, 0.12));
+  border: 1px solid $gold-dark;
+  border-radius: $radius-sm;
+  color: $gold-primary;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+
+  &:hover {
+    background: linear-gradient(180deg, rgba($gold-primary, 0.3), rgba($gold-dark, 0.18));
+    border-color: $gold-primary;
+  }
+
+  &.copied {
+    background: rgba(74, 222, 128, 0.15);
+    border-color: rgba(74, 222, 128, 0.4);
+    color: $status-success;
+  }
+}
+
+.activate-copy-inline {
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+  transition: color 0.2s;
+  &:hover { color: $gold-primary; }
+  &.copied { color: $status-success; }
+}
+
+// ── Instructions ─────────────────────────────
+.activate-instructions {
+  @include stone-panel;
+  border-radius: $radius-md;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+
+  .activate-instructions-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: $gold-primary;
+    margin-bottom: 1rem;
+  }
+
+  // Reuse .step classes from _dashboard.scss
+  .activate-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.82rem;
+    background: $bg-deepest;
+    padding: 4px 8px;
+    border-radius: $radius-sm;
+    color: $gold-primary;
+    border: 1px solid $border-subtle;
+  }
+}
+
+// ── Key Details ──────────────────────────────
+.activate-details {
+  @include stone-panel;
+  border-radius: $radius-md;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.activate-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid $border-faint;
+  font-size: 0.82rem;
+  color: $text-muted;
+
+  &:last-child { border-bottom: none; }
+
+  .activate-detail-value {
+    color: $text-primary;
+    font-weight: 600;
+  }
+}
+
+// ── Footer ───────────────────────────────────
+.activate-footer {
+  text-align: center;
+  font-size: 0.78rem;
+  color: $text-muted;
+  margin-top: 2rem;
+
+  a {
+    color: $gold-primary;
+    text-decoration: none;
+    border-bottom: 1px solid rgba($gold-primary, 0.3);
+    &:hover { opacity: 0.8; }
+  }
+}

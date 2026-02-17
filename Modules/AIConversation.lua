@@ -202,6 +202,8 @@ function AIC:SendPendingResponses()
     if not aiData or not aiData.responses then return 0 end
 
     local sent = 0
+    local pending = ns.db and ns.db.global and ns.db.global.aiPendingReplies
+
     for key, response in pairs(aiData.responses) do
         if response and response ~= "" then
             local c = ns.DB_GetContact(key)
@@ -211,17 +213,14 @@ function AIC:SendPendingResponses()
                 ns.DB_Log("AI", "Reponse AI envoyee a " .. key)
             end
         end
-    end
-
-    -- Clear processed responses
-    aiData.responses = {}
-
-    -- Clear pending replies that were answered
-    if ns.db and ns.db.global and ns.db.global.aiPendingReplies then
-        for key in pairs(aiData.responses or {}) do
-            ns.db.global.aiPendingReplies[key] = nil
+        -- Clear matching pending reply as we go
+        if pending then
+            pending[key] = nil
         end
     end
+
+    -- Clear all processed responses
+    aiData.responses = {}
 
     return sent
 end

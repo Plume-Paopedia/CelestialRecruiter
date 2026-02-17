@@ -32,6 +32,7 @@ yarn-error.log*
 Tools/config.json
 Tools/*.log
 Tools/__pycache__/
+Tools/claimed_tokens.json
 
 # typescript
 *.tsbuildinfo

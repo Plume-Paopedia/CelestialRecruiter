@@ -43,6 +43,7 @@ export function Footer() {
             { label: 'Features', href: '#features' },
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Pricing', href: '#pricing' },
+            { label: 'Changelog', href: '/changelog' },
             { label: 'FAQ', href: '#faq' },
             { label: 'Discord', href: LINKS.discord, external: true },
             { label: 'CurseForge', href: LINKS.curseforge, external: true },
@@ -72,6 +73,21 @@ export function Footer() {
             </a>
           ))}
         </nav>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            fontSize: '0.7rem',
+          }}
+        >
+          <a href="/privacy" style={{ color: '#4a3f32', textDecoration: 'none' }}>
+            Privacy
+          </a>
+          <a href="/terms" style={{ color: '#4a3f32', textDecoration: 'none' }}>
+            Terms
+          </a>
+        </div>
 
         <p
           style={{

@@ -13,33 +13,38 @@ local lastSend = 0
 local MIN_INTERVAL = 2  -- seconds between webhooks
 
 ---------------------------------------------------------------------------
--- Send Discord Webhook
+-- Send Discord Webhook (in-game stub)
+--
+-- WoW addons CANNOT make HTTP requests — all network calls are sandboxed.
+-- This function queues webhook events into ns.DiscordQueue.  The actual
+-- Discord delivery is handled by the external companion script:
+--     Tools/discord_webhook.py
+-- which reads the addon SavedVariables and sends the real HTTP POSTs.
 ---------------------------------------------------------------------------
 local function sendWebhook(webhookUrl, payload)
     if not webhookUrl or webhookUrl == "" then
         return false, "No webhook URL configured"
     end
 
-    -- Rate limiting
+    -- Rate limiting (in-game, to avoid spamming the queue)
     local now = GetTime()
     if now - lastSend < MIN_INTERVAL then
         return false, "Rate limited"
     end
     lastSend = now
 
-    -- Note: WoW Lua cannot make HTTP requests directly
-    -- This function prepares the data format, but actual sending
-    -- requires an external companion app or addon like RESTFul
-
-    -- For now, we'll output to chat with instructions
-    local jsonPayload = ns.Discord:EncodePayload(payload)
-
-    if ns.db and ns.db.profile and ns.db.profile.discordWebhookUrl then
-        -- Log the webhook data for debugging
-        ns.Util_Print("Discord webhook prepared (requires external sender):")
-        ns.Util_Print("URL: " .. (webhookUrl or "not set"))
-        ns.DB_Log("DISCORD", "Webhook prepared: " .. (payload.content or ""))
+    -- Queue event for the external companion to pick up
+    if ns.DiscordQueue and ns.DiscordQueue.QueueEvent then
+        local title = payload.embeds and payload.embeds[1] and payload.embeds[1].title or ""
+        local desc  = payload.content or (payload.embeds and payload.embeds[1] and payload.embeds[1].description or "")
+        ns.DiscordQueue:QueueEvent("discord_webhook", {
+            title = title,
+            description = desc,
+        })
     end
+
+    local logMsg = payload.content or (payload.embeds and payload.embeds[1] and payload.embeds[1].title) or "(empty)"
+    ns.DB_Log("DISCORD", "Webhook queued: " .. tostring(logMsg))
 
     return true
 end

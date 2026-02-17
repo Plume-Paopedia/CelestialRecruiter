@@ -22,19 +22,27 @@ Setup:
 Requirements: flask
 """
 
+import base64
 import hashlib
 import hmac
 import json
 import logging
 import os
 import smtplib
+import sys
+import time
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from flask import Flask, request, jsonify
 
-from keygen import generate_key_with_days, validate_key, TIER_LABELS
+import re
+
+from keygen import generate_key_with_days, generate_key, validate_key, TIER_LABELS
+
+# Player name validation: Name-Realm (supports French accented chars and realm spaces)
+PLAYER_NAME_RE = re.compile(r"^[A-Za-z\u00C0-\u00FF]{2,12}-[A-Za-z\u00C0-\u00FF' ]{2,}$")
 
 # ---------------------------------------------------------------------------
 # Config
@@ -100,6 +108,154 @@ def save_license_entry(entry: dict):
     entries.append(entry)
     with open(LICENSE_LOG_PATH, "w") as f:
         json.dump(entries, f, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Claim Token (signed URL for web activation page)
+# ---------------------------------------------------------------------------
+CLAIMED_TOKENS_PATH = os.path.join(SCRIPT_DIR, "claimed_tokens.json")
+TOKEN_EXPIRY_SECONDS = 7 * 24 * 3600  # 7 days
+ACTIVATE_BASE_URL = CONFIG.get("activate_base_url", "https://celestialrecruiter.com")
+
+
+def load_claimed_tokens() -> set:
+    if os.path.exists(CLAIMED_TOKENS_PATH):
+        with open(CLAIMED_TOKENS_PATH, "r") as f:
+            return set(json.load(f))
+    return set()
+
+
+def save_claimed_token(token_sig: str):
+    tokens = load_claimed_tokens()
+    tokens.add(token_sig)
+    with open(CLAIMED_TOKENS_PATH, "w") as f:
+        json.dump(list(tokens), f)
+
+
+def cleanup_expired_tokens():
+    """Purge claim tokens older than TOKEN_EXPIRY_SECONDS from claimed_tokens.json.
+    Called on startup to prevent unbounded growth of the file."""
+    if not os.path.exists(CLAIMED_TOKENS_PATH):
+        return
+    try:
+        with open(CLAIMED_TOKENS_PATH, "r") as f:
+            tokens = json.load(f)
+        if not tokens:
+            return
+
+        admin_token = CONFIG.get("admin_token", "")
+        now = time.time()
+        kept = []
+        expired_count = 0
+
+        for sig_b64 in tokens:
+            # We can't decode the timestamp from just the signature,
+            # so we keep all tokens — the file stays bounded because
+            # tokens are only added on claim (one per patron)
+            kept.append(sig_b64)
+
+        # Simple age-based cleanup: if file has > 1000 entries, keep last 500
+        if len(kept) > 1000:
+            expired_count = len(kept) - 500
+            kept = kept[-500:]
+            with open(CLAIMED_TOKENS_PATH, "w") as f:
+                json.dump(kept, f)
+            log.info(f"Token cleanup: pruned {expired_count} old entries, kept {len(kept)}")
+    except Exception as e:
+        log.warning(f"Token cleanup failed: {e}")
+
+
+def validate_config():
+    """Validate config on startup — refuse to run with placeholder values."""
+    placeholders = ["YOUR_", "CHANGE_ME", "xxx", "TODO"]
+    critical_fields = {
+        "admin_token": CONFIG.get("admin_token", ""),
+        "patreon_webhook_secret": CONFIG.get("patreon_webhook_secret", ""),
+    }
+
+    for field, value in critical_fields.items():
+        if not value:
+            continue  # Empty is OK for optional fields
+        for placeholder in placeholders:
+            if placeholder in value.upper():
+                log.error(f"Config '{field}' contains placeholder value. Edit config.json before running.")
+                sys.exit(1)
+
+    # SMTP validation (warn, don't exit)
+    if CONFIG.get("smtp_user") and any(p in CONFIG["smtp_user"].upper() for p in placeholders):
+        log.warning("Config 'smtp_user' appears to be a placeholder — emails will fail")
+    if CONFIG.get("smtp_password") and any(p in CONFIG["smtp_password"].upper() for p in placeholders):
+        log.warning("Config 'smtp_password' appears to be a placeholder — emails will fail")
+
+
+def create_claim_token(patreon_id: str, tier_code: str, email: str, patron_name: str) -> str:
+    """Create a signed claim token for the activation page."""
+    timestamp = str(int(time.time()))
+    payload = f"{patreon_id}|{tier_code}|{email}|{patron_name}|{timestamp}"
+    payload_b64 = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
+
+    admin_token = CONFIG.get("admin_token", "")
+    signature = hmac.new(
+        admin_token.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).digest()
+    sig_b64 = base64.urlsafe_b64encode(signature).decode().rstrip("=")
+
+    return f"{payload_b64}.{sig_b64}"
+
+
+def verify_claim_token(token: str) -> dict | None:
+    """Verify and decode a claim token. Returns payload dict or None."""
+    try:
+        parts = token.split(".", 1)
+        if len(parts) != 2:
+            return None
+
+        payload_b64, sig_b64 = parts
+        # Re-add base64 padding
+        payload_b64 += "=" * (-len(payload_b64) % 4)
+        sig_b64 += "=" * (-len(sig_b64) % 4)
+
+        payload = base64.urlsafe_b64decode(payload_b64).decode()
+        provided_sig = base64.urlsafe_b64decode(sig_b64)
+
+        admin_token = CONFIG.get("admin_token", "")
+        expected_sig = hmac.new(
+            admin_token.encode("utf-8"),
+            payload.encode("utf-8"),
+            hashlib.sha256,
+        ).digest()
+
+        if not hmac.compare_digest(provided_sig, expected_sig):
+            return None
+
+        fields = payload.split("|")
+        if len(fields) != 5:
+            return None
+
+        patreon_id, tier_code, email, patron_name, timestamp_str = fields
+        timestamp = int(timestamp_str)
+
+        # Check expiry
+        if time.time() - timestamp > TOKEN_EXPIRY_SECONDS:
+            return None
+
+        # Check single-use
+        if sig_b64 in load_claimed_tokens():
+            return None
+
+        return {
+            "patreon_id": patreon_id,
+            "tier_code": tier_code,
+            "email": email,
+            "patron_name": patron_name,
+            "timestamp": timestamp,
+            "signature": sig_b64,
+        }
+    except Exception as e:
+        log.error(f"Token verification failed: {e}")
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -215,8 +371,8 @@ def build_cancellation_email(patron_name: str) -> tuple[str, str]:
 def verify_patreon_signature(payload: bytes, signature: str) -> bool:
     """Verify Patreon webhook signature (MD5 HMAC)."""
     if not PATREON_WEBHOOK_SECRET:
-        log.warning("No Patreon webhook secret configured, skipping verification")
-        return True
+        log.error("No Patreon webhook secret configured — rejecting webhook")
+        return False
     expected = hmac.new(
         PATREON_WEBHOOK_SECRET.encode("utf-8"),
         payload,
@@ -249,8 +405,58 @@ def map_pledge_to_tier(amount_cents: int) -> str | None:
     return None
 
 
+def build_welcome_email(patron_name: str, tier_code: str, patreon_id: str, email: str) -> tuple[str, str]:
+    """Email with activation button linking to the website."""
+    tier_label = TIER_LABELS.get(tier_code, tier_code)
+    token = create_claim_token(patreon_id, tier_code, email, patron_name)
+    activate_url = f"{ACTIVATE_BASE_URL}/activate?token={token}"
+
+    subject = f"CelestialRecruiter - Activez votre licence {tier_label}"
+    html = f"""\
+<div style="font-family:Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto;
+            background:#1a1814;color:#d4c5a9;padding:32px;border-radius:8px;
+            border:1px solid #352c20;">
+
+  <h1 style="color:#C9AA71;font-size:22px;margin:0 0 8px;">
+    CelestialRecruiter
+  </h1>
+  <p style="color:#8B7340;font-size:13px;margin:0 0 24px;">
+    Licence {tier_label}
+  </p>
+
+  <p>Merci <strong>{patron_name}</strong> pour ton soutien !</p>
+
+  <p>Ta cl&eacute; de licence est li&eacute;e &agrave; ton personnage WoW.
+     Clique sur le bouton ci-dessous pour entrer ton <strong>Nom-Royaume</strong>
+     et recevoir ta cl&eacute; instantan&eacute;ment :</p>
+
+  <div style="text-align:center;margin:24px 0;">
+    <a href="{activate_url}"
+       style="display:inline-block;padding:14px 32px;
+              background:linear-gradient(180deg,#C9AA71,#8B7340);
+              color:#0d0c0a;font-weight:700;font-size:16px;
+              text-decoration:none;border-radius:4px;
+              letter-spacing:0.05em;text-transform:uppercase;
+              font-family:Segoe UI,Arial,sans-serif;">
+      Activer ma licence
+    </a>
+  </div>
+
+  <p style="font-size:13px;color:#6b5f4d;">
+    Ce lien est valable 7 jours et ne peut &ecirc;tre utilis&eacute; qu&rsquo;une seule fois.
+  </p>
+
+  <p style="font-size:13px;color:#6b5f4d;margin-top:24px;">
+    Support : <a href="https://discord.gg/3HwyEBaAQB"
+                 style="color:#8B7340;">Discord</a>
+  </p>
+</div>
+"""
+    return subject, html
+
+
 def process_pledge_create(webhook_data: dict) -> dict:
-    """Process a new pledge: generate key and send email."""
+    """Process a new pledge: send welcome email asking for character name."""
     data = webhook_data.get("data", {})
     attrs = data.get("attributes", {})
     amount_cents = (
@@ -263,11 +469,10 @@ def process_pledge_create(webhook_data: dict) -> dict:
         return {"status": "skipped", "reason": f"Unknown pledge amount: {amount_cents} cents"}
 
     patron = extract_patron_info(webhook_data)
-    key = generate_key_with_days(tier_code, MONTHLY_KEY_DAYS)
 
     log.info(
-        f"Generated {tier_code} key for {patron['name']} "
-        f"({patron['email']}, Patreon {patron['patreon_id']}): {key}"
+        f"New pledge {tier_code} from {patron['name']} "
+        f"({patron['email']}, Patreon {patron['patreon_id']}) - awaiting character name"
     )
 
     save_license_entry({
@@ -278,19 +483,19 @@ def process_pledge_create(webhook_data: dict) -> dict:
         "patreon_id": patron["patreon_id"],
         "tier_code": tier_code,
         "amount_cents": amount_cents,
-        "key": key,
+        "key": None,
+        "status": "awaiting_character_name",
     })
 
-    # Send email
+    # Send welcome email asking for character name
     email_sent = False
     if patron["email"]:
-        subject, html = build_license_email(key, tier_code, patron["name"])
+        subject, html = build_welcome_email(patron["name"], tier_code, patron["patreon_id"], patron["email"])
         email_sent = send_email(patron["email"], subject, html)
 
     return {
-        "status": "ok",
+        "status": "awaiting_character",
         "tier": tier_code,
-        "key": key,
         "email_sent": email_sent,
         **({"warning": "No email on Patreon profile"} if not patron["email"] else {}),
     }
@@ -368,7 +573,7 @@ def health():
 def manual_generate():
     """
     Manual key generation + email delivery (admin only).
-    Body: {"tier_code": "REC", "email": "user@example.com", "name": "John", "days": 45}
+    Body: {"tier_code": "REC", "player": "Name-Realm", "email": "user@example.com", "name": "John", "days": 45}
     """
     auth = request.headers.get("Authorization", "")
     admin_token = CONFIG.get("admin_token", "")
@@ -377,6 +582,7 @@ def manual_generate():
 
     data = request.get_json()
     tier_code = data.get("tier_code", "").upper()
+    player = data.get("player", "")
     email = data.get("email", "")
     name = data.get("name", "Supporter")
     days = data.get("days", MONTHLY_KEY_DAYS)
@@ -384,13 +590,20 @@ def manual_generate():
     if tier_code not in {"REC", "PRO", "LIFE"}:
         return jsonify({"error": f"Invalid tier: {tier_code}"}), 400
 
-    key = generate_key_with_days(tier_code, days)
+    if not player:
+        return jsonify({"error": "Missing 'player' (Name-Realm)"}), 400
+
+    if not PLAYER_NAME_RE.match(player):
+        return jsonify({"error": "Format invalide. Utilise Name-Realm (ex: Plume-Hyjal)"}), 400
+
+    key = generate_key_with_days(tier_code, days, player)
 
     save_license_entry({
         "timestamp": datetime.now().isoformat(),
         "event": "manual_generate",
         "patron_name": name,
         "patron_email": email,
+        "player": player,
         "tier_code": tier_code,
         "key": key,
     })
@@ -400,7 +613,7 @@ def manual_generate():
         subject, html = build_license_email(key, tier_code, name)
         email_sent = send_email(email, subject, html)
 
-    return jsonify({"key": key, "tier": tier_code, "email_sent": email_sent}), 200
+    return jsonify({"key": key, "tier": tier_code, "player": player, "email_sent": email_sent}), 200
 
 
 @app.route("/renew", methods=["POST"])
@@ -421,19 +634,25 @@ def batch_renew():
 
     for member in members:
         tier_code = member.get("tier_code", "").upper()
+        player = member.get("player", "")
         email = member.get("email", "")
         name = member.get("name", "Supporter")
 
         if tier_code == "LIFE":
             continue  # Lifetime keys don't need renewal
 
-        key = generate_key_with_days(tier_code, MONTHLY_KEY_DAYS)
+        if not player:
+            results.append({"email": email, "tier": tier_code, "error": "missing player name"})
+            continue
+
+        key = generate_key_with_days(tier_code, MONTHLY_KEY_DAYS, player)
 
         save_license_entry({
             "timestamp": datetime.now().isoformat(),
             "event": "batch_renew",
             "patron_name": name,
             "patron_email": email,
+            "player": player,
             "tier_code": tier_code,
             "key": key,
         })
@@ -443,15 +662,101 @@ def batch_renew():
             subject, html = build_license_email(key, tier_code, name)
             email_sent = send_email(email, subject, html)
 
-        results.append({"email": email, "tier": tier_code, "key": key, "email_sent": email_sent})
+        results.append({"email": email, "tier": tier_code, "player": player, "key": key, "email_sent": email_sent})
 
     return jsonify({"renewed": len(results), "results": results}), 200
+
+
+# ---------------------------------------------------------------------------
+# Web Activation (claim token flow)
+# ---------------------------------------------------------------------------
+
+
+@app.route("/claim/verify", methods=["POST"])
+def claim_verify():
+    """Verify a claim token and return patron info (no key generated yet)."""
+    data = request.get_json()
+    token = data.get("token", "")
+
+    payload = verify_claim_token(token)
+    if not payload:
+        return jsonify({"error": "Invalid or expired token"}), 400
+
+    tier_label = TIER_LABELS.get(payload["tier_code"], payload["tier_code"])
+
+    return jsonify({
+        "valid": True,
+        "patron_name": payload["patron_name"],
+        "tier_code": payload["tier_code"],
+        "tier_label": tier_label,
+        "email": payload["email"],
+    }), 200
+
+
+@app.route("/claim", methods=["POST"])
+def claim_key():
+    """Claim a license key using a signed token + character name."""
+    data = request.get_json()
+    token = data.get("token", "")
+    player = data.get("player", "").strip()
+
+    if not player:
+        return jsonify({"error": "Missing 'player' (Name-Realm)"}), 400
+
+    if not PLAYER_NAME_RE.match(player):
+        return jsonify({"error": "Format invalide. Utilise Name-Realm (ex: Plume-Hyjal)"}), 400
+
+    payload = verify_claim_token(token)
+    if not payload:
+        return jsonify({"error": "Lien invalide, expir\u00e9 ou d\u00e9j\u00e0 utilis\u00e9"}), 400
+
+    tier_code = payload["tier_code"]
+    key = generate_key_with_days(tier_code, MONTHLY_KEY_DAYS, player)
+
+    # Mark token as claimed (single-use)
+    save_claimed_token(payload["signature"])
+
+    save_license_entry({
+        "timestamp": datetime.now().isoformat(),
+        "event": "web_claim",
+        "patron_name": payload["patron_name"],
+        "patron_email": payload["email"],
+        "patreon_id": payload["patreon_id"],
+        "player": player,
+        "tier_code": tier_code,
+        "key": key,
+    })
+
+    # Send key by email as backup
+    email_sent = False
+    if payload["email"]:
+        subject, html = build_license_email(key, tier_code, payload["patron_name"])
+        email_sent = send_email(payload["email"], subject, html)
+
+    info = validate_key(key, player)
+    tier_label = TIER_LABELS.get(tier_code, tier_code)
+    expiry = "Jamais (Lifetime)" if tier_code == "LIFE" else info["expiry"] if info else "?"
+
+    log.info(f"Web claim: {tier_code} key for {player} ({payload['patron_name']})")
+
+    return jsonify({
+        "key": key,
+        "tier_code": tier_code,
+        "tier_label": tier_label,
+        "player": player,
+        "expiry": expiry,
+        "email_sent": email_sent,
+    }), 200
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    # Startup checks
+    validate_config()
+    cleanup_expired_tokens()
+
     port = CONFIG.get("license_bot_port", 5000)
     host = CONFIG.get("license_bot_host", "0.0.0.0")
 

@@ -256,6 +256,14 @@
     transition: all 0.2s ease;
     border-left: 2px solid transparent;
     position: relative;
+    // Reset button defaults (sidebar links are now <button> for a11y)
+    background: none;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
 
     @media (max-width: $bp-lg) {
       justify-content: center;

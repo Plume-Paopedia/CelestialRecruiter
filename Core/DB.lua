@@ -81,10 +81,17 @@ local DEFAULTS = {
     },
   },
   global = {
-    contacts = {},   -- [key] = {...}
-    queue = {},      -- array of keys
-    blacklist = {},  -- [key]=true
-    logs = {},       -- ring buffer
+    contacts = {},   -- [key] = { status, name, level, classFile, classLabel, race, guild, zone, ... }
+                     -- status values:
+                     --   "new"       = discovered by scanner, not yet contacted
+                     --   "contacted" = whisper sent, waiting for response
+                     --   "invited"   = guild invite sent
+                     --   "joined"    = player accepted and joined the guild
+                     --   "ignored"   = player declined or was manually ignored
+                     --   "declined"  = player explicitly refused the invite
+    queue = {},      -- ordered array of contact keys (processing order)
+    blacklist = {},  -- [key]=true (permanently excluded contacts)
+    logs = {},       -- ring buffer of { t, kind, text } entries
     aiPendingReplies = {},  -- { [key] = { msg, timestamp, context } }
   }
 }

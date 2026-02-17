@@ -1,0 +1,16 @@
+# Secrets & config
+Tools/config.json
+Tools/configjson
+
+# Runtime data
+Tools/*.log
+Tools/claimed_tokens.json
+Tools/discord_webhook_state.json
+
+# Python
+Tools/__pycache__/
+Tools/*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

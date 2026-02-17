@@ -100,8 +100,15 @@ local function djb2(str)
     return string.format("%08x", hash)
 end
 
-local function computeChecksum(tierCode, dateStr)
-    return djb2(tierCode .. dateStr .. SALT)
+local function getPlayerIdentity()
+    local name = UnitName("player") or ""
+    local realm = GetNormalizedRealmName() or ""
+    return (name .. "-" .. realm):upper()
+end
+
+local function computeChecksum(tierCode, dateStr, playerName)
+    playerName = playerName or getPlayerIdentity()
+    return djb2(tierCode .. dateStr .. playerName .. SALT)
 end
 
 -- Map short tier codes in license keys to internal tier names
@@ -138,12 +145,29 @@ function T:_Validate(license)
     -- Check expiry (YYYYMMDD format as number)
     local now = tonumber(date("%Y%m%d"))
     if license.expiry < now then
-        -- Expired
+        -- Format expiry date for display (YYYYMMDD -> DD/MM/YYYY)
+        local exStr = tostring(license.expiry)
+        local exDisplay = #exStr == 8 and (exStr:sub(7,8) .. "/" .. exStr:sub(5,6) .. "/" .. exStr:sub(1,4)) or exStr
         if ns.Notifications_Info then
             ns.Notifications_Info("Licence expir\195\169e",
-                "Votre licence " .. (license.tier or "") .. " a expir\195\169. Renouvelez sur Patreon.")
+                "Votre licence " .. (license.tier or "") .. " a expir\195\169 le " .. exDisplay .. ". Renouvelez sur Patreon.")
         end
         return "free"
+    end
+
+    -- Re-verify checksum against current character (anti-sharing)
+    if license.key then
+        local tierCode, dateStr, checksum = license.key:match("^CR%-(%u+)%-(%d%d%d%d%d%d%d%d)%-(%x%x%x%x%x%x%x%x)$")
+        if tierCode and dateStr and checksum then
+            local expected = computeChecksum(tierCode, dateStr)
+            if checksum ~= expected then
+                if ns.Notifications_Info then
+                    ns.Notifications_Info("Licence invalide",
+                        "Cette cl\195\169 n'est pas li\195\169e \195\160 ce personnage.")
+                end
+                return "free"
+            end
+        end
     end
 
     -- Verify the tier is valid
@@ -262,7 +286,7 @@ end
 -- ───────────────────────────── License Activation ─────────────────────────────
 
 function T:Activate(keyStr)
-    if not keyStr or keyStr == "" then
+    if not keyStr or type(keyStr) ~= "string" or keyStr == "" then
         return false, "Cl\195\169 vide. Format: CR-TIER-DATE-CHECKSUM"
     end
 
@@ -281,10 +305,10 @@ function T:Activate(keyStr)
         return false, "Tier inconnu: " .. tierCode
     end
 
-    -- Validate checksum (compare lowercase since djb2 returns lowercase hex)
+    -- Validate checksum against current character (key is bound to Name-Realm)
     local expected = computeChecksum(tierCode, dateStr)
     if checksum:lower() ~= expected then
-        return false, "Cl\195\169 invalide (checksum incorrect)."
+        return false, "Cl\195\169 invalide. V\195\169rifiez qu'elle est bien g\195\169n\195\169r\195\169e pour " .. getPlayerIdentity() .. "."
     end
 
     -- Store license
@@ -324,8 +348,8 @@ end
 
 -- ───────────────────────────── Utility: Generate Key (for dev/testing) ─────────────────────────────
 
-function T:GenerateKey(tierCode, dateStr)
-    local checksum = computeChecksum(tierCode, dateStr)
+function T:GenerateKey(tierCode, dateStr, playerName)
+    local checksum = computeChecksum(tierCode, dateStr, playerName and playerName:upper() or nil)
     return "CR-" .. tierCode .. "-" .. dateStr .. "-" .. checksum
 end
 

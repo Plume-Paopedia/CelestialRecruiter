@@ -22,7 +22,7 @@ export function TopBar({ title, onMenuToggle }: TopBarProps) {
       <div className="dashboard-topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {onMenuToggle && (
-            <button className="mobile-menu-btn" onClick={onMenuToggle}>
+            <button className="mobile-menu-btn" onClick={onMenuToggle} aria-label="Toggle navigation menu">
               {'\u2630'}
             </button>
           )}
@@ -52,6 +52,7 @@ export function TopBar({ title, onMenuToggle }: TopBarProps) {
                 key={tier}
                 className={`tier-btn tier-${tier} ${currentTier === tier ? 'active' : ''}`}
                 onClick={() => setTier(tier)}
+                aria-pressed={currentTier === tier}
                 style={{ padding: '0.35rem 0.85rem', fontSize: '0.72rem' }}
               >
                 {tier.charAt(0).toUpperCase() + tier.slice(1)}
@@ -59,7 +60,7 @@ export function TopBar({ title, onMenuToggle }: TopBarProps) {
             ))}
           </div>
 
-          <a href="/" className="back-link">
+          <a href="/" className="back-link" aria-label="Back to homepage">
             {'\u2190'} Back
           </a>
         </div>
