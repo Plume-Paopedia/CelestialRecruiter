@@ -2,14 +2,10 @@
 
 import { useMemo } from 'react';
 import { CLASS_COLORS } from '@/lib/constants';
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
-import { LockedOverlay } from '@/components/dashboard/LockedOverlay';
 
 export function AnalyticsPanel() {
-  const { hasAccess } = useTier();
   const { data } = useData();
-  const isLocked = !hasAccess('recruteur');
 
   const { stats, weeklyData, classDistribution, conversionFunnel } = useMemo(() => {
     const contacts = data ? Object.values(data.contacts) : [];
@@ -83,15 +79,7 @@ export function AnalyticsPanel() {
   const funnelMax = Math.max(conversionFunnel[0]?.count || 1, 1);
 
   return (
-    <div style={{ position: 'relative' }}>
-      {isLocked && (
-        <LockedOverlay
-          requiredTier="recruteur"
-          featureName="Analytics"
-          description="Unlock detailed recruitment analytics, conversion funnels, and performance tracking."
-        />
-      )}
-
+    <div>
       {/* Stats grid */}
       <div className="stats-grid">
         {stats.map((stat) => (

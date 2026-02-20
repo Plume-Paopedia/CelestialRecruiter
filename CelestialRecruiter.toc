@@ -9,8 +9,6 @@
 ## X-Localizations: frFR
 ## SavedVariables: CelestialRecruiterDB
 
-AI_Data.lua
-
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\AceAddon-3.0\AceAddon-3.0.xml
@@ -19,7 +17,6 @@ Libs\AceDB-3.0\AceDB-3.0.xml
 
 Core\Util.lua
 Core\DB.lua
-Core\Tier.lua
 
 Modules\AntiSpam.lua
 Modules\Templates.lua
@@ -40,8 +37,6 @@ Modules\Leaderboard.lua
 Modules\SmartSuggestions.lua
 Modules\Discord.lua
 Modules\DiscordQueue.lua
-Modules\AIConversation.lua
-Modules\SleepRecruiter.lua
 Modules\BulkOperations.lua
 
 UI\Widgets.lua

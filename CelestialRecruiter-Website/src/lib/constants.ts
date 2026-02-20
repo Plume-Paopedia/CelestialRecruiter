@@ -6,55 +6,43 @@ export const FEATURES = [
     id: 'auto-scan',
     title: 'Auto-Scan',
     icon: '🎯',
-    tier: 'epic' as const,
     description: 'Background scanner discovers players while you raid. Never manually /who again.',
     stats: 'Hands-free scanning',
-    unlock: 'Recruteur Tier',
   },
   {
     id: 'auto-recruiter',
-    title: 'AI Auto-Recruiter',
+    title: 'Auto-Recruiter',
     icon: '🤖',
-    tier: 'legendary' as const,
-    description: 'Set rules, walk away. Recruits while you sleep with smart prioritization by class and level.',
+    description: 'Set rules, walk away. Recruits automatically with smart prioritization by class and level.',
     stats: 'Fully automated',
-    unlock: 'Pro Tier',
   },
   {
     id: 'analytics',
     title: 'Advanced Analytics',
     icon: '📊',
-    tier: 'epic' as const,
     description: 'Hourly analytics, conversion funnels, template performance tracking. Recruit smarter, not harder.',
     stats: 'Data-driven recruiting',
-    unlock: 'Recruteur Tier',
   },
   {
     id: 'discord',
     title: 'Discord Integration',
     icon: '💬',
-    tier: 'legendary' as const,
     description: 'Real-time webhooks send alerts to Discord when players whisper or join. Setup in 5 min.',
     stats: 'Instant notifications',
-    unlock: 'Pro Tier',
   },
   {
     id: 'templates',
     title: 'Smart Templates',
     icon: '📝',
-    tier: 'rare' as const,
     description: 'Dynamic templates with {name}, {class}, {level}, {guild}, {discord} and more. Personalize every message.',
     stats: 'Personalized outreach',
-    unlock: 'Recruteur Tier',
   },
   {
     id: 'campaigns',
     title: 'Recruitment Campaigns',
     icon: '⚡',
-    tier: 'legendary' as const,
     description: 'Schedule automated campaigns targeting specific classes, levels, and time windows.',
     stats: 'Set it and forget it',
-    unlock: 'Pro Tier',
   },
 ];
 
@@ -64,83 +52,8 @@ export const FEATURES = [
 export const HERO_PILLS = [
   { label: 'Auto-Scanner' },
   { label: 'Analytics' },
-  { label: 'AI Recruiting' },
   { label: 'Discord Alerts' },
-];
-
-// ============================================
-// Pricing Tiers
-// ============================================
-export const PRICING_TIERS = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: 0,
-    color: 'common' as const,
-    features: [
-      'Manual Scanner',
-      'Contact Queue',
-      '3 Built-in Templates',
-      'Basic Filters',
-      '2 Themes',
-    ],
-    limitations: [
-      '✗ No Auto-Scan',
-      '✗ No Auto-Recruiter',
-      '✗ No Analytics',
-      '✗ No Discord',
-    ],
-    cta: 'Start Free',
-    ctaStyle: 'btn-common',
-    ctaLink: 'https://www.curseforge.com/wow/addons/celestialrecruiter',
-  },
-  {
-    id: 'recruteur',
-    name: 'Recruteur',
-    price: 3,
-    color: 'rare' as const,
-    badge: 'MOST POPULAR',
-    features: [
-      '✓ Auto-Scan Enabled',
-      '✓ Advanced Analytics',
-      '✓ 3 Custom Templates',
-      '✓ Advanced Filters',
-      '✓ All 6 Themes',
-      '✓ 500 Contacts / 100 Queue',
-      '✓ Discord (5 events)',
-      '✓ All Achievements',
-      '✓ Import/Export',
-    ],
-    savings: 'Automate your recruitment',
-    cta: 'Get Recruteur',
-    ctaStyle: 'btn-rare',
-    ctaLink: 'https://www.patreon.com/cw/Plume_',
-    popular: true,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 7,
-    color: 'epic' as const,
-    badge: 'BEST VALUE',
-    features: [
-      'Everything in Recruteur +',
-      '✓ Auto-Recruiter (AI)',
-      '✓ Full Discord (30+ events)',
-      '✓ A/B Testing',
-      '✓ Campaigns (3 active)',
-      '✓ Bulk Whisper/Invite',
-      '✓ Unlimited Everything',
-      '✓ Custom Theme Creator',
-      '✓ Priority Support',
-    ],
-    savings: 'Full automation suite',
-    value: 'Everything included for serious recruiters',
-    cta: 'Get Pro',
-    ctaStyle: 'btn-epic',
-    ctaLink: 'https://www.patreon.com/cw/Plume_',
-    recommended: true,
-  },
+  { label: 'Campaigns' },
 ];
 
 // ============================================
@@ -192,14 +105,6 @@ export const STATS = [
 // ============================================
 export const FAQS = [
   {
-    q: 'Why should I pay for an addon?',
-    a: 'The free tier is fully functional! Paid tiers support continued development and give you access to automation features like Auto-Scan, Auto-Recruiter, and Discord integration.',
-  },
-  {
-    q: 'Can I try Pro before committing?',
-    a: 'Absolutely! Start with Free or Recruteur tier. Upgrade anytime. 30-day money-back guarantee on all tiers.',
-  },
-  {
     q: 'Is this against WoW ToS?',
     a: '100% compliant. We use only official WoW APIs. No botting, no automation beyond what Blizzard allows. The addon simply makes your existing recruitment workflow more efficient.',
   },
@@ -208,8 +113,8 @@ export const FAQS = [
     a: 'Real-time webhooks send notifications to your Discord server when players whisper, join, or opt-in. Paste your webhook URL in the addon settings and toggle the events you want.',
   },
   {
-    q: 'What happens if I cancel my subscription?',
-    a: 'You keep the free tier features forever. Your data, templates, and history are preserved. You can re-subscribe anytime to unlock premium features again.',
+    q: 'Is the addon really free?',
+    a: 'Yes! All features are free and will remain free. You can optionally support the project on Patreon, but there are no locked features.',
   },
   {
     q: 'Does it work on all servers and regions?',
@@ -250,26 +155,16 @@ export const LINKS = {
 // Dashboard Modules
 // ============================================
 export const DASHBOARD_MODULES = [
-  { id: 'overview', label: 'Overview', icon: '\u2302', minTier: 'free' as const },
-  { id: 'scanner', label: 'Scanner', icon: '\u2295', minTier: 'free' as const },
-  { id: 'queue', label: 'Queue', icon: '\u2630', minTier: 'free' as const },
-  { id: 'templates', label: 'Templates', icon: '\u2637', minTier: 'free' as const },
-  { id: 'blacklist', label: 'Blacklist', icon: '\u26D4', minTier: 'recruteur' as const },
-  { id: 'analytics', label: 'Analytics', icon: '\u2584', minTier: 'recruteur' as const },
-  { id: 'campaigns', label: 'Campaigns', icon: '\u26A1', minTier: 'pro' as const },
-  { id: 'discord', label: 'Discord', icon: '\u2709', minTier: 'pro' as const },
-  { id: 'settings', label: 'Settings', icon: '\u2699', minTier: 'free' as const },
+  { id: 'overview', label: 'Overview', icon: '\u2302' },
+  { id: 'scanner', label: 'Scanner', icon: '\u2295' },
+  { id: 'queue', label: 'Queue', icon: '\u2630' },
+  { id: 'templates', label: 'Templates', icon: '\u2637' },
+  { id: 'blacklist', label: 'Blacklist', icon: '\u26D4' },
+  { id: 'analytics', label: 'Analytics', icon: '\u2584' },
+  { id: 'campaigns', label: 'Campaigns', icon: '\u26A1' },
+  { id: 'discord', label: 'Discord', icon: '\u2709' },
+  { id: 'settings', label: 'Settings', icon: '\u2699' },
 ];
-
-// ============================================
-// Tier Levels (for numeric comparison)
-// ============================================
-export const TIER_LEVELS: Record<string, number> = {
-  free: 0,
-  recruteur: 1,
-  pro: 2,
-  lifetime: 2,
-};
 
 // ============================================
 // Mock Scanner Data

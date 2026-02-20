@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
 import { usePatch } from '@/components/dashboard/PatchContext';
-import { LockedOverlay } from '@/components/dashboard/LockedOverlay';
 
 export function BlacklistPanel() {
-  const { hasAccess } = useTier();
   const { data, isLive } = useData();
   const { editedBlacklist, setEditedBlacklist, dirtySummary } = usePatch();
-  const isLocked = !hasAccess('recruteur');
 
   const [search, setSearch] = useState('');
   const [newName, setNewName] = useState('');
@@ -54,15 +50,7 @@ export function BlacklistPanel() {
   }, [blacklist, setEditedBlacklist]);
 
   return (
-    <div style={{ position: 'relative' }}>
-      {isLocked && (
-        <LockedOverlay
-          requiredTier="recruteur"
-          featureName="Blacklist Manager"
-          description="Manage your blacklist from the web dashboard."
-        />
-      )}
-
+    <div>
       <div className="panel-card">
         <div className="panel-title">
           <span className="panel-icon">{'\u26D4'}</span>

@@ -1,8 +1,6 @@
 'use client';
 
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
-import { LockedOverlay } from '@/components/dashboard/LockedOverlay';
 import { useMemo, useState } from 'react';
 
 interface CampaignDisplay {
@@ -34,9 +32,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function CampaignsPanel() {
-  const { hasAccess } = useTier();
   const { data } = useData();
-  const isLocked = !hasAccess('pro');
   const [showForm, setShowForm] = useState(false);
   const [formName, setFormName] = useState('');
   const [formTemplate, setFormTemplate] = useState('default');
@@ -71,15 +67,7 @@ export function CampaignsPanel() {
   const allCampaigns = useMemo(() => [...campaigns, ...localCampaigns], [campaigns, localCampaigns]);
 
   return (
-    <div style={{ position: 'relative' }}>
-      {isLocked && (
-        <LockedOverlay
-          requiredTier="pro"
-          featureName="Campaigns"
-          description="Create automated recruitment campaigns targeting specific classes, levels, and time windows."
-        />
-      )}
-
+    <div>
       <div className="panel-card">
         <div className="panel-title">
           <span className="panel-icon">{'\u26A1'}</span>

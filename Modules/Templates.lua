@@ -72,22 +72,6 @@ function ns.Templates_SetText(id, text)
     ns.db.profile.customTemplates = {}
   end
 
-  -- Tier gate: check custom template count for new (non-builtin) templates
-  if not BUILTIN[id] and not (ns.db.profile.customTemplates[id]) then
-    -- This is a new custom template, check the limit
-    if ns.Tier then
-      local max = ns.Tier:GetLimit("custom_templates_max")
-      local count = 0
-      for k, v in pairs(ns.db.profile.customTemplates) do
-        if not BUILTIN[k] and v ~= "" then count = count + 1 end
-      end
-      if count >= max then
-        ns.Tier:ShowUpgrade("custom_templates_max")
-        return
-      end
-    end
-  end
-
   ns.db.profile.customTemplates[id] = text
   if templates[id] then
     templates[id].text = text
@@ -118,18 +102,9 @@ function ns.Templates_Render(key, tplId)
     ["{inviteKeyword}"] = clean(p.inviteKeyword ~= "" and p.inviteKeyword or "!invite"),
   }
 
-  -- Tier-gated variables: {discord}, {raidDays}, {goal} require Recruteur+
-  if not ns.Tier or ns.Tier:CanUse("template_vars_all") then
-    map["{discord}"] = clean(p.discord ~= "" and p.discord or "a definir")
-    map["{raidDays}"] = clean(p.raidDays ~= "" and p.raidDays or "a definir")
-    map["{goal}"] = clean(p.goal ~= "" and p.goal or "a definir")
-  else
-    -- Show placeholder so user knows the variable exists but is locked
-    map["{discord}"] = "[Recruteur]"
-    map["{raidDays}"] = "[Recruteur]"
-    map["{goal}"] = "[Recruteur]"
-    ns.Tier:ShowUpgrade("template_vars_all")
-  end
+  map["{discord}"] = clean(p.discord ~= "" and p.discord or "a definir")
+  map["{raidDays}"] = clean(p.raidDays ~= "" and p.raidDays or "a definir")
+  map["{goal}"] = clean(p.goal ~= "" and p.goal or "a definir")
 
   local out = tpl.text
   for token, value in pairs(map) do

@@ -181,20 +181,6 @@ function Themes:Apply(themeId)
         themeId = "dark"
     end
 
-    -- Tier gate: check theme availability
-    if ns.Tier then
-        if themeId == "custom" and not ns.Tier:CanUse("theme_custom") then
-            ns.Tier:ShowUpgrade("theme_custom")
-            themeId = "dark"
-        elseif not FREE_THEMES[themeId] and themeId ~= "custom" then
-            local max = ns.Tier:GetLimit("themes_preset_max")
-            if max <= 2 and not FREE_THEMES[themeId] then
-                ns.Tier:ShowUpgrade("themes_preset_max")
-                themeId = "dark"
-            end
-        end
-    end
-
     self.current = themeId
 
     -- Save to DB
@@ -242,11 +228,6 @@ function Themes:GetPresetList()
 end
 
 function Themes:SaveCustom(colors)
-    -- Tier gate: custom theme creator requires Pro tier
-    if ns.Tier and not ns.Tier:CanUse("theme_custom") then
-        ns.Tier:ShowUpgrade("theme_custom")
-        return
-    end
     self.presets.custom = {
         name = "Custom",
         colors = colors,

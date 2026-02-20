@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { CLASS_COLORS } from '@/lib/constants';
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
 
 function getClassColor(className: string): string {
@@ -20,10 +19,7 @@ function formatTimestamp(ts?: number): string {
 }
 
 export function QueuePanel() {
-  const { hasAccess, currentTier } = useTier();
   const { data } = useData();
-  const isFree = currentTier === 'free';
-  const showBulkActions = hasAccess('recruteur');
 
   const queueEntries = useMemo(() => {
     if (!data) return [];
@@ -58,10 +54,6 @@ export function QueuePanel() {
       });
   }, [data]);
 
-  const queueUsed = queueEntries.length;
-  const queueMax = isFree ? 50 : queueUsed;
-  const queuePercent = queueMax > 0 ? (queueUsed / queueMax) * 100 : 0;
-
   return (
     <div>
       <div className="panel-card">
@@ -70,38 +62,8 @@ export function QueuePanel() {
           Recruitment Queue
         </div>
 
-        {/* Free tier: capacity bar */}
-        {isFree && (
-          <div style={{ marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#a89b80', marginBottom: '0.35rem' }}>
-              <span>Queue Capacity</span>
-              <span>{queueUsed}/50</span>
-            </div>
-            <div
-              style={{
-                width: '100%',
-                height: 8,
-                background: '#211d18',
-                borderRadius: 4,
-                overflow: 'hidden',
-                border: '1px solid #2a2318',
-              }}
-            >
-              <div
-                style={{
-                  width: `${Math.min(queuePercent, 100)}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #C9AA71, #8B7340)',
-                  borderRadius: 4,
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Bulk actions (Recruteur+) */}
-        {showBulkActions && (
+        {/* Bulk actions */}
+        {(
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
             {['Select All', 'Invite Selected', 'Remove Selected'].map((label) => (
               <div

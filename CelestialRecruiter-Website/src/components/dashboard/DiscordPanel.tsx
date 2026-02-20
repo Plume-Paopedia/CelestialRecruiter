@@ -1,8 +1,6 @@
 'use client';
 
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
-import { LockedOverlay } from '@/components/dashboard/LockedOverlay';
 
 // Event categories matching addon's GetEventTypes()
 const EVENT_CATEGORIES = [
@@ -56,23 +54,13 @@ function formatTimestamp(ts: number): string {
 }
 
 export function DiscordPanel() {
-  const { hasAccess } = useTier();
   const { data, isLive } = useData();
-  const isLocked = !hasAccess('pro');
 
   const discordNotify = isLive ? data?.discordNotify : null;
   const discordQueue = isLive ? data?.discordQueue : null;
 
   return (
-    <div style={{ position: 'relative' }}>
-      {isLocked && (
-        <LockedOverlay
-          requiredTier="pro"
-          featureName="Discord Integration"
-          description="Send real-time recruitment notifications to your Discord server via webhooks."
-        />
-      )}
-
+    <div>
       {/* Webhook config */}
       <div className="panel-card">
         <div className="panel-title">

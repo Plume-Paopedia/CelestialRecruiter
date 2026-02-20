@@ -100,13 +100,6 @@ function ns.Inbox_Init()
 
     ns.DB_Log("IN", "Ajout manuel requis dans la liste d'attente: " .. key)
 
-    -- AI Conversation: auto-respond to incoming whispers (Mode Nuit or aiAutoRespond)
-    local aiRespond = (ns.db and ns.db.profile and ns.db.profile.aiAutoRespond)
-        or (ns.SleepRecruiter and ns.SleepRecruiter:IsActive())
-    if aiRespond and ns.AIConversation then
-      ns.AIConversation:HandleIncoming(key, msg)
-    end
-
     ns.UI_Refresh()
   end)
 

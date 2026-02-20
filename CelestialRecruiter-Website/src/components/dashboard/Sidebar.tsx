@@ -1,7 +1,6 @@
 'use client';
 
 import { DASHBOARD_MODULES } from '@/lib/constants';
-import { useTier } from './TierContext';
 import { useData } from './DataContext';
 
 interface SidebarProps {
@@ -10,7 +9,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
-  const { hasAccess } = useTier();
   const { isLive } = useData();
 
   return (
@@ -21,61 +19,46 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
 
       <nav className="sidebar-nav" aria-label="Dashboard navigation">
         <div className="sidebar-section-label">Recruitment</div>
-        {DASHBOARD_MODULES.filter(m => ['overview', 'scanner', 'queue', 'templates', 'blacklist'].includes(m.id)).map((mod) => {
-          const locked = !hasAccess(mod.minTier);
-          return (
-            <button
-              key={mod.id}
-              className={`sidebar-link ${activeModule === mod.id ? 'active' : ''} ${locked ? 'locked' : ''}`}
-              onClick={() => !locked && onModuleChange(mod.id)}
-              aria-current={activeModule === mod.id ? 'page' : undefined}
-              aria-disabled={locked}
-              aria-label={`${mod.label}${locked ? ' (locked)' : ''}`}
-            >
-              <span className="link-icon" aria-hidden="true">{mod.icon}</span>
-              <span className="link-label">{mod.label}</span>
-              {locked && <span className="lock-badge" aria-hidden="true">{'\u{1F512}'}</span>}
-            </button>
-          );
-        })}
+        {DASHBOARD_MODULES.filter(m => ['overview', 'scanner', 'queue', 'templates', 'blacklist'].includes(m.id)).map((mod) => (
+          <button
+            key={mod.id}
+            className={`sidebar-link ${activeModule === mod.id ? 'active' : ''}`}
+            onClick={() => onModuleChange(mod.id)}
+            aria-current={activeModule === mod.id ? 'page' : undefined}
+            aria-label={mod.label}
+          >
+            <span className="link-icon" aria-hidden="true">{mod.icon}</span>
+            <span className="link-label">{mod.label}</span>
+          </button>
+        ))}
 
         <div className="sidebar-section-label">Intelligence</div>
-        {DASHBOARD_MODULES.filter(m => ['analytics', 'campaigns'].includes(m.id)).map((mod) => {
-          const locked = !hasAccess(mod.minTier);
-          return (
-            <button
-              key={mod.id}
-              className={`sidebar-link ${activeModule === mod.id ? 'active' : ''} ${locked ? 'locked' : ''}`}
-              onClick={() => !locked && onModuleChange(mod.id)}
-              aria-current={activeModule === mod.id ? 'page' : undefined}
-              aria-disabled={locked}
-              aria-label={`${mod.label}${locked ? ' (locked)' : ''}`}
-            >
-              <span className="link-icon" aria-hidden="true">{mod.icon}</span>
-              <span className="link-label">{mod.label}</span>
-              {locked && <span className="lock-badge" aria-hidden="true">{'\u{1F512}'}</span>}
-            </button>
-          );
-        })}
+        {DASHBOARD_MODULES.filter(m => ['analytics', 'campaigns'].includes(m.id)).map((mod) => (
+          <button
+            key={mod.id}
+            className={`sidebar-link ${activeModule === mod.id ? 'active' : ''}`}
+            onClick={() => onModuleChange(mod.id)}
+            aria-current={activeModule === mod.id ? 'page' : undefined}
+            aria-label={mod.label}
+          >
+            <span className="link-icon" aria-hidden="true">{mod.icon}</span>
+            <span className="link-label">{mod.label}</span>
+          </button>
+        ))}
 
         <div className="sidebar-section-label">Integrations</div>
-        {DASHBOARD_MODULES.filter(m => ['discord'].includes(m.id)).map((mod) => {
-          const locked = !hasAccess(mod.minTier);
-          return (
-            <button
-              key={mod.id}
-              className={`sidebar-link ${activeModule === mod.id ? 'active' : ''} ${locked ? 'locked' : ''}`}
-              onClick={() => !locked && onModuleChange(mod.id)}
-              aria-current={activeModule === mod.id ? 'page' : undefined}
-              aria-disabled={locked}
-              aria-label={`${mod.label}${locked ? ' (locked)' : ''}`}
-            >
-              <span className="link-icon" aria-hidden="true">{mod.icon}</span>
-              <span className="link-label">{mod.label}</span>
-              {locked && <span className="lock-badge" aria-hidden="true">{'\u{1F512}'}</span>}
-            </button>
-          );
-        })}
+        {DASHBOARD_MODULES.filter(m => ['discord'].includes(m.id)).map((mod) => (
+          <button
+            key={mod.id}
+            className={`sidebar-link ${activeModule === mod.id ? 'active' : ''}`}
+            onClick={() => onModuleChange(mod.id)}
+            aria-current={activeModule === mod.id ? 'page' : undefined}
+            aria-label={mod.label}
+          >
+            <span className="link-icon" aria-hidden="true">{mod.icon}</span>
+            <span className="link-label">{mod.label}</span>
+          </button>
+        ))}
 
         <div className="sidebar-section-label">System</div>
         {DASHBOARD_MODULES.filter(m => ['settings'].includes(m.id)).map((mod) => (

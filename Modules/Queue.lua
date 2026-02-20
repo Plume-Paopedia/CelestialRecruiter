@@ -54,15 +54,7 @@ function ns.Queue_Whisper(key, tplId)
   -- Ensure actualTplId is never nil (fallback to original tplId or "default")
   actualTplId = actualTplId or tplId or "default"
 
-  -- AI message: use pre-generated AI message if available (from Python companion)
-  local msg
-  local aiOn = ns.db and ns.db.profile and ns.db.profile.aiEnabled
-  if aiOn and ns.AIConversation and ns.AIConversation.GetAIMessage then
-    msg = ns.AIConversation:GetAIMessage(key)
-  end
-  if not msg or msg == "" then
-    msg = ns.Templates_Render(key, actualTplId)
-  end
+  local msg = ns.Templates_Render(key, actualTplId)
   if not msg or msg == "" then
     ns.Util_Print("Message bloque (modele vide)")
     return false, "empty_template"

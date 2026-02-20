@@ -1,11 +1,9 @@
 'use client';
 
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
 import { useMemo } from 'react';
 
 export function OverviewPanel() {
-  const { currentTier } = useTier();
   const { data, isLive } = useData();
 
   const contacts = useMemo(() => data ? Object.values(data.contacts) : [], [data]);
@@ -96,10 +94,6 @@ export function OverviewPanel() {
           Quick Info
         </div>
         <div style={{ fontSize: '0.82rem', color: '#a89b80', lineHeight: 1.6 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid #2a2318' }}>
-            <span>Current Tier</span>
-            <span style={{ color: '#C9AA71', fontWeight: 600, textTransform: 'capitalize' }}>{currentTier}</span>
-          </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid #2a2318' }}>
             <span>Guild</span>
             <span style={{ color: '#d4c5a9' }}>{guildName}</span>

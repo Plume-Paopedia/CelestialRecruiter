@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData, type AddonSettings } from '@/components/dashboard/DataContext';
 import { usePatch } from '@/components/dashboard/PatchContext';
 
@@ -67,10 +66,8 @@ function SettingsToggle({ label, value, onChange }: {
 }
 
 export function SettingsPanel() {
-  const { hasAccess, currentTier } = useTier();
   const { data, isLive } = useData();
   const { editedSettings, setEditedSettings, dirtySummary } = usePatch();
-  const isFree = currentTier === 'free';
 
   const settings: AddonSettings = isLive
     ? (editedSettings || data?.settings || {})
@@ -185,15 +182,13 @@ export function SettingsPanel() {
             <button
               style={{
                 padding: '0.55rem 1.25rem', fontSize: '0.82rem', fontWeight: 600,
-                color: isFree ? '#4a3f32' : '#C9AA71',
-                background: isFree ? 'rgba(74, 63, 50, 0.1)' : 'rgba(201, 170, 113, 0.1)',
-                border: `1px solid ${isFree ? '#2a2318' : '#6b5635'}`,
-                borderRadius: 3, cursor: isFree ? 'not-allowed' : 'default',
-                opacity: isFree ? 0.5 : 1,
+                color: '#C9AA71',
+                background: 'rgba(201, 170, 113, 0.1)',
+                border: '1px solid #6b5635',
+                borderRadius: 3, cursor: 'default',
               }}
             >
               Export Data
-              {isFree && <span style={{ marginLeft: '0.4rem', fontSize: '0.65rem' }}>{'\u{1F512}'}</span>}
             </button>
             <a
               href="/dashboard/import"
@@ -231,7 +226,7 @@ export function SettingsPanel() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0' }}>
             <span style={{ color: '#6b5f4d' }}>License</span>
-            <span style={{ textTransform: 'capitalize' }}>{hasAccess('pro') ? 'Pro' : hasAccess('recruteur') ? 'Recruteur' : 'Free'}</span>
+            <span>Free (all features included)</span>
           </div>
         </div>
       </div>

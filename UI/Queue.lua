@@ -196,10 +196,6 @@ local function MakeQueueRow(parent, i)
     row.recruitBtn = W.MakeBtn(row, "Recruter", 76, "s", nil)
     row.recruitBtn:SetPoint("RIGHT", row.msgBtn, "LEFT", -4, 0)
 
-    -- AI Message button (sends pre-generated AI message)
-    row.aiBtn = W.MakeBtn(row, "Msg AI", 52, "p", nil)
-    row.aiBtn:SetPoint("RIGHT", row.recruitBtn, "LEFT", -4, 0)
-
     W.AddRowGlow(row)
     return row
 end
@@ -641,16 +637,6 @@ function ns.UI_RefreshQueue()
             row.lastSeen:SetText("")
         end
 
-        -- AI button: show/hide + enable/disable based on aiEnabled and message availability
-        local aiOn = ns.db and ns.db.profile and ns.db.profile.aiEnabled
-        local hasAI = aiOn and ns.AIConversation and ns.AIConversation.GetAIMessage and ns.AIConversation:GetAIMessage(key)
-        if aiOn then
-            row.aiBtn:Show()
-            row.aiBtn:SetOff(not hasAI)
-        else
-            row.aiBtn:Hide()
-        end
-
         -- Only rewire buttons if the bound key changed
         if row._boundKey ~= key then
             row._boundKey = key
@@ -665,27 +651,6 @@ function ns.UI_RefreshQueue()
                 local ok, why = ns.Queue_Whisper(key, tplId)
                 if not ok and why then
                     ns.Util_Print("Message: " .. W.reasonFr(why))
-                end
-                ns.UI_Refresh()
-            end)
-            row.aiBtn:SetScript("OnClick", function()
-                local aiMsg = ns.AIConversation and ns.AIConversation:GetAIMessage(key)
-                if aiMsg and aiMsg ~= "" then
-                    local sendOk = pcall(SendChatMessage, aiMsg, "WHISPER", nil, key)
-                    if sendOk then
-                        ns.AntiSpam_MarkWhisper(key)
-                        ns.DB_UpsertContact(key, { status = "contacted", recruitedBy = UnitName("player") })
-                        ns.DB_AddMessage(key, "out", aiMsg)
-                        ns.DB_Log("AI", "Message AI envoye a " .. key)
-                        if ns.sessionStats then ns.sessionStats.whispersSent = ns.sessionStats.whispersSent + 1 end
-                        if ns.Notifications_Success then
-                            ns.Notifications_Success("Message AI envoy\195\169", key)
-                        end
-                    else
-                        ns.Util_Print("Message AI bloqu\195\169 (SendChatMessage prot\195\169g\195\169)")
-                    end
-                else
-                    ns.Util_Print("Pas de message AI pour " .. key .. ". Lancez le companion Python + /reload.")
                 end
                 ns.UI_Refresh()
             end)

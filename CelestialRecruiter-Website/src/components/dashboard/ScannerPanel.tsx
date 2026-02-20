@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import { CLASS_COLORS } from '@/lib/constants';
-import { useTier } from '@/components/dashboard/TierContext';
 import { useData } from '@/components/dashboard/DataContext';
 
 function getClassColor(className: string): string {
@@ -11,9 +10,7 @@ function getClassColor(className: string): string {
 }
 
 export function ScannerPanel() {
-  const { hasAccess } = useTier();
   const { data } = useData();
-  const showAutoScan = hasAccess('recruteur');
   const [search, setSearch] = useState('');
 
   const players = useMemo(() => {
@@ -86,8 +83,8 @@ export function ScannerPanel() {
           </button>
         </div>
 
-        {/* Auto-Scan toggle (Recruteur+) */}
-        {showAutoScan && (
+        {/* Auto-Scan toggle */}
+        {(
           <div
             style={{
               display: 'flex',

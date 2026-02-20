@@ -732,31 +732,18 @@ end
 function G:GetAllAchievements()
     local achievements = (ns.db and ns.db.global and ns.db.global.goals and ns.db.global.goals.achievements) or {}
 
-    -- Tier gate: Free users only see "recrutement" category
-    local showAll = not ns.Tier or ns.Tier:CanUse("achievements_full")
-
     local result = {}
-    local hiddenCount = 0
     for _, def in ipairs(ACHIEVEMENTS) do
-        if showAll or def.category == "recrutement" then
-            local unlockData = achievements[def.id]
-            table.insert(result, {
-                id          = def.id,
-                name        = def.name,
-                description = def.description,
-                icon        = def.icon,
-                category    = def.category,
-                unlocked    = unlockData ~= nil,
-                unlockedAt  = unlockData and unlockData.unlockedAt or nil,
-            })
-        else
-            hiddenCount = hiddenCount + 1
-        end
-    end
-
-    -- Notify about hidden achievements (once per session via ShowUpgrade throttle)
-    if hiddenCount > 0 then
-        ns.Tier:ShowUpgrade("achievements_full")
+        local unlockData = achievements[def.id]
+        table.insert(result, {
+            id          = def.id,
+            name        = def.name,
+            description = def.description,
+            icon        = def.icon,
+            category    = def.category,
+            unlocked    = unlockData ~= nil,
+            unlockedAt  = unlockData and unlockData.unlockedAt or nil,
+        })
     end
 
     -- Sort: by category order, then unlocked first within each category

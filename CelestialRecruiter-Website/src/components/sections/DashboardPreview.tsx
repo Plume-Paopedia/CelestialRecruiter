@@ -1,32 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { fadeInUp, staggerContainer } from '@/lib/animations';
+import { fadeInUp } from '@/lib/animations';
 import { DASHBOARD_MODULES, MOCK_SCANNER_DATA, MOCK_ANALYTICS, CLASS_COLORS } from '@/lib/constants';
 
-type TierName = 'free' | 'recruteur' | 'pro';
-
-const TIER_LEVELS: Record<string, number> = { free: 0, recruteur: 1, pro: 2 };
-
-function hasAccess(current: TierName, required: string) {
-  return (TIER_LEVELS[current] ?? 0) >= (TIER_LEVELS[required] ?? 0);
-}
-
-function PreviewSidebar({ tier }: { tier: TierName }) {
+function PreviewSidebar() {
   return (
     <div className="preview-sidebar">
       {DASHBOARD_MODULES.map((mod) => {
-        const locked = !hasAccess(tier, mod.minTier);
         const active = mod.id === 'overview';
         return (
           <div
             key={mod.id}
-            className={`sidebar-item ${active ? 'active' : ''} ${locked ? 'locked' : ''}`}
+            className={`sidebar-item ${active ? 'active' : ''}`}
           >
             <span className="item-icon">{mod.icon}</span>
             <span>{mod.label}</span>
-            {locked && <span className="lock-icon">{'\u{1F512}'}</span>}
           </div>
         );
       })}
@@ -34,7 +23,7 @@ function PreviewSidebar({ tier }: { tier: TierName }) {
   );
 }
 
-function PreviewContent({ tier }: { tier: TierName }) {
+function PreviewContent() {
   const maxBars = Math.max(...MOCK_ANALYTICS.weeklyData.map(d => d.recruits));
 
   return (
@@ -50,7 +39,7 @@ function PreviewContent({ tier }: { tier: TierName }) {
           { label: 'Recruits', value: '7' },
           { label: 'Queue', value: '23' },
           { label: 'Response', value: '34%' },
-          { label: 'Campaigns', value: tier === 'pro' ? '2' : '--' },
+          { label: 'Campaigns', value: '2' },
         ].map((s) => (
           <div key={s.label} style={{
             background: '#1a1814',
@@ -84,7 +73,7 @@ function PreviewContent({ tier }: { tier: TierName }) {
             fontSize: '0.7rem', fontWeight: 600, color: '#C9AA71',
             fontFamily: "'Cinzel', serif", marginBottom: '0.4rem',
           }}>
-            {hasAccess(tier, 'recruteur') ? '\u25CE Auto-Scanner' : '\u25CE Manual Scanner'}
+            {'\u25CE'} Auto-Scanner
           </div>
           {MOCK_SCANNER_DATA.slice(0, 4).map((p, i) => (
             <div key={i} style={{
@@ -103,13 +92,12 @@ function PreviewContent({ tier }: { tier: TierName }) {
           ))}
         </div>
 
-        {/* Analytics preview or locked */}
+        {/* Analytics preview */}
         <div style={{
           background: '#1a1814',
           border: '1px solid #352c20',
           borderRadius: '4px',
           padding: '0.6rem',
-          position: 'relative',
         }}>
           <div style={{
             fontSize: '0.7rem', fontWeight: 600, color: '#C9AA71',
@@ -126,9 +114,7 @@ function PreviewContent({ tier }: { tier: TierName }) {
               <div key={i} style={{
                 flex: 1,
                 height: `${(d.recruits / maxBars) * 100}%`,
-                background: hasAccess(tier, 'recruteur')
-                  ? 'linear-gradient(180deg, rgba(201, 170, 113, 0.6), rgba(139, 115, 64, 0.3))'
-                  : '#2a2318',
+                background: 'linear-gradient(180deg, rgba(201, 170, 113, 0.6), rgba(139, 115, 64, 0.3))',
                 borderRadius: '2px 2px 0 0',
                 minHeight: '4px',
               }} />
@@ -146,53 +132,35 @@ function PreviewContent({ tier }: { tier: TierName }) {
               </div>
             ))}
           </div>
-
-          {!hasAccess(tier, 'recruteur') && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'rgba(13, 12, 10, 0.8)',
-              backdropFilter: 'blur(2px)',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              borderRadius: '4px', fontSize: '0.65rem', color: '#6b5f4d',
-            }}>
-              <span style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{'\u{1F512}'}</span>
-              Recruteur
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Discord preview (pro only) */}
-      {tier === 'pro' && (
+      {/* Discord preview */}
+      <div style={{
+        background: '#1a1814',
+        border: '1px solid #352c20',
+        borderRadius: '4px',
+        padding: '0.5rem 0.6rem',
+        marginTop: '0.75rem',
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+      }}>
         <div style={{
-          background: '#1a1814',
-          border: '1px solid #352c20',
-          borderRadius: '4px',
-          padding: '0.5rem 0.6rem',
-          marginTop: '0.75rem',
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          width: '20px', height: '20px', borderRadius: '50%',
+          background: '#5865F2', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '0.55rem', color: 'white', fontWeight: 700,
         }}>
-          <div style={{
-            width: '20px', height: '20px', borderRadius: '50%',
-            background: '#5865F2', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', fontSize: '0.55rem', color: 'white', fontWeight: 700,
-          }}>
-            CR
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.6rem', color: '#5865F2', fontWeight: 600 }}>CelestialRecruiter</div>
-            <div style={{ fontSize: '0.55rem', color: '#a89b80' }}>New player Kaelethas (Paladin 80) whispered!</div>
-          </div>
+          CR
         </div>
-      )}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.6rem', color: '#5865F2', fontWeight: 600 }}>CelestialRecruiter</div>
+          <div style={{ fontSize: '0.55rem', color: '#a89b80' }}>New player Kaelethas (Paladin 80) whispered!</div>
+        </div>
+      </div>
     </div>
   );
 }
 
 export function DashboardPreviewSection() {
-  const [tier, setTier] = useState<TierName>('pro');
-
   return (
     <section
       id="dashboard-preview"
@@ -214,32 +182,13 @@ export function DashboardPreviewSection() {
         <p>A complete dashboard to manage your recruitment</p>
       </motion.div>
 
-      {/* Tier Selector */}
-      <motion.div
-        className="tier-selector"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-      >
-        {(['free', 'recruteur', 'pro'] as const).map((t) => (
-          <button
-            key={t}
-            className={`tier-btn tier-${t} ${tier === t ? 'active' : ''}`}
-            onClick={() => setTier(t)}
-          >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </motion.div>
-
       {/* Dashboard Frame */}
       <motion.div
         className="dashboard-frame"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ delay: 0.2, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
       >
         <div className="frame-chrome">
           <span className="dot red" />
@@ -249,8 +198,8 @@ export function DashboardPreviewSection() {
         </div>
 
         <div className="frame-content">
-          <PreviewSidebar tier={tier} />
-          <PreviewContent tier={tier} />
+          <PreviewSidebar />
+          <PreviewContent />
         </div>
       </motion.div>
 
@@ -259,7 +208,7 @@ export function DashboardPreviewSection() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ delay: 0.5, duration: 0.6 }}
+        transition={{ delay: 0.4, duration: 0.6 }}
         style={{ textAlign: 'center', marginTop: '2rem' }}
       >
         <a

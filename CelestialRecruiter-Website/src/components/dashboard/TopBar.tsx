@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTier } from './TierContext';
 import { useData } from './DataContext';
 import { usePatch } from './PatchContext';
 import { ExportPatchModal } from './ExportPatchModal';
@@ -12,7 +11,6 @@ interface TopBarProps {
 }
 
 export function TopBar({ title, onMenuToggle }: TopBarProps) {
-  const { currentTier, setTier } = useTier();
   const { isLive, data } = useData();
   const { isDirty, dirtyCount } = usePatch();
   const [showExportModal, setShowExportModal] = useState(false);
@@ -45,20 +43,6 @@ export function TopBar({ title, onMenuToggle }: TopBarProps) {
               {isDirty && <span className="export-changes-count">{dirtyCount}</span>}
             </button>
           )}
-
-          <div className="tier-selector" style={{ marginBottom: 0 }}>
-            {(['free', 'recruteur', 'pro'] as const).map((tier) => (
-              <button
-                key={tier}
-                className={`tier-btn tier-${tier} ${currentTier === tier ? 'active' : ''}`}
-                onClick={() => setTier(tier)}
-                aria-pressed={currentTier === tier}
-                style={{ padding: '0.35rem 0.85rem', fontSize: '0.72rem' }}
-              >
-                {tier.charAt(0).toUpperCase() + tier.slice(1)}
-              </button>
-            ))}
-          </div>
 
           <a href="/" className="back-link" aria-label="Back to homepage">
             {'\u2190'} Back

@@ -456,12 +456,6 @@ local exportFrame = nil
 
 -- Open a copy dialog with web export data
 function IE:ShowWebExportDialog()
-    -- Tier gate: web export requires Recruteur+
-    if ns.Tier and not ns.Tier:CanUse("web_export") then
-        ns.Tier:ShowUpgrade("web_export")
-        return
-    end
-
     local data = self:ExportForWeb()
 
     if not data or data == "" then
