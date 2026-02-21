@@ -173,9 +173,6 @@ function Themes:GetColors()
     return theme.colors
 end
 
--- Theme availability by tier: Free gets 2 (dark, light), Recruteur gets all 6, Pro gets 6 + custom
-local FREE_THEMES = { dark = true, light = true }
-
 function Themes:Apply(themeId)
     if not self.presets[themeId] then
         themeId = "dark"

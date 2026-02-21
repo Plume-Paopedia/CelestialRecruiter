@@ -171,13 +171,13 @@
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  background: $bg-deepest;
+  background: var(--cr-bg, #{$bg-deepest});
 }
 
 .dashboard-sidebar {
   width: 220px;
-  background: $bg-panel;
-  border-right: 1px solid $border-faint;
+  background: var(--cr-panel, #{$bg-panel});
+  border-right: 1px solid var(--cr-border, #{$border-faint});
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -205,13 +205,13 @@
 
   .sidebar-brand {
     padding: 1.25rem 1rem;
-    border-bottom: 1px solid $border-faint;
+    border-bottom: 1px solid var(--cr-border, #{$border-faint});
 
     a {
       font-family: 'Cinzel', serif;
       font-size: 0.85rem;
       font-weight: 700;
-      color: $gold-primary;
+      color: var(--cr-gold, #{$gold-primary});
       text-decoration: none;
       letter-spacing: 0.04em;
 
@@ -286,9 +286,9 @@
     }
 
     &.active {
-      color: $gold-primary;
+      color: var(--cr-accent, #{$gold-primary});
       background: rgba(201, 170, 113, 0.06);
-      border-left-color: $gold-primary;
+      border-left-color: var(--cr-accent, #{$gold-primary});
     }
 
     &.locked {
@@ -333,8 +333,8 @@
   justify-content: space-between;
   padding: 0 1.5rem;
   height: 56px;
-  background: $bg-panel;
-  border-bottom: 1px solid $border-faint;
+  background: var(--cr-panel, #{$bg-panel});
+  border-bottom: 1px solid var(--cr-border, #{$border-faint});
   position: sticky;
   top: 0;
   z-index: 15;
@@ -343,7 +343,7 @@
     font-family: 'Cinzel', serif;
     font-size: 1rem;
     font-weight: 700;
-    color: $text-primary;
+    color: var(--cr-text, #{$text-primary});
   }
 
   .topbar-actions {
@@ -390,6 +390,8 @@
 // ============================================
 .panel-card {
   @include stone-panel;
+  background: var(--cr-panel, #{$bg-panel});
+  border-color: var(--cr-border, #{$border-subtle});
   border-radius: $radius-md;
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -398,7 +400,7 @@
     font-family: 'Cinzel', serif;
     font-size: 0.9rem;
     font-weight: 700;
-    color: $gold-primary;
+    color: var(--cr-gold, #{$gold-primary});
     margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
@@ -410,6 +412,8 @@
 
 .stat-card {
   @include stone-panel;
+  background: var(--cr-panel, #{$bg-panel});
+  border-color: var(--cr-border, #{$border-subtle});
   border-radius: $radius-md;
   padding: 1rem 1.25rem;
   text-align: center;
@@ -418,12 +422,12 @@
     font-family: 'Cinzel', serif;
     font-size: 1.5rem;
     font-weight: 700;
-    color: $gold-primary;
+    color: var(--cr-gold, #{$gold-primary});
   }
 
   .stat-label {
     font-size: 0.75rem;
-    color: $text-muted;
+    color: var(--cr-muted, #{$text-muted});
     margin-top: 0.25rem;
   }
 }
@@ -448,17 +452,17 @@
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: $text-muted;
+    color: var(--cr-muted, #{$text-muted});
     text-align: left;
     padding: 0.6rem 0.75rem;
-    border-bottom: 1px solid $border-subtle;
+    border-bottom: 1px solid var(--cr-border, #{$border-subtle});
   }
 
   td {
     font-size: 0.82rem;
-    color: $text-primary;
+    color: var(--cr-text, #{$text-primary});
     padding: 0.55rem 0.75rem;
-    border-bottom: 1px solid $border-faint;
+    border-bottom: 1px solid var(--cr-border, #{$border-faint});
   }
 
   tr:hover td {
@@ -779,7 +783,7 @@
       aspect-ratio: 16 / 10;
       border-radius: $radius-sm;
       border: 2px solid $border-faint;
-      cursor: default;
+      cursor: pointer;
       transition: border-color 0.2s ease;
       position: relative;
       overflow: hidden;
@@ -1375,7 +1379,7 @@
 .settings-section-label {
   font-size: 0.7rem;
   font-weight: 600;
-  color: $gold-primary;
+  color: var(--cr-gold, #{$gold-primary});
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-top: 1rem;

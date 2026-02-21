@@ -3,14 +3,15 @@
 import { useEffect, useCallback } from 'react';
 import { useData, type AddonSettings } from '@/components/dashboard/DataContext';
 import { usePatch } from '@/components/dashboard/PatchContext';
+import { useTheme, THEME_PALETTES, THEME_IDS } from '@/components/dashboard/ThemeContext';
 
 const THEME_SWATCHES = [
-  { name: 'Sombre', gradient: 'linear-gradient(135deg, #0d0f1c, #141829, #00adff)' },
-  { name: 'Clair', gradient: 'linear-gradient(135deg, #f0f1f5, #fafafc, #338cd9)' },
-  { name: 'R\u00eave Violet', gradient: 'linear-gradient(135deg, #140d1e, #1a1029, #bf59ff)' },
-  { name: 'For\u00eat', gradient: 'linear-gradient(135deg, #0d1a14, #121e1a, #4de680)' },
-  { name: 'Oc\u00e9an', gradient: 'linear-gradient(135deg, #0a1424, #0e192e, #26b3f2)' },
-  { name: 'Ambre', gradient: 'linear-gradient(135deg, #1a140d, #241c12, #ffb333)' },
+  { id: 'dark',   name: 'Sombre',       gradient: 'linear-gradient(135deg, #0d0f1c, #141829, #00adff)' },
+  { id: 'light',  name: 'Clair',         gradient: 'linear-gradient(135deg, #f0f1f5, #fafafc, #338cd9)' },
+  { id: 'purple', name: 'R\u00eave Violet', gradient: 'linear-gradient(135deg, #140d1e, #1a1029, #bf59ff)' },
+  { id: 'green',  name: 'For\u00eat',    gradient: 'linear-gradient(135deg, #0d1a14, #121e1a, #4de680)' },
+  { id: 'blue',   name: 'Oc\u00e9an',    gradient: 'linear-gradient(135deg, #0a1424, #0e192e, #26b3f2)' },
+  { id: 'amber',  name: 'Ambre',         gradient: 'linear-gradient(135deg, #1a140d, #241c12, #ffb333)' },
 ];
 
 const NOTIFICATION_TOGGLES = [
@@ -68,6 +69,7 @@ function SettingsToggle({ label, value, onChange }: {
 export function SettingsPanel() {
   const { data, isLive } = useData();
   const { editedSettings, setEditedSettings, dirtySummary } = usePatch();
+  const { currentTheme, setTheme } = useTheme();
 
   const settings: AddonSettings = isLive
     ? (editedSettings || data?.settings || {})
@@ -97,17 +99,18 @@ export function SettingsPanel() {
         <div className="settings-group">
           <div className="settings-label">Select Theme</div>
           <div className="theme-grid">
-            {THEME_SWATCHES.map((swatch, i) => (
+            {THEME_SWATCHES.map((swatch) => (
               <div
-                key={swatch.name}
-                className={`theme-swatch${i === 0 ? ' active' : ''}`}
+                key={swatch.id}
+                className={`theme-swatch${currentTheme === swatch.id ? ' active' : ''}`}
                 style={{ background: swatch.gradient }}
                 title={swatch.name}
+                onClick={() => setTheme(swatch.id)}
               />
             ))}
           </div>
           <div style={{ fontSize: '0.7rem', color: '#6b5f4d', marginTop: '0.5rem' }}>
-            All 6 themes available. Use /cr in-game to switch themes.
+            Cliquer pour pr\u00e9visualiser. Les th\u00e8mes s&apos;appliquent aussi dans l&apos;addon avec /cr.
           </div>
         </div>
       </div>

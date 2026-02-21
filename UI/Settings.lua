@@ -1,6 +1,8 @@
 local _, ns = ...
 local W = ns.UIWidgets
 local C = W.C
+local SOLID = W.SOLID
+local EDGE  = W.EDGE
 
 -- ═══════════════════════════════════════════════════════════════════
 -- CelestialRecruiter  —  Settings (Reglages) Tab
@@ -34,6 +36,61 @@ function ns.UI_BuildSettings(parent)
     local function p() return ns.db.profile end
     local y = 0
     local function row(h) y = y - h; return y end
+
+    ---------------------------------------------------------------------------
+    -- Section: Theme
+    ---------------------------------------------------------------------------
+    local hTheme = W.MakeHeader(ch, "Th\195\168me")
+    hTheme:SetPoint("TOPLEFT", 4, row(22))
+    W.MakeSeparator(ch, hTheme)
+    y = y - 8
+
+    sd._themeSwatches = {}
+    local presets = ns.Themes:GetPresetList()
+    local swatchW, swatchH, swatchGap = 90, 28, 6
+    local swatchRow = CreateFrame("Frame", nil, ch)
+    swatchRow:SetPoint("TOPLEFT", 4, row(36))
+    swatchRow:SetSize(#presets * (swatchW + swatchGap), swatchH)
+
+    for idx, preset in ipairs(presets) do
+        local sw = CreateFrame("Button", nil, swatchRow, "BackdropTemplate")
+        sw:SetSize(swatchW, swatchH)
+        sw:SetPoint("LEFT", (idx - 1) * (swatchW + swatchGap), 0)
+        sw:SetBackdrop({
+            bgFile = SOLID, edgeFile = EDGE,
+            edgeSize = 10,
+            insets = {left = 2, right = 2, top = 2, bottom = 2},
+        })
+        local ac = preset.colors.accent
+        sw:SetBackdropColor(ac[1], ac[2], ac[3], 0.85)
+        sw:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.4)
+
+        local label = sw:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        label:SetPoint("CENTER")
+        label:SetText(preset.name)
+        label:SetTextColor(C.text[1], C.text[2], C.text[3])
+
+        sw._themeId = preset.id
+        sw:SetScript("OnClick", function()
+            ns.Themes:Apply(preset.id)
+            ns.UI_RefreshSettings()
+        end)
+        sw:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(preset.name, 1, 1, 1)
+            GameTooltip:AddLine("Cliquer pour appliquer ce th\195\168me", C.dim[1], C.dim[2], C.dim[3])
+            GameTooltip:Show()
+        end)
+        sw:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        sd._themeSwatches[#sd._themeSwatches + 1] = sw
+    end
+
+    local themeHint = ch:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    themeHint:SetPoint("TOPLEFT", 8, row(16))
+    themeHint:SetText("Cliquer pour changer le th\195\168me. /reload pour l'effet complet.")
+    themeHint:SetTextColor(C.dim[1], C.dim[2], C.dim[3])
+    y = y - 8
 
     ---------------------------------------------------------------------------
     -- Section: Guild Profile
@@ -649,6 +706,18 @@ end
 ---------------------------------------------------------------------------
 function ns.UI_RefreshSettings()
     if not sd.ch then return end
+
+    -- Update theme swatch borders
+    if sd._themeSwatches then
+        local current = ns.Themes and ns.Themes.current or "dark"
+        for _, sw in ipairs(sd._themeSwatches) do
+            if sw._themeId == current then
+                sw:SetBackdropBorderColor(C.gold[1], C.gold[2], C.gold[3], 1)
+            else
+                sw:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.4)
+            end
+        end
+    end
 
     local dy = sd._abDynY
 
