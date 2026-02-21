@@ -10,7 +10,7 @@ import { SectionDivider } from '@/components/ui/SectionDivider';
 const PILL_ICONS: Record<string, string> = {
   'Auto-Scanner': '\u25CE',   // bullseye
   'Analytics':    '\u2593',   // bar chart
-  'AI Recruiting': '\u2699',  // gear
+  'Campaigns':    '\u2699',   // gear
   'Discord Alerts': '\u2709', // envelope
 };
 

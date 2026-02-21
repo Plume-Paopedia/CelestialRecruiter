@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://celestialrecruiter.com'),
   title: 'CelestialRecruiter - Legendary WoW Guild Recruitment Addon',
   description:
-    'Automate guild recruitment in World of Warcraft. Auto-scan, AI recruiting, Discord integration, and advanced analytics. Used by 847+ guilds.',
+    'Automate guild recruitment in World of Warcraft. Auto-scan, Discord integration, and advanced analytics.',
   keywords: [
     'World of Warcraft',
     'WoW addon',

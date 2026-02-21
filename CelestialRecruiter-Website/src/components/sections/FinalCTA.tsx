@@ -102,7 +102,7 @@ export function FinalCTASection() {
             rel="noopener noreferrer"
             className="btn-epic"
           >
-            Get Pro for 7&euro;/mo
+            Support on Patreon
           </a>
         </motion.div>
 
@@ -118,9 +118,9 @@ export function FinalCTASection() {
             fontSize: '0.82rem',
           }}
         >
-          <span>{'\u2713'} Free Forever Option</span>
-          <span>{'\u2713'} 30-Day Money Back</span>
-          <span>{'\u2713'} Cancel Anytime</span>
+          <span>{'\u2713'} 100% Free</span>
+          <span>{'\u2713'} All Features Included</span>
+          <span>{'\u2713'} No Paywall</span>
         </motion.div>
       </motion.div>
     </section>
